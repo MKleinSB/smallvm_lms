@@ -734,8 +734,7 @@ void hardwareInit() {
 	#define DEFAULT_TONE_PIN 2
 	#define PIN_LED 13
 	static const char reservedPin[TOTAL_PINS] = {
-		//sodb remove reserved pins 7 and 8 for LMS-ESP32v2 serial port
-		0, 1, 0, 1, 0, 1, 1, 0, 0, 0,
+		0, 1, 0, 1, 0, 1, 1, 1, 1, 0,
 		0, 1, 1, 0, 0, 1, 1, 1, 0, 0,
 		1, 1, 1, 0, 1, 0, 0, 0, 1, 1,
 		1, 1, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -953,9 +952,6 @@ void hardwareInit() {
 		#define PIN_BUTTON_B 14
 	#elif defined(KIDS_BITS)
 		#define BOARD_TYPE "KidsBits"
-// sodb define name
-	#elif defined(LMSDISPLAY) || defined(LMS7789)
-		#define BOARD_TYPE "LMS-ESP32"
 	#else
 		#define BOARD_TYPE "ESP32"
 	#endif
@@ -976,9 +972,7 @@ void hardwareInit() {
 		#endif
 	#endif
 	static const char reservedPin[TOTAL_PINS] = {
-		//sodb remove reserved pins 7 and 8 for LMS-ESP32v2 serial port
-		
-		0, 1, 0, 1, 0, 0, 1, 0, 0, 1,
+		0, 1, 0, 1, 0, 0, 1, 1, 1, 1,
 		1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 		1, 0, 0, 0, 1, 0, 0, 0, 1, 1,
 		1, 1, 0, 0, 0, 0, 0, 1, 1, 0};
@@ -2862,16 +2856,6 @@ static OBJ primSquareWave(int argCount, OBJ *args) {
 	return isSupported ? trueObj : falseObj;
 }
 
-//sodb
-static OBJ primOutputString(int argCount, OBJ *args) {
-	OBJ arg = args[0];
-	if (IS_TYPE(arg, StringType)) { // string
-		char *s = obj2str(arg);
-		outputString(s);
-		return trueObj;
-	}
-	return falseObj;
-}
 // forward to primitives that don't take argCount
 
 static OBJ primSetUserLED2(int argCount, OBJ *args) { primSetUserLED(args); return falseObj; }
@@ -2894,8 +2878,6 @@ static PrimEntry entries[] = {
 	{"analogWrite", primAnalogWrite2},
 	{"digitalRead", primDigitalRead},
 	{"digitalWrite", primDigitalWrite2},
-//sodb
-	{"outputstring",primOutputString},
 };
 
 void addIOPrims() {
