@@ -46,9 +46,6 @@
 	// 0 and 1 are edge connector pins 19 and 20 or DUELink standard pins 16 and 15
 	#define PIN_WIRE_SCL 1
 	#define PIN_WIRE_SDA 0
-#elif defined(LMSDISPLAY) || defined(LMS7789)
-	#define PIN_WIRE_SCL 4 // 47 -> PA3 (DUE downlink port SCL)
-	#define PIN_WIRE_SDA 5 // 52 -> PA2 (DUE downlink port SDA)
 #elif !defined(PIN_WIRE_SCL)
 	#if defined(PIN_WIRE0_SCL)
 		#define PIN_WIRE_SCL PIN_WIRE0_SCL
@@ -1867,14 +1864,7 @@ static OBJ primTouchRead(int argCount, OBJ *args) {
 #else
 
 static OBJ primTouchRead(int argCount, OBJ *args) {
-	uint8 esp32TouchPins[10] = {0, 2, 4, 12, 13, 14, 15, 27, 32, 33};
-	int gpioPin = mapDigitalPinNum(obj2int(args[0]));
-	for (int i = 0; i < sizeof(esp32TouchPins); i++) {
-		if (gpioPin == esp32TouchPins[i]) {
-			return int2obj(touchRead(gpioPin));
-		}
-	}
-	return zeroObj; // gpioPin is not an ESP32 touch pin
+	return int2obj(touchRead(obj2int(args[0])));
 }
 
 #endif
