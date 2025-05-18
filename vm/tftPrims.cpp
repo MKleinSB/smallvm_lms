@@ -30,7 +30,7 @@ static int deferUpdates = false;
 	defined(ARDUINO_NRF52840_CLUE) || defined(ARDUINO_IOT_BUS) || defined(SCOUT_MAKES_AZUL) || \
 	defined(TTGO_RP2040) || defined(TTGO_DISPLAY) || defined(ARDUINO_M5STACK_Core2) || \
 	defined(GAMEPAD_DISPLAY) || defined(PICO_ED) || defined(OLED_128_64) || defined(COCUBE) || \
-	defined(ARDUINO_M5Atom_S3) || defined(LMSDISPLAY)
+	defined(ARDUINO_M5Atom_S3) || defined(LMSDISPLAY) || defined(LMS7789)
 
 	#define BLACK 0
 	#define WHITE 65535
@@ -557,7 +557,7 @@ TS_Point XPT2046_Touchscreen::getMappedPoint()
 		return ((float)(x-X_MIN)/X_MAX)*TFT_WIDTH;
 		}
 		
-		static int screenTouchY() {
+	static int screenTouchY() {
 		if (!touchEnabled) touchInit();
 		if (!ts.touched()) { return -1; }
 		int16_t y = ts.getPoint().y;
@@ -648,11 +648,13 @@ TFT_BL=33
 
 		useTFT = true;
 	}
-  /*
+  
 
 	
 #elif defined(LMS7789)
 	//disp = st7789(spimode=3,miso=12, mosi=13, clk=14, cs=15, dc=23, rst=25, backlight=2,power=-1,width=240, height=280,start_y=20, rot=PORTRAIT, colormode=COLOR_MODE_RGB)
+	// disp = st7789(spimode=3,miso=-1, mosi=26, clk=15 , cs=-1, dc=27, rst=13, backlight=12,power=-1,width=240, height=280,start_y=20, rot=PORTRAIT, colormode=COLOR_MODE_RGB)
+
 
     // touch = xpt2046(spihost=esp.HSPI_HOST,cs=26,transpose=False,cal_x0=3865, 
 	#include "Adafruit_GFX.h"
@@ -673,12 +675,12 @@ TFT_BL=33
 	#define Y_MIN 274
 	#define Y_MAX 3579
 
-	#define TFT_MOSI 13
-	#define TFT_MISO 12
-	#define TFT_SCLK 14
-	#define TFT_CS 15
-	#define TFT_DC 23
-	#define TFT_RST 25
+	#define TFT_MOSI 26
+	#define TFT_MISO -1
+	#define TFT_SCLK 15
+	#define TFT_CS 14
+	#define TFT_DC 27
+	#define TFT_RST 13
 
 	SPIClass mySPI(HSPI); 
 	
