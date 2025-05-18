@@ -409,7 +409,8 @@ static void flashWriteWord(int *addr, int value) {
 
 #elif defined(ESP32_FLASH_CODESTORE)
 	#include "esp_partition.h"
-
+	//sodb
+	//#define DEBUG_FLASH 0
 	#define START 0
 	#define HALF_SPACE (80 * 1024)
 
@@ -424,14 +425,34 @@ static void flashWriteWord(int *addr, int value) {
 	static void flashErase(int *startAddr, int *endAddr) {
 		uint32 byteCount = 4 * (endAddr - startAddr);
 		spi_flash_erase_range(flashAddr(startAddr), byteCount);
+		//sodb
+		#ifdef DEBUG_FLASH
+		char s[100];
+		sprintf(s,"flashErase: startaddr 0x%08x, endaddr 0x%08x\n, flashAddr(startAddr) 0x%08x, byteCount 0x%04x",startAddr,endAddr,flashAddr(startAddr),byteCount);
+		outputString(s);
+		#endif
+
 	}
 
 	static void flashWriteWord(int *addr, int value) {
 		spi_flash_write(flashAddr(addr), &value, 4);
+		//sodb
+		#ifdef DEBUG_FLASH
+		char s[100];
+		sprintf(s,"flashWriteWord: addr %08x, value 0x%08x flashAddr(addr) %08x\n",addr,value,flashAddr(addr));
+		outputString(s);
+		#endif
 	}
 
 	static void flashWriteData(int *dst, int wordCount, uint8 *src) {
 		spi_flash_write(flashAddr(dst), src, 4 * wordCount);
+		//sodb
+		#ifdef DEBUG_FLASH
+		char s[100];
+		sprintf(s,"flashWriteData: dst %08x, wordcount %08x, src %08x, flashAddr(dst) %08x\n",
+		  dst,wordCount,src,flashAddr(dst));
+		outputString(s);
+		#endif
 	}
 
 #elif defined(__ZEPHYR__)
