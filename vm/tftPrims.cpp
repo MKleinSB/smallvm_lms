@@ -698,8 +698,8 @@ TFT_BL=33
 //			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
 		tftClear();
 		// Turn on backlight on IoT-Bus
-		pinMode(2, OUTPUT);
-		digitalWrite(2, HIGH);
+		pinMode(12, OUTPUT);
+		digitalWrite(12, HIGH);
 
 		useTFT = true;
 	}
