@@ -144,7 +144,9 @@ void writeI2CReg(int deviceID, int reg, int value) {
 	Wire.endTransmission();
 }
 
-#if defined(ARDUINO_BBC_MICROBIT_V2) || defined(CALLIOPE_V3) || defined(ARDUINO_M5STACK_Core2)
+// sodb added LMS7789
+#if defined(ARDUINO_BBC_MICROBIT_V2) || defined(CALLIOPE_V3) || defined(ARDUINO_M5STACK_Core2) || \
+    defined(LMS7789)
 
 #define HAS_INTERNAL_I2C 1
 
