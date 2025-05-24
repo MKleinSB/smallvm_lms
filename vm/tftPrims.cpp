@@ -590,6 +590,7 @@ TS_Point XPT2046_Touchscreen::getMappedPoint()
 	}
 */
 
+<<<<<<< HEAD
 #elif defined(UNIHIKER)
 
 	#include "Adafruit_GFX.h"
@@ -625,6 +626,8 @@ TS_Point XPT2046_Touchscreen::getMappedPoint()
 	}
   
 
+=======
+>>>>>>> f062aca9e0e9e26a8e09e0aa5cfbfcf764ea9e2d
 	#elif defined(CYD)
 
 /*
@@ -694,6 +697,7 @@ TFT_BL=33
     // touch = xpt2046(spihost=esp.HSPI_HOST,cs=26,transpose=False,cal_x0=3865, 
 	#include "Adafruit_GFX.h"
 	#include "Adafruit_ST7789.h"
+<<<<<<< HEAD
 	// #include <bb_captouch.h>
 	
 	
@@ -703,12 +707,32 @@ TFT_BL=33
 	#define TOUCH_I2C_SDA 32
 	#define TOUCH_I2C_SCL 33
 	#define CST820_ADDR 0x15
+=======
+	
+	//#include <XPT2046_Touchscreen.h>
+	//#include <SPI.h>
+
+	// #define HAS_TOUCH_SCREEN 1
+	// i2c=I2C(1,sda=Pin(21),scl=Pin(22),freq=100000)
+	#define TOUCH_I2C_SDA 21
+	#define TOUCH_I2C_SDC 22
+
+	TwoWire WireTouch = TwoWire(1);
+
+	#define X_MIN 256
+	#define X_MAX 3632
+	#define Y_MIN 274
+	#define Y_MAX 3579
+>>>>>>> f062aca9e0e9e26a8e09e0aa5cfbfcf764ea9e2d
 
 	#define TFT_MOSI 26
 	#define TFT_MISO -1
 	#define TFT_SCLK 15
 	#define TFT_CS 14
+<<<<<<< HEAD
 	
+=======
+>>>>>>> f062aca9e0e9e26a8e09e0aa5cfbfcf764ea9e2d
 	#define TFT_DC 27
 	#define TFT_RST 13
 
@@ -718,6 +742,10 @@ TFT_BL=33
 	#define TFT_HEIGHT 240
 	Adafruit_ST7789 tft = Adafruit_ST7789(&mySPI, TFT_CS, TFT_DC, TFT_RST);
 
+<<<<<<< HEAD
+=======
+	//XPT2046_Touchscreen ts( TOUCH_CS_PIN);
+>>>>>>> f062aca9e0e9e26a8e09e0aa5cfbfcf764ea9e2d
 	void tftInit() {
 		mySPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, TFT_CS);
 		mySPI.beginTransaction(SPISettings(40000000, MSBFIRST, SPI_MODE3));
@@ -733,6 +761,7 @@ TFT_BL=33
 		useTFT = true;
 	}
 
+<<<<<<< HEAD
 	
 	static int wireTouchStarted = false;
 
@@ -758,6 +787,38 @@ TFT_BL=33
 		Wire1.requestFrom(deviceID, 1);
 	
 		return Wire1.available() ? Wire1.read() : 0;
+=======
+	/*
+	static int wireTouchStarted = false;
+
+	static void startTouchWire() {
+		#elif defined(ARDUINO_ARCH_ESP32)
+			WireTouch.setPins(TOUCH_I2C_SDA,TOUCH_I2C_SDC);
+		#endif
+	
+		
+		WireTouch.begin();
+		WireTouch.setClock(400000); // i2c fast mode (seems pretty ubiquitous among i2c devices)
+		#if defined(ARDUINO_ARCH_RP2040)
+			// Needed on RP2040 to reset the I2C bus after a timeout
+			Wire.setTimeout(100, true);
+		#endif
+		wireTouchStarted = true;
+	}
+	
+	int readI2CTouchReg(int deviceID, int reg) {
+		if (!wireStarted) startTouchWire();
+		if (!wireStarted) return -100; // could not start I2C; missing pullup resistors?
+	
+		WireTouch.beginTransmission(deviceID);
+		WireTouch.write(reg);
+		int error = WireTouch.endTransmission();
+		if (error) return -error; // error; bad device ID?
+	
+		WireTouch.requestFrom(deviceID, 1);
+	
+		return WireTouch.available() ? WireTouch.read() : 0;
+>>>>>>> f062aca9e0e9e26a8e09e0aa5cfbfcf764ea9e2d
 	}
 	
 
@@ -766,6 +827,7 @@ TFT_BL=33
 		if (!wireTouchStarted) startTouchWire();
 		if (!wireTouchStarted) return;
 	
+<<<<<<< HEAD
 		Wire1.beginTransmission(deviceID);
 		Wire1.write(reg);
 		Wire1.write(value);
@@ -869,6 +931,44 @@ TFT_BL=33
 		if (!touchEnabled) touchInit();
 		return screenTouched() ? 1000 : -1;
 	}
+=======
+		WireTouch.beginTransmission(deviceID);
+		WireTouch.write(reg);
+		WireTouch.write(value);
+		WireTouch.endTransmission();
+	}
+	
+
+	static void touchInit() {
+		startTouchWire();
+		writeI2CTouchReg(21, 0xfe, 0xff); // do not sleep 
+		touchEnabled = true;
+	}
+
+	static int screenTouched() {
+		if (!touchEnabled) touchInit();
+		return ts.touched();
+	}
+
+	static int screenTouchX() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		return ts.getMappedPoint().x;
+	}
+
+	static int screenTouchY() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		return ts.getMappedPoint().y;
+	}
+
+	static int screenTouchPressure() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		return ts.getMappedPoint().z;
+	}
+	*/
+>>>>>>> f062aca9e0e9e26a8e09e0aa5cfbfcf764ea9e2d
 
 
 	#elif defined(ARDUINO_IOT_BUS)
