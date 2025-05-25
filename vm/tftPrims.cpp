@@ -561,7 +561,7 @@ TS_Point XPT2046_Touchscreen::getMappedPoint()
 		if (!touchEnabled) touchInit();
 		if (!ts.touched()) { return -1; }
 		int16_t y = ts.getPoint().y;
-		return ((float)(y-Y_MIN)/Y_MAX)*TFT_HEIGHT;
+		return (1-((float)(y-Y_MIN)/Y_MAX))*TFT_HEIGHT;
 		}
 		
 		static int screenTouchPressure() {
@@ -2026,7 +2026,6 @@ static OBJ primTftTouchGesture(int argCount, OBJ *args) {
 	return int2obj(-1);
 }
 #endif
-
 static OBJ primTftTouchPressure(int argCount, OBJ *args) {
 	#ifdef HAS_TOUCH_SCREEN
 		return int2obj(screenTouchPressure());
