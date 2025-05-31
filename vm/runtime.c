@@ -156,20 +156,20 @@ void primsInit() {
 #else
 	addDataPrims();
 	addDisplayPrims();
-	addFilePrims();
+	//addFilePrims();
 	addIOPrims();
 	addMiscPrims();
-	addNetPrims();
-	addBLEPrims();
-	addRadioPrims();
+	//addNetPrims();
+	//addBLEPrims();
+	//addRadioPrims();
 	addSensorPrims();
 	addSerialPrims();
 	addTFTPrims();
 	addVarPrims();
-	addHIDPrims();
-	addOneWirePrims();
-	addCameraPrims();
-	addEncoderPrims();
+	//addHIDPrims();
+	//addOneWirePrims();
+	//addCameraPrims();
+	//addEncoderPrims();
 	addSDCardPrims();
 #endif
 }

@@ -18,6 +18,18 @@
 #include "interp.h"
 #include "persist.h"
 
+
+#if defined(LVGL)
+//#include "lv_conf.h"
+#include <lvgl.h>
+#include <stdbool.h>
+bool useLVGL = false;
+bool LVGL_initialized = false;
+
+extern void update_lvgl(void);
+
+#endif
+
 // Tasks - Set USE_TASKS to false to test interpreter performance without task switching
 
 #define USE_TASKS true
@@ -1368,12 +1380,20 @@ static void runTask(Task *task) {
 
 void vmLoop() {
 	// Run the next runnable task. Wake up any waiting tasks whose wakeup time has arrived.
-
 	int currentTaskIndex = 0;
 	int count = 0;
 	while (true) {
+		#if defined(LVGL)
+			if (LVGL_initialized & useLVGL) {
+					 lv_tick_inc(1);
+				     lv_timer_handler();
+
+				}
+		#endif
+
 		if (count-- < 0) {
 			// do background VM tasks once every N VM loop cycles
+
 			processMessage();
 			checkButtons();
 			#if defined(HAS_LED_MATRIX)

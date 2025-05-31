@@ -47,8 +47,12 @@
 	#define PIN_WIRE_SCL 1
 	#define PIN_WIRE_SDA 0
 #elif defined(LMSDISPLAY) || defined(LMS7789)
-	#define PIN_WIRE_SCL 4 // 47 -> PA3 (DUE downlink port SCL)
-	#define PIN_WIRE_SDA 5 // 52 -> PA2 (DUE downlink port SDA)
+	#define PIN_WIRE_SCL 4 
+	#define PIN_WIRE_SDA 5 
+#elif defined(UNIHIKER) 
+	#define PIN_WIRE_SCL 48	
+	#define PIN_WIRE_SDA 47 
+
 #elif !defined(PIN_WIRE_SCL)
 	#if defined(PIN_WIRE0_SCL)
 		#define PIN_WIRE_SCL PIN_WIRE0_SCL

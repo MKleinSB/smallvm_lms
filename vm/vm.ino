@@ -8,6 +8,22 @@
 #include "interp.h"
 #include "persist.h"
 
+// #if defined(LVGL)
+// #include "lv_conf.h"
+// #include <lvgl.h>
+
+// extern "C" {
+// 	void update_lvgl(void) {
+// 	 lv_tick_inc(1);
+//      lv_timer_handler();
+ 
+//    }
+
+// }
+
+
+// #endif
+
 void setup() {
 #ifdef ARDUINO_NRF52_PRIMO
 	sd_softdevice_disable();
