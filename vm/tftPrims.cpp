@@ -2058,7 +2058,7 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t * px_map) 
 /*Read the touchpad*/
 #if defined(HAS_TOUCH_SCREEN)
 void my_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data) {
-
+    /*
     uint16_t x_raw,y_raw;
      if (ts.touched()) {
     TS_Point p = ts.getPoint();
@@ -2066,9 +2066,16 @@ void my_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data) {
     data->state = LV_INDEV_STATE_PR;
     data->point.x = map(p.x, 200, 3800, 0, TFT_WIDTH);
     data->point.y = map(p.y, 250, 3900,  TFT_HEIGHT,0);
-  } else {
-    data->state = LV_INDEV_STATE_RELEASED;
-  }
+	*/
+	// use global functions
+	if (screenTouched()) {
+		data->state = LV_INDEV_STATE_PR;
+    	data->point.x = screenTouchX();
+    	data->point.y = screenTouchY();
+	
+    } else {
+      data->state = LV_INDEV_STATE_RELEASED;
+    }
 }
 #endif
 
