@@ -1321,7 +1321,9 @@ static int hasTFT() {
 }
 
 #define BUFFER_PIXELS_SIZE (TFT_WIDTH * 8)
-uint16_t bufferPixels[BUFFER_PIXELS_SIZE]; // used by primPixelRow and primDrawBuffer
+//uint16_t bufferPixels[BUFFER_PIXELS_SIZE]; // used by primPixelRow and primDrawBuffer
+
+__attribute__((section(".ext_ram"))) uint16_t bufferPixels[BUFFER_PIXELS_SIZE];
 
 static int color24to16b(int color24b) {
 	// Convert 24-bit RGB888 format to the TFT's target pixel format.
@@ -2079,7 +2081,7 @@ void my_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data) {
 }
 #endif
 
-#define TFT_BUFFER_LINES 10 
+#define TFT_BUFFER_LINES 10
 static lv_draw_buf_t draw_buf;
 static lv_color_t buf[TFT_WIDTH * TFT_BUFFER_LINES];
 static lv_display_t * disp;

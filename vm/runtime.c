@@ -162,18 +162,18 @@ void primsInit() {
 	addSerialPrims();
 	addTFTPrims();
 	addVarPrims();
-#if !defined(LVGL)
+	addBLEPrims();
+//#if !defined(LVGL)
 	// for these there is not enough space in D-RAM
 	addFilePrims();
 	addNetPrims();
-	addBLEPrims();
 	addRadioPrims();
 	addHIDPrims();
 	addOneWirePrims();
 	addCameraPrims();
 	addEncoderPrims();
 	addSDCardPrims();
-#endif	
+//#endif	
 #endif
 }
 
