@@ -368,6 +368,11 @@ void tftClear();
 void tftSetHugePixel(int x, int y, int state);
 void tftSetHugePixelBits(int bits);
 
+// LVGL
+#if defined(LVGL)
+void setup_lvgl(void); 
+#endif
+
 // CoCube Sensor Support
 void cocubeSensorInit();
 void cocubeSensorUpdate();

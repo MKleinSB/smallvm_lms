@@ -174,6 +174,10 @@ void hardwareInit() {
 		writeI2CReg(0x20, 0, 0); // initialize IO expander
 	#endif
 	tftInit();
+	#if defined(LVGL)
+		// declared in interp.h
+	   setup_lvgl();
+	#endif
 	tftClear();
 	#if defined(DATABOT)
 		int yellow = 14864128;
