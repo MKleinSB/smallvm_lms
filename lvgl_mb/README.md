@@ -27,4 +27,4 @@ To limit DRAM usage, PSRAM is used for storing the array
 
 ```__attribute__((section(".ext_ram"))) uint16_t bufferPixels[BUFFER_PIXELS_SIZE];```
 
-Furthermore, using the `-DLV_CONF_INCLUDE_SIMPLE` build_flag in platformio.ini, the spece eeded or LV_MEM is defined in PSRAM as well.
+Furthermore, using the `-DLV_CONF_INCLUDE_SIMPLE` build_flag in platformio.ini, the LV_MEM is defined in PSRAM as well.
