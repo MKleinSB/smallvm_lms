@@ -154,26 +154,43 @@ void primsInit() {
 	addEncoderPrims();
 //	addSDCardPrims();
 #else
+// 	addDataPrims();
+// 	addDisplayPrims();
+// 	addIOPrims();
+// 	addMiscPrims();
+// 	addSensorPrims();
+// 	addSerialPrims();
+// 	addTFTPrims();
+// 	addVarPrims();
+// 	addBLEPrims();
+// //#if !defined(LVGL)
+// 	// for these there is not enough space in D-RAM
+// 	addFilePrims();
+// 	addNetPrims();
+// 	addRadioPrims();
+// 	addHIDPrims();
+// 	addOneWirePrims();
+// 	addCameraPrims();
+// 	addEncoderPrims();
+// 	addSDCardPrims();
+// //#endif	
 	addDataPrims();
 	addDisplayPrims();
+	addFilePrims();
 	addIOPrims();
 	addMiscPrims();
+	addNetPrims();
+	addBLEPrims();
+	addRadioPrims();
 	addSensorPrims();
 	addSerialPrims();
 	addTFTPrims();
 	addVarPrims();
-	addBLEPrims();
-//#if !defined(LVGL)
-	// for these there is not enough space in D-RAM
-	addFilePrims();
-	addNetPrims();
-	addRadioPrims();
 	addHIDPrims();
 	addOneWirePrims();
 	addCameraPrims();
 	addEncoderPrims();
 	addSDCardPrims();
-//#endif	
 #endif
 }
 

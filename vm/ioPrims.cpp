@@ -959,7 +959,8 @@ void hardwareInit() {
 		#define BOARD_TYPE "KidsBits"
 // sodb define name
 	#elif defined(LMSDISPLAY) || defined(LMS7789)
-		#define BOARD_TYPE "LMS-ESP32"
+		// name it as such; automatically tft and touch loaded + file transfers to ide
+		#define BOARD_TYPE "IOT-BUS"
 	#else
 		#define BOARD_TYPE "ESP32"
 	#endif

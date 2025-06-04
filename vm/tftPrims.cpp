@@ -2081,10 +2081,11 @@ void my_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data) {
 }
 #endif
 
-#define TFT_BUFFER_LINES 10
+#define TFT_BUFFER_LINES 40
 static lv_draw_buf_t draw_buf;
 static lv_color_t buf[TFT_WIDTH * TFT_BUFFER_LINES];
 static lv_display_t * disp;
+
 
 void setup_lvgl() {
 	/*
@@ -2247,7 +2248,18 @@ int ui_get_last_event(std::string& name_out) {
     return static_cast<int>(last_event.code);
 }
 
-void ui_create_button(char * button_name, char * label_text, bool event) {
+
+const lv_font_t* get_font_from_scale(int scale_x) {
+    switch(scale_x) {
+        case 1: return &lv_font_montserrat_14;
+        case 2: return &lv_font_montserrat_24;
+        case 3: return &lv_font_montserrat_40;
+        default: return &lv_font_montserrat_14; // default fallback
+    }
+}
+
+
+void ui_create_button(char * button_name, char * label_text, int scale,  bool event) {
 	if (!registry.get(button_name)) {
 		lv_obj_t* obj = lv_btn_create(lv_screen_active());
 		if (event) {
@@ -2257,16 +2269,18 @@ void ui_create_button(char * button_name, char * label_text, bool event) {
 		// sodb: check whether kabek is correctly removes when partent btn object is deleted
 		lv_obj_t * label = lv_label_create(obj);
 		lv_label_set_text(label, label_text);
+		lv_obj_set_style_text_font(label, get_font_from_scale(scale), LV_PART_MAIN);
 		lv_obj_center(label);
 		registry.add(button_name, obj);
 	}
 
 }
 
-void ui_create_label(char * label_name, char * label_text) {
+void ui_create_label(char * label_name, char * label_text, int scale) {
     if (!registry.get(label_name)) {
 		lv_obj_t* label = lv_label_create(lv_scr_act());
 		lv_label_set_text(label, label_text);
+		lv_obj_set_style_text_font(label, get_font_from_scale(scale), LV_PART_MAIN);
 		registry.add(label_name, label);
 	}
 }
@@ -2326,10 +2340,11 @@ void ui_set_value(char * obj_name, int value) {
 	}
 }
 
-void ui_set_text(char * obj_name, char * text) {
+void ui_set_text(char * obj_name, char * text, int scale) {
     lv_obj_t* obj = registry.get(obj_name);
 	if (obj) {
 		lv_label_set_text(obj, text);
+		lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_PART_MAIN);
 	}
 }
 
@@ -2398,17 +2413,25 @@ static OBJ primLVGLgetallobjs(int argCount, OBJ *args) {
 }
 
 static OBJ primLVGLaddBtn(int argCount, OBJ *args) {
+	int scale = 1;
 	char* obj_name = obj2str(args[0]);
 	char* label = obj2str(args[1]);
-	bool event = (argCount > 2) ? (trueObj == args[2]) : true;
-	ui_create_button(obj_name, label, event);
+	if (argCount >2) {
+		scale = obj2int(args[2]);
+	}
+	bool event = (argCount > 3) ? (trueObj == args[3]) : true;
+	ui_create_button(obj_name, label, scale, event);
 	return falseObj;
 }
 
 static OBJ primLVGLaddLabel(int argCount, OBJ *args) {
+	int scale = 1;
 	char* label_name = obj2str(args[0]);
 	char* label_text = obj2str(args[1]);
-	ui_create_label(label_name, label_text);
+	if (argCount >2) {
+		scale = obj2int(args[2]);
+	}
+	ui_create_label(label_name, label_text, scale);
 	return falseObj;
 }
 
@@ -2457,9 +2480,13 @@ static OBJ primLVGLsetVal(int argCount, OBJ *args) {
 }
 
 static OBJ primLVGLsetText(int argCount, OBJ *args) {
+	int scale = 1;
 	char* obj_name = obj2str(args[0]);
 	char* obj_text = obj2str(args[1]);
-	ui_set_text(obj_name, obj_text);
+	if (argCount >2) {
+		scale = obj2int(args[2]);
+	}
+	ui_set_text(obj_name, obj_text, scale);
 	return falseObj;
 }
 
