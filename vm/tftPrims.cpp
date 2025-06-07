@@ -32,8 +32,11 @@ static int deferUpdates = false;
 	defined(GAMEPAD_DISPLAY) || defined(PICO_ED) || defined(OLED_128_64) || defined(COCUBE) || \
 	defined(ARDUINO_M5Atom_S3) || defined(LMSDISPLAY) || defined(LMS7789) || defined(UNIHIKER)
 
-	#define BLACK 0
-	#define WHITE 65535
+	//sodb
+	//#if !defined(TFT_ESPI)
+		#define BLACK 0
+		#define WHITE 65535
+	//#endif
 
 	#if defined(ARDUINO_CITILAB_ED1)
 		#include "Adafruit_GFX.h"
@@ -468,8 +471,88 @@ static int deferUpdates = false;
 
 			useTFT = true;
 		}
+	#elif defined(LMSDISPLAY) && defined(TFT_ESPI)
 
-    #elif defined(LMSDISPLAY)
+		#define HAS_TOUCH_SCREEN 1
+		#include <TFT_eSPI.h>
+
+		// in User_Setup,h #define ILI9341_DRIVER
+		// this definition also defines width and height.
+
+		#include <XPT2046_Touchscreen.h>
+		TFT_eSPI tft = TFT_eSPI();  // Invoke TFT object
+		XPT2046_Touchscreen ts(TOUCH_CS);
+		SPIClass& spix = SPI;
+//SPIClass mySPI(HSPI); 
+
+		void tftInit() {
+			
+			tft.init();
+			tft.initDMA();
+			//tft.setSwapBytes(true);
+			spix = tft.getSPIinstance(); 
+			//tft.fillScreen(TFT_BLACK);
+		
+			tft.begin();
+			tft.setRotation(3);
+	//			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
+			tftClear();
+			// Turn on backlight on IoT-Bus
+			pinMode(33, OUTPUT);
+			digitalWrite(33, HIGH);
+
+			useTFT = true;
+	}
+  
+	static void touchInit() {
+		
+		ts.begin(spix);
+		//pinMode(TOUCH_CS, INPUT);
+		//mySPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, TOUCH_CS);
+		//ts.begin(mySPI);
+  		ts.setRotation(3);
+		//ts.setCalibration(X_MIN, X_MAX, Y_MIN, Y_MAX);
+		//ts.setRotation(1);
+		touchEnabled = true;
+	}
+
+	static int screenTouched() {
+		if (!touchEnabled) touchInit();
+		// char s[100];
+		// sprintf(s,"touch init: %d ",ts.touched());
+		// outputString(s);
+		return ts.touched();
+	}
+
+	static int screenTouchX() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		int16_t x = ts.getPoint().x;
+		// char s[100];
+		// sprintf(s,"touch x: %d ",x);
+		// outputString(s);
+		return map(x, 200, 3800, TFT_HEIGHT,0);
+		}
+		
+	static int screenTouchY() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		int16_t y = ts.getPoint().y;
+		// char s[100];
+		// sprintf(s,"touch y: %d ",y);
+		// outputString(s);
+		return  map(y, 300, 3900, 0, TFT_WIDTH);
+		}
+		
+	static int screenTouchPressure() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		return ts.getPoint().z;
+		}
+		
+
+
+    #elif defined(LMSDISPLAY) && !defined(TFT_ESPI)
 	// disp = ili9341(miso=12, mosi=13, clk=14, cs=15, dc=27, rst=32, backlight=-1,power=-1,width=320, height=240, rot=LANDSCAPE)
     // touch = xpt2046(spihost=esp.HSPI_HOST,cs=26,transpose=False,cal_x0=3865, 
 	#include "Adafruit_GFX.h"
@@ -478,10 +561,8 @@ static int deferUpdates = false;
 	#include <XPT2046_Touchscreen.h>
 	#include <SPI.h>
 
-
 	#define TFT_WIDTH 320
 	#define TFT_HEIGHT 240
-
 
 
 	#define HAS_TOUCH_SCREEN 1
@@ -509,7 +590,7 @@ static int deferUpdates = false;
 		mySPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, TFT_CS);
 	
 		tft.begin(40000000);
-		tft.setRotation(3);
+		//tft.setRotation(0);
 //			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
 		tftClear();
 		// Turn on backlight on IoT-Bus
@@ -528,7 +609,7 @@ static int deferUpdates = false;
 	static void touchInit() {
 		ts.begin(mySPI);
 		//ts.setCalibration(X_MIN, X_MAX, Y_MIN, Y_MAX);
-		ts.setRotation(1);
+		//ts.setRotation(1);
 		touchEnabled = true;
 	}
 
@@ -536,30 +617,6 @@ static int deferUpdates = false;
 		if (!touchEnabled) touchInit();
 		return ts.touched();
 	}
-
-/*
-
-void XPT2046_Touchscreen::setCalibration(uint16_t _xmin, uint16_t _xmax, uint16_t _ymin, uint16_t _ymax ){
-	xmin = _xmin;
-	xmax = _xmax;
-	ymin = _ymin;
-	ymax = _ymax;
-	calibrated = true;
-}
-
-
-TS_Point XPT2046_Touchscreen::getMappedPoint()
-{
-	update();
-	TS_Point p = getPoint();	
-	p.x = ((float)(p.x-xmin)/xmax)*getWidth();//getWidth();         
-	p.y = ((float)(p.y-ymin)/ymax)*getHeight();//getHeight(); 
-	return TS_Point(p.x, p.y, p.z);
-}
-
-
-*/
-
 
 	static int screenTouchX() {
 		if (!touchEnabled) touchInit();
@@ -575,32 +632,11 @@ TS_Point XPT2046_Touchscreen::getMappedPoint()
 		return (1-((float)(y-Y_MIN)/Y_MAX))*TFT_HEIGHT;
 		}
 		
-		static int screenTouchPressure() {
+	static int screenTouchPressure() {
 		if (!touchEnabled) touchInit();
 		if (!ts.touched()) { return -1; }
 		return ts.getPoint().z;
 		}
-		
-/*
-	static int screenTouchX() {
-		if (!touchEnabled) touchInit();
-		if (!ts.touched()) { return -1; }
-		return ts.getMappedPoint().x;
-	}
-
-	static int screenTouchY() {
-		if (!touchEnabled) touchInit();
-		if (!ts.touched()) { return -1; }
-		return ts.getMappedPoint().y;
-	}
-
-	static int screenTouchPressure() {
-		if (!touchEnabled) touchInit();
-		if (!ts.touched()) { return -1; }
-		return ts.getMappedPoint().z;
-	}
-*/
-
 
 #elif defined(UNIHIKER)
 
@@ -1321,9 +1357,12 @@ static int hasTFT() {
 }
 
 #define BUFFER_PIXELS_SIZE (TFT_WIDTH * 8)
-//uint16_t bufferPixels[BUFFER_PIXELS_SIZE]; // used by primPixelRow and primDrawBuffer
-
-__attribute__((section(".ext_ram"))) uint16_t bufferPixels[BUFFER_PIXELS_SIZE];
+//sodb move buffer to psram. Warning: No check whether psram exists!
+#if defined(LVGL)
+  __attribute__((section(".ext_ram"))) uint16_t bufferPixels[BUFFER_PIXELS_SIZE];
+#else
+  uint16_t bufferPixels[BUFFER_PIXELS_SIZE]; // used by primPixelRow and primDrawBuffer
+#endif
 
 static int color24to16b(int color24b) {
 	// Convert 24-bit RGB888 format to the TFT's target pixel format.
@@ -1542,7 +1581,13 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 			OBJ pixelObj = FIELD(pixelDataObj, (i + 1));
 			bufferPixels[i] = (isInt(pixelObj)) ? color24to16b(obj2int(pixelObj)) : 0;
 		}
-		tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+		//sodb
+		 #if defined(TFT_ESPI)
+		   tft.pushImageDMA(x,y,pixelCount,1,bufferPixels);
+		#else
+		  tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+		#endif
+		
 	} else if (IS_TYPE(pixelDataObj, ByteArrayType)) {
 		int isRGB565 = true;
 		if (bytesPerPixel < 0) {
@@ -1574,8 +1619,16 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 				byte += bytesPerPixel;
 			}
 		}
-		tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+		//sodb
+		// tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+		//tft.draw16bitRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+		#if defined(TFT_ESPI)
+			tft.pushImageDMA(x, y, pixelCount, 1, bufferPixels);
+		#else
+		  tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+		#endif
 	}
+	
 	UPDATE_DISPLAY();
 	return falseObj;
 }
@@ -1921,6 +1974,24 @@ static OBJ primDrawBuffer(int argCount, OBJ *args) {
 				}
 			}
 		}
+		//sodb
+		// tft.draw16bitRGBBitmap(
+		// 	originX * scale,
+		// 	(originY + y) * scale,
+		// 	bufferPixels,
+		// 	originWidth * scale,
+		// 	scale
+		// );
+		#if defined(TFT_ESPI)
+		tft.pushImageDMA(
+			originX * scale,
+			(originY + y) * scale,
+			originWidth * scale,
+			scale,
+			bufferPixels
+		);
+	
+		#else
 		tft.drawRGBBitmap(
 			originX * scale,
 			(originY + y) * scale,
@@ -1928,6 +1999,10 @@ static OBJ primDrawBuffer(int argCount, OBJ *args) {
 			originWidth * scale,
 			scale
 		);
+		#endif
+
+
+
 	}
 
 	UPDATE_DISPLAY();
@@ -2033,7 +2108,55 @@ static OBJ primAprilTag(int argCount, OBJ *args) { return falseObj; }
 
 // LVGL 
 // only for these boards:
-#if defined(LVGL)
+#if defined(LVGL) && defined(TFT_ESPI)
+	#include <lvgl.h>
+	void setup_lvgl(void); 
+	extern bool useLVGL;
+	extern bool LVGL_initialized;
+
+
+	void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map) {
+		uint16_t w = area->x2 - area->x1 + 1;
+		uint16_t h = area->y2 - area->y1 + 1;
+
+		uint16_t *color_buf = (uint16_t *)px_map;
+
+		tft.startWrite();
+		tft.setAddrWindow(area->x1, area->y1, w, h);
+
+		// Send entire area with DMA
+		tft.pushPixelsDMA(color_buf, w * h);
+
+		tft.endWrite();
+
+		// Immediately notify LVGL since TFT_eSPI handles DMA behind the scenes
+		lv_disp_flush_ready(disp);
+	}
+	/*Read the touchpad*/
+	#if defined(HAS_TOUCH_SCREEN)
+		void my_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data) {
+			/*
+			uint16_t x_raw,y_raw;
+			if (ts.touched()) {
+			TS_Point p = ts.getPoint();
+			// Map raw touch to screen coordinates
+			data->state = LV_INDEV_STATE_PR;
+			data->point.x = map(p.x, 200, 3800, 0, TFT_WIDTH);
+			data->point.y = map(p.y, 250, 3900,  TFT_HEIGHT,0);
+			*/
+			// use global functions
+			if (!tft.dmaBusy() && screenTouched()) {
+				data->state = LV_INDEV_STATE_PR;
+				data->point.x = screenTouchX();
+				data->point.y = screenTouchY();
+			
+			} else {
+			data->state = LV_INDEV_STATE_RELEASED;
+			}
+		}
+	#endif
+
+#elif defined(LVGL) && !defined(TFT_ESPI)
 #include <lvgl.h>
 void setup_lvgl(void); 
 extern bool useLVGL;
@@ -2080,10 +2203,17 @@ void my_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data) {
     }
 }
 #endif
+#endif
 
+#if defined(LVGL)
 #define TFT_BUFFER_LINES 40
 static lv_draw_buf_t draw_buf;
-static lv_color_t buf[TFT_WIDTH * TFT_BUFFER_LINES];
+static lv_color_t *buf1;
+static lv_color_t *buf2;
+//static lv_color_t buf[TFT_WIDTH * TFT_BUFFER_LINES];
+
+ 
+
 static lv_display_t * disp;
 
 
@@ -2106,19 +2236,35 @@ void setup_lvgl() {
 	  sprintf(s,"free heap after: %d psram: %d ",  ESP.getFreeHeap(),ESP.getFreePsram());
 	  outputString(s);
 	  */
-  lv_init();
-  lv_draw_buf_init(&draw_buf,
-                     TFT_WIDTH,
-                     TFT_BUFFER_LINES,                    // height of buffer in pixels
-                     LV_COLOR_FORMAT_RGB565, // 16-bit color format
-                     TFT_WIDTH * sizeof(lv_color_t), // stride: width in bytes per row
-                     buf,
-                     sizeof(buf));
+  	lv_init();
+	// double buffer
 
-disp = lv_display_create(TFT_WIDTH, TFT_HEIGHT);
-    lv_display_set_draw_buffers(disp, &draw_buf, NULL);
+#include "esp_heap_caps.h"
+
+ 	size_t buf_size = TFT_WIDTH * TFT_BUFFER_LINES * sizeof(lv_color_t);
+ 	char s[100];
+	 sprintf(s,"free heap before: %d psram: %d ",  ESP.getFreeHeap(),ESP.getFreePsram());
+	 outputString(s);
+    
+	  
+
+	buf1 = (lv_color_t *)heap_caps_malloc(TFT_WIDTH * 40 * sizeof(lv_color_t), MALLOC_CAP_DMA);
+ 	buf2 = (lv_color_t *)heap_caps_malloc(TFT_WIDTH * 40 * sizeof(lv_color_t), MALLOC_CAP_DMA);
+
+ 	if (buf1)  outputString("malloc succesfull");
+	 else outputString("cannot mallocsuccesfull");
+	
+	  sprintf(s,"free heap after: %d psram: %d ",  ESP.getFreeHeap(),ESP.getFreePsram());
+	  outputString(s);
+
+	disp = lv_display_create(TFT_WIDTH, TFT_HEIGHT);
+    lv_display_set_buffers(disp, buf1, buf2, TFT_WIDTH * 40, LV_DISPLAY_RENDER_MODE_PARTIAL);
     lv_display_set_flush_cb(disp, my_disp_flush);
-    lv_display_set_resolution(disp, TFT_WIDTH, TFT_HEIGHT);
+	#if defined(TFT_ESPI)
+		lv_display_set_resolution(disp, TFT_HEIGHT, TFT_WIDTH);
+	#else
+    	lv_display_set_resolution(disp, TFT_WIDTH, TFT_HEIGHT);
+	#endif
    #if defined(HAS_TOUCH_SCREEN)
 	/*Initialize the (dummy) input device driver*/
 		lv_indev_t * indev = lv_indev_create();
@@ -2128,6 +2274,7 @@ disp = lv_display_create(TFT_WIDTH, TFT_HEIGHT);
 	#endif
 	LVGL_initialized = true;
 }
+
 
 void set_lvgl(bool use_lvgl) {
 	if (use_lvgl) {

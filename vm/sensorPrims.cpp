@@ -439,6 +439,13 @@ static OBJ primI2cSetPins(int argCount, OBJ *args) {
 	#define BitOrder int
 #endif
 
+//sodb
+//#define USE_HSPI
+
+#if defined(USE_HSPI)
+	SPIClass hspi(VSPI); 
+#endif
+
 static int spiSpeed = 1000000;
 static int spiMode = SPI_MODE0;
 static BitOrder spiBitOrder = MSBFIRST;
@@ -470,8 +477,15 @@ static void initSPI() {
 			SPI.setMOSI(mapDigitalPinNum(14));
 		}
 	#endif
+#if defined(USE_HSPI)
+	hspi.begin();
+	hspi.beginTransaction(SPISettings(spiSpeed, spiBitOrder, spiMode));
+#else
 	SPI.begin();
 	SPI.beginTransaction(SPISettings(spiSpeed, spiBitOrder, spiMode));
+#endif
+
+
 }
 
 OBJ primSPISend(OBJ *args) {
@@ -479,15 +493,25 @@ OBJ primSPISend(OBJ *args) {
 	unsigned data = obj2int(args[0]);
 	if (data > 255) return fail(i2cValueOutOfRange);
 	initSPI();
+	#if defined(USE_HSPI)
+	hspi.transfer(data); // send data byte to the slave
+	hspi.endTransaction();
+	#else
 	SPI.transfer(data); // send data byte to the slave
 	SPI.endTransaction();
+	#endif
 	return falseObj;
 }
 
 OBJ primSPIRecv(OBJ *args) {
 	initSPI();
+		#if defined(USE_HSPI)
+	int result = hspi.transfer(0); // send a zero byte while receiving a data byte from slave
+	hspi.endTransaction();
+	#else
 	int result = SPI.transfer(0); // send a zero byte while receiving a data byte from slave
 	SPI.endTransaction();
+	#endif
 	return int2obj(result);
 }
 
@@ -521,9 +545,17 @@ OBJ primSPIExchange(int argCount, OBJ *args) {
 	int byteCount = BYTES(args[0]);
 	initSPI();
 	for (int i = 0; i < byteCount; i++) {
+		#if defined(USE_HSPI)
+		data[i] = hspi.transfer(data[i]);
+		#else
 		data[i] = SPI.transfer(data[i]);
+		#endif
 	}
+	#if defined(USE_HSPI)
+	hspi.endTransaction();
+	#else
 	SPI.endTransaction();
+	#endif
 	return falseObj;
 }
 
