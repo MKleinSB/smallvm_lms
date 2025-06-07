@@ -4,13 +4,13 @@ author Ste7an
 version 1 1 
 description 'LVGL support for MicroBlocks'
 
-choices obj_types button arc slider led switch
+choices obj_types button arc slider led switch bar
 choices style_types min max elements 
   spec ' ' '[tft:LVGLon]' 'enable_lvgl _' 'bool' true
   spec ' ' '[tft:LVGLaddbtn]' 'btn _ text _ : scale _ event _' 'str str num bool' 'btn' 'label' 1 true
   spec ' ' '[tft:LVGLaddlabel]' 'label _ text _ : scale _' 'str str num ' 'label' 'text' 1
   spec ' ' '[tft:LVGLaddslider]' 'slider _ : event _' 'str bool' 'slider' false
-  spec ' ' '[tft:LVGLaddobject]' 'add _ as _'  'str.obj_types str' 'button' ''
+  spec ' ' '[tft:LVGLaddobj]' 'add _ as _ : parent _ '  'str.obj_types str str' 'button' '' 'scr_act'
   spec ' ' '[tft:LVGLaddstyle]' 'set _ of _ to _ '  'str.style_types str auto' 'min' '' ''
 
   spec ' ' '[tft:LVGLaddarc]' 'arc _ : event _' 'str bool' 'arc' false

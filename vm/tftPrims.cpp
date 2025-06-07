@@ -2406,7 +2406,7 @@ const lv_font_t* get_font_from_scale(int scale_x) {
 }
 
 
-void ui_create_button(char * button_name, char * label_text, int scale,  bool event) {
+void ui_create_button_label(char * button_name, char * label_text, int scale,  bool event) {
 	if (!registry.get(button_name)) {
 		lv_obj_t* obj = lv_btn_create(lv_screen_active());
 		if (event) {
@@ -2418,6 +2418,20 @@ void ui_create_button(char * button_name, char * label_text, int scale,  bool ev
 		lv_label_set_text(label, label_text);
 		lv_obj_set_style_text_font(label, get_font_from_scale(scale), LV_PART_MAIN);
 		lv_obj_center(label);
+		registry.add(button_name, obj);
+	}
+
+}
+
+
+void ui_create_button(char * button_name,  bool event) {
+	if (!registry.get(button_name)) {
+		lv_obj_t* obj = lv_btn_create(lv_screen_active());
+		if (event) {
+			lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_CLICKED, NULL);
+			//outputString("event added to button");
+		}
+		// sodb: check whether kabek is correctly removes when partent btn object is deleted
 		registry.add(button_name, obj);
 	}
 
@@ -2449,6 +2463,33 @@ void ui_create_arc(char * arc_name, bool event) {
 		registry.add(arc_name, obj);
 	}
 }
+
+
+void ui_create_switch(char * switch_name, bool event) {
+    if (!registry.get(switch_name)) {
+		lv_obj_t* obj = lv_switch_create(lv_scr_act());
+		if (event) lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(switch_name, obj);
+	}
+}
+
+
+void ui_create_led(char * led_name, bool event) {
+    if (!registry.get(led_name)) {
+		lv_obj_t* obj = lv_led_create(lv_scr_act());
+		if (event) lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(led_name, obj);
+	}
+}
+
+void ui_create_bar(char * obj_name, bool event) {
+    if (!registry.get(obj_name)) {
+		lv_obj_t* obj = lv_bar_create(lv_scr_act());
+		if (event) lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
 
 void ui_delete_obj(char * obj_name) {
     lv_obj_t* obj = registry.get(obj_name);
@@ -2483,6 +2524,21 @@ void ui_set_value(char * obj_name, int value) {
 		} else 
 		if (lv_obj_get_class(obj) == &lv_slider_class) {
 			lv_slider_set_value(obj, value, LV_ANIM_OFF);
+		} else
+		if (lv_obj_get_class(obj) == &lv_bar_class) {
+			lv_bar_set_value(obj, value, LV_ANIM_OFF);
+		} else
+		if (lv_obj_get_class(obj) == &lv_switch_class) {
+			if (value==0) lv_obj_remove_state(obj, LV_STATE_CHECKED);
+			else if (value&1) lv_obj_add_state(obj, LV_STATE_CHECKED);
+			else if (value>1) lv_obj_add_state(obj, value);
+			else if (value<0) lv_obj_remove_state(obj, -value);
+			
+		} else
+		if (lv_obj_get_class(obj) == &lv_led_class) {
+			if (value==0) lv_led_off(obj);
+			else lv_led_on(obj);
+			
 		}
 	}
 }
@@ -2540,6 +2596,33 @@ void printall() {
 
 }
 
+
+// helper code for object selection
+
+typedef enum {
+    CMD_UNKNOWN = -1,
+    CMD_BUTTON,
+    CMD_ARC,
+    CMD_SLIDER,
+    CMD_LED,
+    CMD_SWITCH,
+	CMD_BAR,
+    CMD_COUNT
+} Command;
+
+
+Command lookup_cmd(const char *s) {
+    if (strcmp(s, "button") == 0)   return CMD_BUTTON;
+    if (strcmp(s, "arc") == 0)      return CMD_ARC;
+    if (strcmp(s, "slider") == 0)   return CMD_SLIDER;
+    if (strcmp(s, "led") == 0)      return CMD_LED;
+    if (strcmp(s, "switch") == 0)   return CMD_SWITCH;
+	if (strcmp(s, "bar") == 0)   return CMD_BAR;
+	
+    return CMD_UNKNOWN;
+}
+
+
 // primLVGL function definitions
 static OBJ primLVGLprintall(int argCount, OBJ *args) {
 	printall();
@@ -2567,7 +2650,7 @@ static OBJ primLVGLaddBtn(int argCount, OBJ *args) {
 		scale = obj2int(args[2]);
 	}
 	bool event = (argCount > 3) ? (trueObj == args[3]) : true;
-	ui_create_button(obj_name, label, scale, event);
+	ui_create_button_label(obj_name, label, scale, event);
 	return falseObj;
 }
 
@@ -2596,6 +2679,44 @@ static OBJ primLVGLaddArc(int argCount, OBJ *args) {
 	return falseObj;
 }
 
+static OBJ primLVGLaddObject(int argCount, OBJ *args) {
+	char* obj_type = obj2str(args[0]);
+	char* obj_name = obj2str(args[1]);
+	//bool event = (argCount > 1) ? (trueObj == args[1]) : true;
+	Command cmd = lookup_cmd(obj_type);
+	switch (cmd) {
+		case CMD_BUTTON:
+			outputString("Handle BUTTON");
+			ui_create_button(obj_name,true);
+			break;
+		case CMD_ARC:
+			outputString("Handle ARC");
+			ui_create_arc(obj_name,true);
+			break;
+		case CMD_SLIDER:
+			outputString("Handle SLIDER");
+			ui_create_slider(obj_name,true);
+			break;
+		case CMD_LED:
+			outputString("Handle LED");
+			ui_create_led(obj_name,false);
+			break;
+		case CMD_SWITCH:
+			outputString("Handle SWITCH");
+			ui_create_switch(obj_name,true);
+			
+			break;
+		case CMD_BAR:
+			outputString("Handle BAR");
+			ui_create_bar(obj_name,true);
+			
+			break;
+		default:
+			outputString("Unknown command");;
+	}
+	return falseObj;
+}
+	
 
 static OBJ primLVGLdelObj(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
@@ -2779,6 +2900,7 @@ static PrimEntry entries[] = {
 	{"LVGLaddlabel",primLVGLaddLabel},
 	{"LVGLaddslider",primLVGLaddSlider},
 	{"LVGLaddarc",primLVGLaddArc},
+	{"LVGLaddobj",primLVGLaddObject},
 	{"LVGLdelobj",primLVGLdelObj},
 	{"LVGLsetpos",primLVGLsetPos},
 	{"LVGLsetsize",primLVGLsetSize},
