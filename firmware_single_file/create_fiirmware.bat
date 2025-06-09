@@ -2,7 +2,7 @@
 
 set "param=%1"
 if "%1"=="" (
-    set "param=esp32"
+    set "param=esp32_tft"
 )
 
 for /f %%a in ('wmic os get localdatetime ^| find "."') do set datetime=%%a
