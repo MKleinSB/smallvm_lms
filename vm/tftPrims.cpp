@@ -2217,6 +2217,70 @@ static lv_color_t *buf2;
 static lv_display_t * disp;
 
 
+// some includes for c++ maps etc.
+#include <unordered_map>
+#include <string>
+#include <functional>
+#include <vector>
+
+class LVObjectRegistry {
+public:
+    void add(const std::string& name, lv_obj_t* obj) {
+        registry[name] = obj;
+    }
+
+    lv_obj_t* get(const std::string& name) const {
+		if (name == "lv_scr_act") {
+			return lv_scr_act();
+		} else {
+     		auto it = registry.find(name);
+        return it != registry.end() ? it->second : nullptr;
+		}
+    }
+
+    bool remove(const std::string& name) {
+        return registry.erase(name) > 0;
+    }
+
+    void printall() {
+         for (const auto& pair : registry) {
+             char s[100];
+			sprintf(s,"name %s ",pair.first.c_str());
+			outputString(s);
+    	}
+	}
+
+    size_t size() const {
+        return registry.size();
+    }
+
+	std::vector<std::string> getAllNames() const {
+        std::vector<std::string> names;
+        for (const auto& entry : registry) {
+            names.push_back(entry.first);
+        }
+        return names;
+    }
+
+	std::string findNameFor(lv_obj_t* obj) const {
+        for (const auto& pair : registry) {
+            if (pair.second == obj) {
+                return pair.first;
+				//  char s[100];
+				// sprintf(s,"find name %s ",pair.first.c_str());
+				// outputString(s);
+            }
+        }
+        return "";
+    }
+
+private:
+    std::unordered_map<std::string, lv_obj_t*> registry;
+};
+
+LVObjectRegistry registry;
+
+
 void setup_lvgl() {
 	/*
 	#include "esp_heap_caps.h"
@@ -2303,64 +2367,7 @@ void lvgl_tick() {
      lv_timer_handler();
 }
 
-// some includes for c++ maps etc.
-#include <unordered_map>
-#include <string>
-#include <functional>
-#include <vector>
 
-class LVObjectRegistry {
-public:
-    void add(const std::string& name, lv_obj_t* obj) {
-        registry[name] = obj;
-    }
-
-    lv_obj_t* get(const std::string& name) const {
-        auto it = registry.find(name);
-        return it != registry.end() ? it->second : nullptr;
-    }
-
-    bool remove(const std::string& name) {
-        return registry.erase(name) > 0;
-    }
-
-    void printall() {
-         for (const auto& pair : registry) {
-             char s[100];
-			sprintf(s,"name %s ",pair.first.c_str());
-			outputString(s);
-    	}
-	}
-
-    size_t size() const {
-        return registry.size();
-    }
-
-	std::vector<std::string> getAllNames() const {
-        std::vector<std::string> names;
-        for (const auto& entry : registry) {
-            names.push_back(entry.first);
-        }
-        return names;
-    }
-
-	std::string findNameFor(lv_obj_t* obj) const {
-        for (const auto& pair : registry) {
-            if (pair.second == obj) {
-                return pair.first;
-				//  char s[100];
-				// sprintf(s,"find name %s ",pair.first.c_str());
-				// outputString(s);
-            }
-        }
-        return "";
-    }
-
-private:
-    std::unordered_map<std::string, lv_obj_t*> registry;
-};
-
-LVObjectRegistry registry;
 
 // in lvgl 9 there is no LV_EVENT_NONE defined, so define it ourselves
 #define LV_EVENT_NONE_CUSTOM (lv_event_code_t)(-1)
@@ -2406,90 +2413,119 @@ const lv_font_t* get_font_from_scale(int scale_x) {
 }
 
 
-void ui_create_button_label(char * button_name, char * label_text, int scale,  bool event) {
-	if (!registry.get(button_name)) {
-		lv_obj_t* obj = lv_btn_create(lv_screen_active());
-		if (event) {
-			lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_CLICKED, NULL);
-			//outputString("event added to button");
+void ui_create_button_label(char * obj_name, int scale, const char * label_text, const char * parent_name) {
+	lv_obj_t* parent = registry.get(parent_name);
+	lv_obj_t* obj;
+	if (!registry.get(obj_name) && parent) {
+		if (lv_obj_get_class(parent) == &lv_list_class) {
+			obj = lv_list_add_button(parent, NULL, label_text);
+		} else {
+			obj = lv_btn_create(parent);
+			// sodb: check whether kabek is correctly removes when partent btn object is deleted
+			lv_obj_t * label = lv_label_create(obj);
+			lv_label_set_text(label, label_text);
+			lv_obj_set_style_text_font(label, get_font_from_scale(scale), LV_PART_MAIN);
+			lv_obj_center(label);
 		}
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_CLICKED, NULL);
+		registry.add(obj_name, obj);
+	}
+
+}
+
+
+void ui_create_button(char * obj_name, const char * parent) {
+	if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_btn_create(registry.get(parent));
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_CLICKED, NULL);
 		// sodb: check whether kabek is correctly removes when partent btn object is deleted
-		lv_obj_t * label = lv_label_create(obj);
+		registry.add(obj_name, obj);
+	}
+
+}
+
+void ui_create_label(char * obj_name, int scale, const char * label_text, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* label = lv_label_create(registry.get(parent));
 		lv_label_set_text(label, label_text);
 		lv_obj_set_style_text_font(label, get_font_from_scale(scale), LV_PART_MAIN);
-		lv_obj_center(label);
-		registry.add(button_name, obj);
-	}
-
-}
-
-
-void ui_create_button(char * button_name,  bool event) {
-	if (!registry.get(button_name)) {
-		lv_obj_t* obj = lv_btn_create(lv_screen_active());
-		if (event) {
-			lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_CLICKED, NULL);
-			//outputString("event added to button");
-		}
-		// sodb: check whether kabek is correctly removes when partent btn object is deleted
-		registry.add(button_name, obj);
-	}
-
-}
-
-void ui_create_label(char * label_name, char * label_text, int scale) {
-    if (!registry.get(label_name)) {
-		lv_obj_t* label = lv_label_create(lv_scr_act());
-		lv_label_set_text(label, label_text);
-		lv_obj_set_style_text_font(label, get_font_from_scale(scale), LV_PART_MAIN);
-		registry.add(label_name, label);
+		registry.add(obj_name, label);
 	}
 }
 
 
-void ui_create_slider(char * slider_name, bool event) {
-    if (!registry.get(slider_name)) {
-		lv_obj_t* obj = lv_slider_create(lv_scr_act());
-		if (event) lv_obj_add_event_cb(obj, ui_log_event_cb,LV_EVENT_VALUE_CHANGED, NULL);
+void ui_create_slider(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_slider_create(registry.get(parent));
+		lv_obj_add_event_cb(obj, ui_log_event_cb,LV_EVENT_VALUE_CHANGED, NULL);
 		lv_slider_set_range(obj, 0, 100);
-		registry.add(slider_name, obj);
-	}
-}
-
-void ui_create_arc(char * arc_name, bool event) {
-    if (!registry.get(arc_name)) {
-		lv_obj_t* obj = lv_arc_create(lv_scr_act());
-		if (event) lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-		registry.add(arc_name, obj);
-	}
-}
-
-
-void ui_create_switch(char * switch_name, bool event) {
-    if (!registry.get(switch_name)) {
-		lv_obj_t* obj = lv_switch_create(lv_scr_act());
-		if (event) lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-		registry.add(switch_name, obj);
-	}
-}
-
-
-void ui_create_led(char * led_name, bool event) {
-    if (!registry.get(led_name)) {
-		lv_obj_t* obj = lv_led_create(lv_scr_act());
-		if (event) lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-		registry.add(led_name, obj);
-	}
-}
-
-void ui_create_bar(char * obj_name, bool event) {
-    if (!registry.get(obj_name)) {
-		lv_obj_t* obj = lv_bar_create(lv_scr_act());
-		if (event) lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 		registry.add(obj_name, obj);
 	}
 }
 
+void ui_create_arc(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_arc_create(registry.get(parent));
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
+
+void ui_create_switch(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_switch_create(registry.get(parent));
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
+
+void ui_create_led(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_led_create(registry.get(parent));
+		// lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
+void ui_create_bar(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_bar_create(registry.get(parent));
+		// lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
+void ui_create_tabview(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_tabview_create(registry.get(parent));
+		// lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
+void ui_add_tab(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_tabview_add_tab(registry.get(parent),obj_name);
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
+void ui_create_list(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_list_create(registry.get(parent));
+		// lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
+void ui_set_parent(char * obj_name, const char * parent){
+	if (registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_set_parent(registry.get(obj_name), registry.get(parent));
+	}
+}
 
 void ui_delete_obj(char * obj_name) {
     lv_obj_t* obj = registry.get(obj_name);
@@ -2537,7 +2573,8 @@ void ui_set_value(char * obj_name, int value) {
 		} else
 		if (lv_obj_get_class(obj) == &lv_led_class) {
 			if (value==0) lv_led_off(obj);
-			else lv_led_on(obj);
+			else if (value&1) lv_led_on(obj);
+			else lv_led_set_brightness(obj,value);
 			
 		}
 	}
@@ -2581,12 +2618,20 @@ void ui_set_color_2nd(char * obj_name, int color) {
 			lv_obj_t *label = lv_obj_get_child(obj, 0);
 			lv_obj_set_style_text_color(label, lv_color_hex(color), 0); 
 		} else if (lv_obj_get_class(obj) == &lv_arc_class) {
-			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_KNOB);
 			lv_obj_set_style_arc_color(obj, lv_color_hex(color), LV_PART_INDICATOR);
 		}
  		else {
-			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_KNOB);
 			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_INDICATOR);
+		}
+	}
+}
+void ui_set_color_3rd(char * obj_name, int color) {
+	lv_obj_t* obj = registry.get(obj_name);
+	if (obj) {
+		if (lv_obj_get_class(obj) == &lv_arc_class) {
+			lv_obj_set_style_arc_color(obj, lv_color_hex(color), LV_PART_KNOB);
+		} else {
+			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_KNOB);
 		}
 	}
 }
@@ -2602,22 +2647,29 @@ void printall() {
 typedef enum {
     CMD_UNKNOWN = -1,
     CMD_BUTTON,
+	CMD_LABEL,
     CMD_ARC,
     CMD_SLIDER,
     CMD_LED,
     CMD_SWITCH,
 	CMD_BAR,
+	CMD_TABVIEW,
+	CMD_LIST,
     CMD_COUNT
 } Command;
 
 
 Command lookup_cmd(const char *s) {
     if (strcmp(s, "button") == 0)   return CMD_BUTTON;
+	if (strcmp(s, "label") == 0)    return CMD_LABEL;
     if (strcmp(s, "arc") == 0)      return CMD_ARC;
     if (strcmp(s, "slider") == 0)   return CMD_SLIDER;
     if (strcmp(s, "led") == 0)      return CMD_LED;
     if (strcmp(s, "switch") == 0)   return CMD_SWITCH;
-	if (strcmp(s, "bar") == 0)   return CMD_BAR;
+	if (strcmp(s, "bar") == 0)   	return CMD_BAR;
+	if (strcmp(s, "tabview") == 0)  return CMD_TABVIEW;
+	if (strcmp(s, "list") == 0)     return CMD_LIST;
+	
 	
     return CMD_UNKNOWN;
 }
@@ -2645,78 +2697,141 @@ static OBJ primLVGLgetallobjs(int argCount, OBJ *args) {
 static OBJ primLVGLaddBtn(int argCount, OBJ *args) {
 	int scale = 1;
 	char* obj_name = obj2str(args[0]);
-	char* label = obj2str(args[1]);
+	const char *label_text;
+	if (argCount >1) {
+		scale = obj2int(args[1]);
+	} else scale=1;
 	if (argCount >2) {
-		scale = obj2int(args[2]);
+		label_text = obj2str(args[2]);
+	} else 	label_text = obj2str(args[0]);
+	const char *parent;
+	if (argCount > 3) {
+		parent = obj2str(args[3]);
+	} else {
+		parent = "lv_scr_act";
 	}
-	bool event = (argCount > 3) ? (trueObj == args[3]) : true;
-	ui_create_button_label(obj_name, label, scale, event);
+	char s[100];
+	sprintf(s,"btn: %s %s %d %s",obj_name, label_text, scale, parent );
+	outputString(s);
+	ui_create_button_label(obj_name, scale, label_text, parent);
 	return falseObj;
 }
 
 static OBJ primLVGLaddLabel(int argCount, OBJ *args) {
 	int scale = 1;
 	char* label_name = obj2str(args[0]);
-	char* label_text = obj2str(args[1]);
+	const char *label_text;
+	if (argCount >1) {
+		scale = obj2int(args[1]);
+	} else scale =1;
 	if (argCount >2) {
-		scale = obj2int(args[2]);
+		label_text = obj2str(args[2]);
+	} else 	label_text = obj2str(args[0]);
+	const char *parent;
+	if (argCount > 3) {
+		parent = obj2str(args[3]);
+	} else {
+		parent = "lv_scr_act";
 	}
-	ui_create_label(label_name, label_text, scale);
+	ui_create_label(label_name, scale, label_text, parent);
 	return falseObj;
 }
 
 static OBJ primLVGLaddSlider(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
-	bool event = (argCount > 1) ? (trueObj == args[1]) : true;
-	ui_create_slider(obj_name,event);
+	const char *parent;
+	if (argCount > 1) {
+		parent = obj2str(args[1]);
+	} else {
+		parent = "lv_scr_act";
+	}
+	ui_create_slider(obj_name, parent);
 	return falseObj;
 }
 
+static OBJ primLVGLaddTab(int argCount, OBJ *args) {
+	char* obj_name = obj2str(args[0]);
+	char* parent = obj2str(args[1]);
+	ui_add_tab(obj_name, parent);
+	return falseObj;
+}
+
+
+
 static OBJ primLVGLaddArc(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
-	bool event = (argCount > 1) ? (trueObj == args[1]) : true;
-	ui_create_arc(obj_name,event);
+	const char *parent;
+	if (argCount > 1) {
+		parent = obj2str(args[1]);
+	} else {
+		parent = "lv_scr_act";
+	}
+	ui_create_arc(obj_name, parent);
 	return falseObj;
 }
 
 static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 	char* obj_type = obj2str(args[0]);
 	char* obj_name = obj2str(args[1]);
+	const char *parent;
+	if (argCount > 2) {
+		parent = obj2str(args[2]);
+	} else {
+		parent = "lv_scr_act";
+	}
 	//bool event = (argCount > 1) ? (trueObj == args[1]) : true;
 	Command cmd = lookup_cmd(obj_type);
 	switch (cmd) {
 		case CMD_BUTTON:
 			outputString("Handle BUTTON");
-			ui_create_button(obj_name,true);
+			ui_create_button(obj_name, parent);
 			break;
 		case CMD_ARC:
 			outputString("Handle ARC");
-			ui_create_arc(obj_name,true);
+			ui_create_arc(obj_name, parent);
 			break;
 		case CMD_SLIDER:
 			outputString("Handle SLIDER");
-			ui_create_slider(obj_name,true);
+			ui_create_slider(obj_name, parent);
 			break;
 		case CMD_LED:
 			outputString("Handle LED");
-			ui_create_led(obj_name,false);
+			ui_create_led(obj_name, parent);
 			break;
 		case CMD_SWITCH:
 			outputString("Handle SWITCH");
-			ui_create_switch(obj_name,true);
-			
+			ui_create_switch(obj_name, parent);
 			break;
 		case CMD_BAR:
 			outputString("Handle BAR");
-			ui_create_bar(obj_name,true);
-			
+			ui_create_bar(obj_name, parent);
 			break;
+		case CMD_TABVIEW:
+			outputString("Handle TABVIEW");
+			ui_create_tabview(obj_name, parent);
+			break;
+		case CMD_LIST:
+			outputString("Handle TABVIEW");
+			ui_create_list(obj_name, parent);
+			break;
+			
+		// case CMD_SCALE:
+		// 	outputString("Handle TABVIEW");
+		// 	ui_create_tabview(obj_name, parent);
+		// 	break;
 		default:
 			outputString("Unknown command");;
 	}
 	return falseObj;
 }
-	
+
+static OBJ primLVGLsetParent(int argCount, OBJ *args) {
+	char* obj = obj2str(args[0]);
+	char* parent = obj2str(args[1]);
+	ui_set_parent(obj, parent);
+	return falseObj;
+}
+
 
 static OBJ primLVGLdelObj(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
@@ -2776,6 +2891,11 @@ static OBJ primLVGLsetColor(int argCount, OBJ *args) {
 		color = obj2int(args[2]);
 		ui_set_color_2nd(obj_name, color);
 	}
+	if ( argCount > 3) {
+		color = obj2int(args[3]);
+		ui_set_color_3rd(obj_name, color);
+	}
+	
 	return falseObj;}
 
 
@@ -2900,8 +3020,10 @@ static PrimEntry entries[] = {
 	{"LVGLaddlabel",primLVGLaddLabel},
 	{"LVGLaddslider",primLVGLaddSlider},
 	{"LVGLaddarc",primLVGLaddArc},
+	{"LVGLaddtab",primLVGLaddTab},
 	{"LVGLaddobj",primLVGLaddObject},
 	{"LVGLdelobj",primLVGLdelObj},
+	{"LVGLsetparent",primLVGLsetParent},
 	{"LVGLsetpos",primLVGLsetPos},
 	{"LVGLsetsize",primLVGLsetSize},
 	{"LVGLsetval", primLVGLsetVal},
