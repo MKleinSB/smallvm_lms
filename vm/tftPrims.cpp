@@ -2628,11 +2628,7 @@ void ui_set_color_2nd(char * obj_name, int color) {
 void ui_set_color_3rd(char * obj_name, int color) {
 	lv_obj_t* obj = registry.get(obj_name);
 	if (obj) {
-		if (lv_obj_get_class(obj) == &lv_arc_class) {
-			lv_obj_set_style_arc_color(obj, lv_color_hex(color), LV_PART_KNOB);
-		} else {
-			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_KNOB);
-		}
+		lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_KNOB);
 	}
 }
 
