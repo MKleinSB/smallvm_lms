@@ -16,6 +16,9 @@
 #include "mem.h"
 #include "interp.h"
 
+#include <LittleFS.h>
+#include <FS.h>
+
 int useTFT = false;
 int isOLED1106 = false;
 
@@ -2281,6 +2284,74 @@ private:
 LVObjectRegistry registry;
 
 
+
+void fs_init() {
+  if (!LittleFS.begin()) {
+    outputString("LittleFS mount failed");
+    while (true) delay(1000);
+  }
+  outputString("LittleFS mounted.");
+}
+bool my_ready_cb(lv_fs_drv_t *) {
+  return true;
+}
+
+void *my_open_cb(lv_fs_drv_t *, const char *path, lv_fs_mode_t mode) {
+  char full_path[64];
+  snprintf(full_path, sizeof(full_path), "/%s", path);
+  const char *fmode = (mode == LV_FS_MODE_WR) ? "w" : "r";
+  File *f = new File(LittleFS.open(full_path, fmode));
+  if (!f || !*f) {
+    delete f;
+    return nullptr;
+  }
+  outputString("file oped");
+  outputString(full_path);
+  return f;
+}
+
+lv_fs_res_t my_close_cb(lv_fs_drv_t *, void *file_p) {
+  File *f = static_cast<File *>(file_p);
+  f->close();
+  delete f;
+  return LV_FS_RES_OK;
+}
+
+lv_fs_res_t my_read_cb(lv_fs_drv_t *, void *file_p, void *buf, uint32_t btr, uint32_t *br) {
+  File *f = static_cast<File *>(file_p);
+  *br = f->read((uint8_t *)buf, btr);
+  uint8_t *cp = (uint8_t*)br;
+  return LV_FS_RES_OK;
+}
+
+lv_fs_res_t my_seek_cb(lv_fs_drv_t *, void *file_p, uint32_t pos, lv_fs_whence_t whence) {
+  File *f = static_cast<File *>(file_p);
+  if (whence == LV_FS_SEEK_CUR) f->seek(pos + f->position());
+  else if (whence == LV_FS_SEEK_END) f->seek(f->size() - pos);
+  else f->seek(pos);
+  return LV_FS_RES_OK;
+}
+
+lv_fs_res_t my_tell_cb(lv_fs_drv_t *, void *file_p, uint32_t *pos) {
+  File *f = static_cast<File *>(file_p);
+  *pos = f->position();
+  return LV_FS_RES_OK;
+}
+
+// Register LittleFS with LVGL
+void lv_fs_littlefs_init() {
+  static lv_fs_drv_t drv;
+  lv_fs_drv_init(&drv);
+  drv.letter = 'L';
+  drv.ready_cb = my_ready_cb;
+  drv.open_cb = my_open_cb;
+  drv.close_cb = my_close_cb;
+  drv.read_cb = my_read_cb;
+  drv.seek_cb = my_seek_cb;
+  drv.tell_cb = my_tell_cb;
+  lv_fs_drv_register(&drv);
+}
+
 void setup_lvgl() {
 	/*
 	#include "esp_heap_caps.h"
@@ -2336,6 +2407,9 @@ void setup_lvgl() {
 		lv_indev_set_read_cb(indev, my_touchpad_read);
 		if (!touchEnabled) touchInit();
 	#endif
+
+ fs_init() ;
+lv_fs_littlefs_init();
 	LVGL_initialized = true;
 }
 
@@ -2411,6 +2485,28 @@ const lv_font_t* get_font_from_scale(int scale_x) {
         default: return &lv_font_montserrat_14; // default fallback
     }
 }
+
+
+
+
+void ui_add_image(char * obj_name, const char *path, const char * parent_name) {
+	lv_obj_t* parent = registry.get(parent_name);
+	lv_obj_t* obj;
+    // Create an img object
+    
+	if (!registry.get(obj_name) && parent) {
+		lv_obj_t *obj = lv_img_create(lv_screen_active());
+		// Set image source from file
+		lv_img_set_src(obj, path);
+		outputString("ui_add_image");
+		outputString(path);
+		// Optional: align or move the image
+		//lv_obj_center(img);
+		registry.add(obj_name, obj);
+	}
+}
+
+
 
 
 void ui_create_button_label(char * obj_name, int scale, const char * label_text, const char * parent_name) {
@@ -2670,6 +2766,19 @@ Command lookup_cmd(const char *s) {
     return CMD_UNKNOWN;
 }
 
+static OBJ primLVGLaddimg(int argCount, OBJ *args) {
+	char* obj_name = obj2str(args[0]);
+	char* filename = obj2str(args[1]);
+	const char *parent;
+	if (argCount > 2) {
+		parent = obj2str(args[2]);
+	} else {
+		parent = "lv_scr_act";
+	}
+
+	ui_add_image(obj_name,filename,parent);
+	return falseObj;
+}
 
 // primLVGL function definitions
 static OBJ primLVGLprintall(int argCount, OBJ *args) {
@@ -3029,6 +3138,7 @@ static PrimEntry entries[] = {
 	{"LVGLsetcolor", primLVGLsetColor},
 	{"LVGLgetallobjs", primLVGLgetallobjs},
 	{"LVGLinit", primLVGLinit},
+	{"LVGLaddimg", primLVGLaddimg},
 #endif
 };
 
