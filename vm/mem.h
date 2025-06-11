@@ -50,12 +50,16 @@ extern "C" {
 	#define RP2040_PHILHOWER 1
 #endif
 
+#if defined(XRP) && defined(PICO_RP2350) && (PICO_RP2350A == 0)
+	#define XRP_2350 1
+#endif
+
 #if defined(BLE_IDE) || defined(BLE_KEYBOARD) || defined(BLE_UART) || defined(BLE_OCTO)
 	#define USE_NIMBLE 1
 #endif
 
 #if defined(ARDUINO_BBC_MICROBIT) || defined(ARDUINO_CALLIOPE_MINI) || defined(CALLIOPE_V3) || \
-	defined(ARDUINO_BBC_MICROBIT_V2) || defined(ARDUINO_M5Atom_Matrix_ESP32) || \
+	defined(ARDUINO_BBC_MICROBIT_V2) || defined(M5Atom_Matrix) || \
 	defined(GNUBLOCKS) || defined(ARDUINO_Mbits) || defined(STEAMaker) || defined(FOXBIT)
 		#define HAS_LED_MATRIX 1
 #endif

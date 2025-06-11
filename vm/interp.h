@@ -237,8 +237,14 @@ void vmPanic(const char *s);
 int indexOfVarNamed(const char *varName);
 void processFileMessage(int msgType, int dataSize, char *data);
 void waitAndSendMessage(int msgType, int chunkIndex, int dataSize, char *data);
+void deferIDEDisconnect();
 void suspendCodeFileUpdates();
 void resumeCodeFileUpdates();
+
+// Debugging
+
+void consolePrint(const char *s);
+void consoleReportNum(const char *label, int n);
 
 // Integer Evaluation
 
@@ -374,6 +380,7 @@ void setup_lvgl(void);
 #endif
 
 // CoCube Sensor Support
+
 void cocubeSensorInit();
 void cocubeSensorUpdate();
 

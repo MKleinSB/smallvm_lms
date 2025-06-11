@@ -30,6 +30,10 @@
 int BLE_connected_to_IDE = false;
 int USB_connected_to_IDE = false;
 
+// Other Variables
+
+static uint32 lastSendTime = 0;
+
 char BLE_ThreeLetterID[4];
 static char bleDeviceName[32];
 
@@ -100,6 +104,16 @@ static void flashUserLED() {
 	updateMicrobitDisplay();
 }
 
+extern "C" void consolePrint(const char *s) {
+	Serial.println(s);
+}
+
+extern "C" void consoleReportNum(const char *label, int n) {
+	Serial.print(label);
+	Serial.print(": ");
+	Serial.println(n);
+}
+
 #if defined(BLE_IDE)
 
 // BLE Communications
@@ -108,8 +122,8 @@ static void flashUserLED() {
 
 // BLE_SEND_MAX - maximum bytes to send in a single attribute write (max is 512)
 // INTER_SEND_TIME - don't send data more often than this to avoid NimBLE error & disconnect
-#define BLE_SEND_MAX 250
-#define INTER_SEND_TIME 20
+#define BLE_SEND_MAX 240
+#define INTER_SEND_TIME 40
 
 static NimBLEServer *pServer = NULL;
 static NimBLEService *pService = NULL;
@@ -121,7 +135,6 @@ static NimBLECharacteristic *pUARTRxCharacteristic;
 
 static bool bleRunning = false;
 static uint16_t connID = -1;
-static uint32 lastSendTime = 0;
 static int lastRC = 0;
 
 // incoming BLE buffer
@@ -339,9 +352,9 @@ static uint16_t txCharacteristic = 0;
 static uint16_t rxCharacteristic = 0;
 static uint16_t uartTxCharacteristic = 0;
 static uint16_t uartRxCharacteristic = 0;
-static uint32 lastSendTime = 0;
 
-#define BLE_BUF_MAX 250 // 360 works, 380 fails; making both charactistics dynamic allows larger buffers
+// BLE_BUF_MAX max size of send and receive payloads
+#define BLE_BUF_MAX 240 // 360 works, 380 fails; making both charactistics dynamic allows larger buffers
 
 // incoming BLE buffer
 #define RECV_BUF_SIZE 1024
@@ -489,7 +502,15 @@ static void updateConnectionState() {
 	}
 }
 
+#define INTER_SEND_TIME 35
+
 static int bleSendData(uint8_t *data, int byteCount) {
+	// do not send more often than INTER_SEND_TIME msecs
+	uint32 now = millisecs();
+	if (lastSendTime > now) lastSendTime = 0; // clock wrap
+	if ((now - lastSendTime) < INTER_SEND_TIME) return 0;
+	lastSendTime = now;
+
 	if (byteCount <= 0) return 0;
 	if (byteCount > BLE_BUF_MAX) byteCount = BLE_BUF_MAX;
 
@@ -586,6 +607,12 @@ int sendBytes(uint8 *buf, int start, int end) {
 	// Send bytes buf[start] through buf[end - 1] and return the number of bytes sent.
 
 	if (!BLE_connected_to_IDE) { // no BLE connection; use Serial
+		// don't send serial data too often (needed on boards with USB serial)
+		uint32 now = millisecs();
+		if (lastSendTime > now) lastSendTime = 0; // clock wrap
+		if ((now - lastSendTime) < 15) return 0;
+		lastSendTime = now;
+
 		return Serial.write(&buf[start], end - start);
 	}
 

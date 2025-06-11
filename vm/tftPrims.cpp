@@ -34,6 +34,7 @@ static int deferUpdates = false;
 	defined(TTGO_RP2040) || defined(TTGO_DISPLAY) || defined(ARDUINO_M5STACK_Core2) || \
 	defined(GAMEPAD_DISPLAY) || defined(PICO_ED) || defined(OLED_128_64) || defined(COCUBE) || \
 	defined(ARDUINO_M5Atom_S3) || defined(LMSDISPLAY) || defined(LMS7789) || defined(UNIHIKER)
+	defined(M5Atom_S3_TFT)
 
 	//sodb
 	//#if !defined(TFT_ESPI)
@@ -920,7 +921,6 @@ void pca9535_BL() {
 
 		static void touchInit() {
 			ts.begin();
-			ts.setCalibration(X_MIN, X_MAX, Y_MIN, Y_MAX);
 			ts.setRotation(1);
 			touchEnabled = true;
 		}
@@ -933,19 +933,34 @@ void pca9535_BL() {
 		static int screenTouchX() {
 			if (!touchEnabled) touchInit();
 			if (!ts.touched()) { return -1; }
-			return ts.getMappedPoint().x;
+			uint16_t x, y;
+			uint8_t pressure;
+			ts.readData(&x, &y, &pressure);
+			x = (320 * (x - 256)) / 10;
+			if (x < 0) x = 0;
+			if (x > 320) x = 320;
+			return x;
 		}
 
 		static int screenTouchY() {
 			if (!touchEnabled) touchInit();
 			if (!ts.touched()) { return -1; }
-			return ts.getMappedPoint().y;
+			uint16_t x, y;
+			uint8_t pressure;
+			ts.readData(&x, &y, &pressure);
+			y = (240 * (y - 274)) / 14;
+			if (y < 0) y = 0;
+			if (y > 240) y = 240;
+			return y;
 		}
 
 		static int screenTouchPressure() {
 			if (!touchEnabled) touchInit();
 			if (!ts.touched()) { return -1; }
-			return ts.getMappedPoint().z;
+			uint16_t x, y;
+			uint8_t pressure;
+			ts.readData(&x, &y, &pressure);
+			return pressure;
 		}
 
 	#elif defined(SCOUT_MAKES_AZUL)
@@ -1313,7 +1328,7 @@ void pca9535_BL() {
 			delay(800);
 		}
 
-	#elif defined(ARDUINO_M5Atom_S3)
+	#elif defined(M5Atom_S3_TFT)
 		#include "Adafruit_GFX.h"
 		#include "Adafruit_ST7789.h"
 		#define TFT_MOSI 21
@@ -1335,19 +1350,16 @@ void pca9535_BL() {
 		};
 		AtomS3LCD tft = AtomS3LCD(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 
-
 		void tftInit() {
-
 			//tft.init(TFT_HEIGHT, TFT_WIDTH, SPI_MODE2);
 			//tft.setSPISpeed(40000000);
 			tft.init(TFT_HEIGHT, TFT_WIDTH);
-			tft.setOffsets(2,1);
-			tft.setRotation(0);	
+			tft.setOffsets(2, 1);
+			tft.setRotation(0);
 			tftClear();
 			pinMode(TFT_BL, OUTPUT);
 			digitalWrite(TFT_BL, HIGH);
 			useTFT = true;
-		
 		}
 
 #endif // end of board-specific sections
@@ -1390,7 +1402,7 @@ static int color24to16b(int color24b) {
 	r = (color24b >> 19) & 0x1F; // 5 bits
 	g = (color24b >> 10) & 0x3F; // 6 bits
 	b = (color24b >> 3) & 0x1F; // 5 bits
-	#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Atom_S3) && !defined(ARDUINO_M5Stick_Plus)
+	#if defined(ARDUINO_M5Stick_C) || defined(M5Atom_S3_TFT) && !defined(ARDUINO_M5Stick_Plus)
 		return (b << 11) | (g << 5) | r; // color order: BGR
 	#else
 		return (r << 11) | (g << 5) | b; // color order: RGB

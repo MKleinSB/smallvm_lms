@@ -26,7 +26,10 @@
 
 // Override the default i2c pins on some boards
 
-#if defined(PICO_ED) || defined(XRP)
+#if defined(XRP_2350)
+	#define PIN_WIRE_SCL 39
+	#define PIN_WIRE_SDA 38
+#elif defined(PICO_ED) || defined(XRP)
 	#define PIN_WIRE_SCL 19
 	#define PIN_WIRE_SDA 18
 #elif defined(GIZMO_MECHATRONICS)
@@ -42,6 +45,9 @@
 #elif defined(COCUBE)
 	#define PIN_WIRE_SCL 22
 	#define PIN_WIRE_SDA 21
+#elif defined(M5Atom_Matrix) || defined(M5Atom_Lite)
+	#define PIN_WIRE_SCL 21
+	#define PIN_WIRE_SDA 25
 #elif defined(DUELink)
 	// 0 and 1 are edge connector pins 19 and 20 or DUELink standard pins 16 and 15
 	#define PIN_WIRE_SCL 1
@@ -88,7 +94,7 @@ int hasI2CPullups() {
 }
 
 static void startWire() {
-	#if !defined(ESP8266)
+	#if !defined(ESP8266) && !defined(DUELink)
 		// Ensure Wire is stopped before setting pins.
 		Wire.end();
 	#endif
@@ -956,10 +962,9 @@ static int readTemperature() {
 }
 
 #elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5Stick_C) || \
-	defined(ARDUINO_M5Atom_Matrix_ESP32) || defined(ARDUINO_M5STACK_Core2) || \
-	defined(ARDUINO_M5Atom_S3)
+	defined(M5Atom_Matrix) || defined(ARDUINO_M5STACK_Core2) || defined(M5Atom_S3_TFT)
 
-#ifdef ARDUINO_M5Stack_Core_ESP32
+#ifdef ARDUINO_M5Stack_Core_ESP32 || defined(M5Atom_Matrix)
 	#define Wire1 Wire
 #endif
 
@@ -992,10 +997,8 @@ static void writeAccelReg(int regID, int value) {
 static char is6886 = false;
 
 static void startAccelerometer() {
-	#ifdef ARDUINO_M5Atom_Matrix_ESP32
+	#ifdef M5Atom_Matrix
 		Wire1.begin(25, 21);
-	#elif defined(ARDUINO_M5Atom_S3)
-		Wire1.begin(38, 39);
 	#else
 		Wire1.begin(); // use internal I2C bus with default pins
 	#endif
@@ -1023,7 +1026,7 @@ static int readAcceleration(int registerID) {
 	#if defined(ARDUINO_M5Stick_C)
 		if (1 == registerID) val = readAccelReg(61);
 		if (3 == registerID) val = readAccelReg(59);
-	#elif defined(ARDUINO_M5Atom_Matrix_ESP32)
+	#elif defined(M5Atom_Matrix)
 		if (1 == registerID) val = readAccelReg(59);
 		if (3 == registerID) val = readAccelReg(61);
 		if (5 == registerID) sign = -1;
@@ -1608,7 +1611,7 @@ static void i2cReadBytes(int deviceID, int reg, int *buf, int bufSize) {
 		defined(ARDUINO_M5Stack_Core_ESP32) || \
 		defined(ARDUINO_M5STACK_Core2) || \
 		defined(ARDUINO_M5Stick_C) || \
-		defined(ARDUINO_M5Atom_Matrix_ESP32)
+		defined(M5Atom_Matrix)
 
 		// Use Wire1, the internal i2c bus
 		Wire1.beginTransmission(deviceID);
@@ -1687,7 +1690,7 @@ OBJ primAcceleration(int argCount, OBJ *args) {
 	#elif defined(ARDUINO_SAMD_CIRCUITPLAYGROUND_EXPRESS) || defined(ARDUINO_NRF52840_CIRCUITPLAY)
 		deviceID = LIS3DH_ID;
 		reg = 0x29 | 0x80; // address + auto-increment flag
-	#elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Atom_Matrix_ESP32) || defined(ARDUINO_M5Atom_S3)
+	#elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_M5Stick_C) || defined(M5Atom_Matrix) || defined(M5Atom_S3_TFT)
 		deviceID = MPU6886_ID;
 		reg = 0x3B;
 	#endif

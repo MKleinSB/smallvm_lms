@@ -634,7 +634,7 @@ void hardwareInit() {
 		1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
 		1, 1, 0, 0, 0, 1, 0, 0, 1, 0};
 
-#elif defined(ARDUINO_M5Atom_Matrix_ESP32)
+#elif defined(M5Atom_Matrix)
 
 	#define BOARD_TYPE "M5Atom-Matrix"
 	#define DIGITAL_PINS 40
@@ -648,12 +648,13 @@ void hardwareInit() {
 		1, 0, 0, 0, 1, 0, 0, 0, 1, 1,
 		1, 1, 0, 0, 1, 1, 1, 1, 1, 0};
 
-#elif defined(ARDUINO_M5Atom_Lite_ESP32)
+#elif defined(M5Atom_Lite)
 
 	#define BOARD_TYPE "M5Atom-Lite"
 	#define DIGITAL_PINS 40
 	#define ANALOG_PINS 16
 	#define TOTAL_PINS 40
+	#define NEOPIXEL_PIN_LED true
 	#define PIN_LED 27
 	static const int analogPin[] = {};
 	#define PIN_BUTTON_A 39
@@ -663,29 +664,20 @@ void hardwareInit() {
 		1, 0, 0, 0, 1, 0, 0, 0, 1, 1,
 		1, 1, 0, 0, 1, 1, 1, 1, 1, 0};
 
-#elif defined(ARDUINO_M5Atom_S3)
+#elif defined(ARDUINO_M5Stack_ATOMS3)
 
-	#define BOARD_TYPE "M5AtomS3"
+	#if defined(M5Atom_S3_TFT)
+		#define BOARD_TYPE "M5AtomS3"
+		#define PIN_LED 0
+	#else
+		#define BOARD_TYPE "M5AtomS3-Lite"
+		#define NEOPIXEL_PIN_LED true
+		#define PIN_LED 35
+	#endif
+
 	#define DIGITAL_PINS 42
 	#define ANALOG_PINS 6
 	#define TOTAL_PINS 42
-	#define PIN_LED 0
-	static const int analogPin[] = {};
-	#define PIN_BUTTON_A 41
-	static const char reservedPin[TOTAL_PINS] = {
-		1, 0, 0, 1, 0, 0, 0, 0, 0, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-		1, 0};
-
-#elif defined(ARDUINO_M5Atom_S3_Lite)
-
-	#define BOARD_TYPE "M5AtomS3-Lite"
-	#define DIGITAL_PINS 42
-	#define ANALOG_PINS 6
-	#define TOTAL_PINS 42
-	#define PIN_LED 35
 	static const int analogPin[] = {};
 	#define PIN_BUTTON_A 41
 	static const char reservedPin[TOTAL_PINS] = {
@@ -809,6 +801,7 @@ void hardwareInit() {
 	#define ANALOG_PINS 8
 	#define TOTAL_PINS 22
 	static const int analogPin[] = {};
+	#define NEOPIXEL_PIN_LED true
 	#define PIN_LED 2
 	#define PIN_BUTTON_A 3
 	static const char reservedPin[TOTAL_PINS] = {
@@ -1002,6 +995,20 @@ void hardwareInit() {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 1, 1, 1, 0, 0, 0, 0};
 
+#elif defined(XRP_2350)
+	#define BOARD_TYPE "XRP RP2350"
+	#define DIGITAL_PINS 47
+	#define ANALOG_PINS 4
+	#define TOTAL_PINS DIGITAL_PINS
+	static const int analogPin[] = {A0, A1, A2, A3};
+	#define PIN_BUTTON_A 36
+	static const char reservedPin[TOTAL_PINS] = {
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0};
+
 #elif defined(TTGO_RP2040) // must come before ARDUINO_ARCH_RP2040
 
 	#define BOARD_TYPE "TTGO RP2040"
@@ -1071,13 +1078,8 @@ void hardwareInit() {
 	#else
 		#if defined(XRP)
 			#undef BOARD_TYPE
-			#if defined(RP2350)
-				#define BOARD_TYPE "RP2350 XRP"
-				#define PIN_BUTTON_A 22
-			#else
-				#define BOARD_TYPE "RP2040 XRP"
-				#define PIN_BUTTON_A 22
-			#endif
+			#define BOARD_TYPE "RP2040 XRP"
+			#define PIN_BUTTON_A 22
 		#elif defined(GIZMO_MECHATRONICS)
 			#undef BOARD_TYPE
 			#define BOARD_TYPE "RP2040 Gizmo"
@@ -1095,7 +1097,7 @@ void hardwareInit() {
 #elif defined(DUELink)
 
 	#define BOARD_TYPE "DUELink"
-	#define DIGITAL_PINS 22
+	#define DIGITAL_PINS 27
 	#define ANALOG_PINS 5
 	#define TOTAL_PINS 60
 	#define PIN_LED 15 // PA_6 (unmapped)
@@ -1113,18 +1115,18 @@ void hardwareInit() {
 	static const char cincoEdgePin[DIGITAL_PINS] = {
 		16, 17, 18, 14, 29, 28,  8,  10,  37, 19,
 		 2, 27, 32,  9,  5,  4, 33, 255, 255,  0,
-		 1, 13}; // unused pins: 12, 15, 11, 54, 7};
+		 1, 13,  7, 12, 15, 54, 11}; // row pins: 7, 12, 15, 54, 11
 
 	static const char pixoEdgePin[DIGITAL_PINS] = {
 		16, 17, 18, 11, 54, 28,  8,  10,  37, 19,
 		 2, 27,  7,  9,  5,  4, 33, 255, 255,  0,
-		 1, 13}; // unused pins: 12, 15, 14, 29, 32};
+		 1, 13, 12, 14, 15, 29, 32}; // unused pins: 12, 14, 15, 29, 32
 
 	// Pin 13 is repeated at index 21 (DEFAULT_TONE_PIN)
 	static const char dueStandardPin[DIGITAL_PINS] = {
-		15, 16, 17, 18, 13,  12, 11,  7, 54, 19,
-		33, 29,  9,  5,  4,   1,  0, 37, 14, 10,
-		28, 32}; // unused pins: 8, 2, 27, 32
+		15, 16, 17, 18, 13, 12, 11,  7, 54, 19,
+		33, 29,  9,  5,  4,  1,  0, 37, 14, 10,
+		28, 13,  8,  2, 27, 32, 32}; // unused pins: 8, 2, 27, 32
 
 	// Analog pin names for DUELink boards
 	// Note: CincoBit edge pins 3, 4, and 12 are not analog capable
@@ -1344,6 +1346,9 @@ static void initPins(void) {
 
 void turnOffPins() {
 	for (int pin = 0; pin < TOTAL_PINS; pin++) {
+		#if defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_SAMD_ATMEL_SAMW25_XPRO) || defined(ARDUINO_ARCH_RP2040)
+			if (RESERVED(pin)) continue;
+		#endif
 		int turnOffPin = ((OUTPUT == currentMode[pin]) || (INPUT_PULLUP == currentMode[pin]));
 		#if defined(HAS_INPUT_PULLDOWN)
 			if (INPUT_PULLDOWN == currentMode[pin]) turnOffPin = true;
@@ -1442,6 +1447,10 @@ OBJ primAnalogRead(int argCount, OBJ *args) {
 		if (16 == pinNum) pinNum = 6; // map pin 16 to A6
 		if (18 == pinNum) pinNum = 3; // map pin 18 to A3
 		if (29 == pinNum) return int2obj(readAnalogMicrophone());
+	#elif defined(XRP_2350)
+		if ((pinNum < 40) || (pinNum >= TOTAL_PINS)) return int2obj(0);
+		SET_MODE(pinNum, mode);
+		return int2obj(analogRead(pinNum));
 	#endif
 	#ifdef ARDUINO_CITILAB_ED1
 		if ((100 <= pinNum) && (pinNum <= 139)) {
@@ -1810,7 +1819,7 @@ void primSetUserLED(OBJ *args) {
 		#ifdef INVERT_USER_LED
 			output = !output;
 		#endif
-		#if defined(M5STAMP) || defined(ARDUINO_M5Atom_Lite_ESP32) || defined(ARDUINO_M5Atom_S3_Lite)
+		#if defined(NEOPIXEL_PIN_LED)
 			int color = (output == HIGH) ? 255 : 0; // blue when on
 			setAllNeoPixels(PIN_LED, 1, color);
 			taskSleep(1);
