@@ -762,9 +762,9 @@
 #endif
 
 /*API for Arduino LittleFs. */
-#define LV_USE_FS_ARDUINO_ESP_LITTLEFS 0
+#define LV_USE_FS_ARDUINO_ESP_LITTLEFS 1
 #if LV_USE_FS_ARDUINO_ESP_LITTLEFS
-    #define LV_FS_ARDUINO_ESP_LITTLEFS_LETTER '\0'     /*Set an upper cased letter on which the drive will accessible (e.g. 'A')*/
+    #define LV_FS_ARDUINO_ESP_LITTLEFS_LETTER 'A'     /*Set an upper cased letter on which the drive will accessible (e.g. 'A')*/
 #endif
 
 /*API for Arduino Sd. */
@@ -780,7 +780,7 @@
 #define LV_USE_LIBPNG 0
 
 /*BMP decoder library*/
-#define LV_USE_BMP 0
+#define LV_USE_BMP 1
 
 /* JPG + split JPG decoder library.
  * Split JPG is a custom format optimized for embedded systems. */
@@ -797,9 +797,8 @@
     #define LV_GIF_CACHE_DECODE_DATA 0
 #endif
 
-
 /*Decode bin images to RAM*/
-#define LV_BIN_DECODER_RAM_LOAD 0
+#define LV_BIN_DECODER_RAM_LOAD 1
 
 /*RLE decompress library*/
 #define LV_USE_RLE 0

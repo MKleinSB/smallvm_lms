@@ -33,7 +33,7 @@ static int deferUpdates = false;
 	defined(ARDUINO_NRF52840_CLUE) || defined(ARDUINO_IOT_BUS) || defined(SCOUT_MAKES_AZUL) || \
 	defined(TTGO_RP2040) || defined(TTGO_DISPLAY) || defined(ARDUINO_M5STACK_Core2) || \
 	defined(GAMEPAD_DISPLAY) || defined(PICO_ED) || defined(OLED_128_64) || defined(COCUBE) || \
-	defined(ARDUINO_M5Atom_S3) || defined(LMSDISPLAY) || defined(LMS7789) || defined(UNIHIKER)
+	defined(ARDUINO_M5Atom_S3) || defined(LMSDISPLAY) || defined(LMS7789) || defined(UNIHIKER) ||\
 	defined(M5Atom_S3_TFT)
 
 	//sodb
@@ -2296,6 +2296,50 @@ private:
 LVObjectRegistry registry;
 
 
+class LVObjectBuffer {
+public:
+    void add(const std::string& name, uint8_t* buf) {
+        registry[name] = buf;
+    }
+
+    uint8_t* get(const std::string& name) const {
+		auto it = registry.find(name);
+        return it != registry.end() ? it->second : nullptr;
+    }
+
+    bool remove(const std::string& name) {
+        return registry.erase(name) > 0;
+    }
+
+    size_t size() const {
+        return registry.size();
+    }
+
+	std::vector<std::string> getAllNames() const {
+        std::vector<std::string> names;
+        for (const auto& entry : registry) {
+            names.push_back(entry.first);
+        }
+        return names;
+    }
+
+	std::string findNameFor(uint8_t* obj) const {
+        for (const auto& pair : registry) {
+            if (pair.second == obj) {
+                return pair.first;
+				//  char s[100];
+				// sprintf(s,"find name %s ",pair.first.c_str());
+				// outputString(s);
+            }
+        }
+        return "";
+    }
+
+private:
+    std::unordered_map<std::string, uint8_t*> registry;
+};
+
+ LVObjectBuffer img_buffer;
 
 void fs_init() {
   if (!LittleFS.begin()) {
@@ -2304,6 +2348,8 @@ void fs_init() {
   }
   outputString("LittleFS mounted.");
 }
+
+/*
 bool my_ready_cb(lv_fs_drv_t *) {
   return true;
 }
@@ -2364,6 +2410,46 @@ void lv_fs_littlefs_init() {
   lv_fs_drv_register(&drv);
 }
 
+
+uint8_t* load_file_to_psram(const char *path, size_t *out_size) {
+    // Open the file
+    fs::File f = LittleFS.open(path, "r");
+    if (!f || f.isDirectory()) {
+        outputString("Failed to open file for reading");
+        return nullptr;
+    }
+
+    size_t size = f.size();  // Get the file size
+    if (out_size) *out_size = size;
+
+    // Allocate buffer in PSRAM
+    //uint8_t *buffer = (uint8_t *)heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+	uint8_t *buffer = (uint8_t *)malloc(size);
+	
+    if (!buffer) {
+        outputString("Failed to allocate PSRAM buffer");
+        f.close();
+        return nullptr;
+    }
+
+    // Read file into buffer
+    size_t bytes_read = f.read(buffer, size);
+	char s[100];
+    sprintf(s,"Read %u bytes\n", bytes_read);
+	outputString(s);
+    f.close();
+
+    if (bytes_read != size) {
+		//char s[100];
+        sprintf(s,"Read %u/%u bytes\n", bytes_read, size);
+		outputString(s);
+        heap_caps_free(buffer);
+        return nullptr;
+    }
+
+    return buffer;
+}
+*/
 void setup_lvgl() {
 	/*
 	#include "esp_heap_caps.h"
@@ -2421,7 +2507,7 @@ void setup_lvgl() {
 	#endif
 
  fs_init() ;
-lv_fs_littlefs_init();
+//lv_fs_littlefs_init();
 	LVGL_initialized = true;
 }
 
@@ -2517,8 +2603,30 @@ void ui_add_image(char * obj_name, const char *path, const char * parent_name) {
 		registry.add(obj_name, obj);
 	}
 }
+/*
+void ui_add_image(char * obj_name, const char *path, const char * parent_name) {
+	lv_obj_t* parent = registry.get(parent_name);
+	lv_obj_t* obj;
+    // Create an img object
+    
+	if (!registry.get(obj_name) && parent) {
+		size_t size;
+		uint8_t* buffer = load_file_to_psram(path,&size);
+		lv_image_dsc_t *img_dsc = (lv_image_dsc_t *)buffer;
+		lv_obj_t *obj = lv_img_create(lv_screen_active());
+		// Set image source from file
+		lv_img_set_src(obj, img_dsc);
+		outputString("ui_add_image");
+		outputString(path);
+		// Optional: align or move the image
+		//lv_obj_center(img);
+		registry.add(obj_name, obj);
+		img_buffer.add(obj_name, buffer);
 
+	}
+}
 
+*/
 
 
 void ui_create_button_label(char * obj_name, int scale, const char * label_text, const char * parent_name) {
@@ -2638,7 +2746,12 @@ void ui_set_parent(char * obj_name, const char * parent){
 void ui_delete_obj(char * obj_name) {
     lv_obj_t* obj = registry.get(obj_name);
     if (obj) {
-        lv_obj_del(obj);
+		lv_obj_del(obj);
+		if (lv_obj_get_class(obj) == &lv_image_class) {
+			uint8_t* buffer = img_buffer.get(obj_name);
+			heap_caps_free(buffer);
+			img_buffer.remove(obj_name);
+		}
         registry.remove(obj_name);
     }
 }
@@ -2778,9 +2891,25 @@ Command lookup_cmd(const char *s) {
     return CMD_UNKNOWN;
 }
 
+/*
 static OBJ primLVGLaddimg(int argCount, OBJ *args) {
-	char* obj_name = obj2str(args[0]);
-	char* filename = obj2str(args[1]);
+	char* obj_name = obj2str(args[1]);
+	char* filename = obj2str(args[0]);
+	const char *parent;
+	if (argCount > 2) {
+		parent = obj2str(args[2]);
+	} else {
+		parent = "lv_scr_act";
+	}
+
+	ui_add_image(obj_name,filename,parent);
+	return falseObj;
+}
+*/
+
+static OBJ primLVGLaddimg(int argCount, OBJ *args) {
+	char* obj_name = obj2str(args[1]);
+	char* filename = obj2str(args[0]);
 	const char *parent;
 	if (argCount > 2) {
 		parent = obj2str(args[2]);
@@ -3151,6 +3280,7 @@ static PrimEntry entries[] = {
 	{"LVGLgetallobjs", primLVGLgetallobjs},
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},
+
 #endif
 };
 
