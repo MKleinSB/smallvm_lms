@@ -3182,6 +3182,24 @@ static OBJ primLVGLstate(int argCount, OBJ *args) {
 
 }
 
+#include "esp_heap_caps.h"
+
+static OBJ primLVGLpsram(int argCount, OBJ *args) {
+	int val = heap_caps_get_free_size(MALLOC_CAP_SPIRAM); // in bytes
+
+	char s[100];
+	sprintf(s,"PSRAM total size: %d",ESP.getPsramSize());
+	outputString(s);	
+	sprintf(s,"PSRAM free: %d",val);
+    outputString(s);	
+	sprintf(s,"PSRAM largest free block: %d",heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
+	outputString(s);	
+	sprintf(s,"RAM heap free: %d",heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    outputString(s);	
+	return int2obj(val);
+    
+}
+
 #endif
 
 
@@ -3280,6 +3298,7 @@ static PrimEntry entries[] = {
 	{"LVGLgetallobjs", primLVGLgetallobjs},
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},
+	{"LVGLpsram",primLVGLpsram},
 
 #endif
 };
