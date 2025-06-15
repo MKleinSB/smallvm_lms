@@ -3103,7 +3103,7 @@ void ui_set_value(char * obj_name, int value) {
 		if (lv_obj_get_class(obj) == &lv_led_class) {
 			if (value==0) lv_led_off(obj);
 			else if (value&1) lv_led_on(obj);
-			lv_led_set_brightness(obj,value);
+			
 			
 		} else
 		if (lv_obj_get_class(obj) == &lv_roller_class) {
@@ -3146,8 +3146,10 @@ void ui_set_style(char * obj_name, char * style_name, int to_val, int until_val)
 		if (lv_obj_get_class(obj) == &lv_bar_class) {
 			if (strcmp(style_name,"range")==0) lv_bar_set_range(obj, to_val, until_val);
 		}
-		if (lv_obj_get_class(obj) == &lv_bar_class) {
-			if (strcmp(style_name,"brightness")==0) lv_led_set_brightness(obj,to_val );
+		if (lv_obj_get_class(obj) == &lv_led_class) {
+			if (strcmp(style_name,"brightness")==0) {
+				lv_led_set_brightness(obj,to_val );
+			}
 		}
 
 
@@ -3647,8 +3649,11 @@ static OBJ primLVGLpsram(int argCount, OBJ *args) {
 	outputString(s);	
 	sprintf(s,"RAM heap free: %d",heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
     outputString(s);	
+	sprintf(s,"free heap after: %d psram: %d ",  ESP.getFreeHeap(),ESP.getFreePsram());
+	outputString(s);
 	return int2obj(val);
-    
+     
+
 }
 
 #endif
