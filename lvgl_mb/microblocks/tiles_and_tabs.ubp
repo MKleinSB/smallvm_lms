@@ -1,8 +1,49 @@
+module main
+author unknown
+version 1 0 
+description ''
+
+script 272 40 {
+whenBroadcastReceived 'LVGLevent'
+sayIt ('[tft:LVGLgetevent]') ('[tft:LVGLgetval]' ('[tft:LVGLgetevent]'))
+}
+
+script 40 152 {
+whenStarted
+'[tft:LVGLon]' true
+comment 'create tiles'
+'[tft:LVGLaddobj]' 'tileview' 'tiles'
+'[tft:LVGLaddtile]' 'tile1' 'tiles' 0 0 false true false false
+'[tft:LVGLaddtile]' 'tile2' 'tiles' 1 0 true false false true
+'[tft:LVGLaddtile]' 'tile3' 'tiles' 1 1 false false true true
+'[tft:LVGLaddtile]' 'tile4' 'tiles' 1 2 false false true false
+'[tft:LVGLaddbtn]' 'btn1' 3 'tile1' 'tile1'
+'[tft:LVGLaddbtn]' 'btn2' 3 'tile2' 'tile2'
+'[tft:LVGLaddbtn]' 'btn3' 3 'tile3' 'tile3'
+'[tft:LVGLsetcolor]' 'btn2' (colorSwatch 35 190 30 255)
+'[tft:LVGLsetcolor]' 'btn3' (colorSwatch 190 14 36 255)
+comment 'create roller on tile 2'
+'[tft:LVGLaddobj]' 'roller' 'roller' 'tile2'
+'[tft:LVGLsetpos]' 'roller' 200 10
+'[tft:LVGLsettext]' 'roller' 'left
+right
+upper
+lower'
+comment 'add tabview in tile4'
+'[tft:LVGLaddobj]' 'tabview' 'tabs' 'tile4'
+'[tft:LVGLaddtab]' 'tab1' 'tabs'
+'[tft:LVGLaddtab]' 'tab2' 'tabs'
+'[tft:LVGLaddobj]' 'arc' 'arc' 'tab1'
+'[tft:LVGLaddobj]' 'slider' 'slider' 'tab2'
+'[tft:LVGLsetpos]' 'slider' 10 30
+}
+
+
 module LVGL Output
 author Ste7an
 version 1 1 
-choices style_types range rotation angles brightness
-choices obj_types arc slider led switch bar tabview roller list tileview
+choices style_types range rotation angles 
+choices obj_types arc slider led switch bar tabview roller list tileview 
 description 'LVGL support for MicroBlocks'
 
   spec ' ' '[tft:LVGLon]' 'enable_lvgl _' 'bool' true
@@ -13,7 +54,7 @@ description 'LVGL support for MicroBlocks'
   spec ' ' '[tft:LVGLaddimg]' 'img path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
   spec ' ' '[tft:LVGLsetstyle]' 'set _ of _ to _ : until _' 'str.style_types str auto auto' 'range' '' '' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
-  spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str  num num bool bool bool bool' 'tile' '' 0 0 false false false false
+  spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec ' ' '[tft:LVGLsetpos]' 'set_pos _ x _ y _' 'str num num' '' 100 100
   spec ' ' '[tft:LVGLsetsize]' 'set_size _ width _ height _' 'str num num' '' 100 10
   spec ' ' '[tft:LVGLsetval]' 'set_val _ value _' 'str num' '' 10
@@ -30,7 +71,6 @@ description 'LVGL support for MicroBlocks'
   spec 'r' '[tft:LVGLgetallobjs]' 'get_all_objects'
   spec ' ' '[tft:LVGLdelobj]' 'del_obj _' 'str' ''
   spec ' ' 'delete_all_objects' 'delete_all_objects'
-  
 
 to delete_all_objects {
   local 'all_objects' ('[tft:LVGLgetallobjs]')

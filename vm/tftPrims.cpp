@@ -183,7 +183,7 @@ static int deferUpdates = false;
 			useTFT = true;
 		}
 
-	#elif defined(ARDUINO_M5STACK_Core2)
+	#elif defined(ARDUINO_M5STACK_Core2) && !defined(TFT_ESPI)
 		// Preliminary: this is not yet working...
 		#include "Adafruit_GFX.h"
 		#include "Adafruit_ILI9341.h"
@@ -380,6 +380,284 @@ static int deferUpdates = false;
 			tftClear();
 			useTFT = true;
 		}
+
+		// M5 Core2 touchscreen support
+
+		#define HAS_TOUCH_SCREEN 1
+		#define CORE2_TOUCH_SCREEN_ADDR 0x38
+		#define CORE2_SCREEN_TOUCHED_PIN 39
+
+		static void setCore2TouchScreenReg(int regID, int value) {
+			Wire1.beginTransmission(CORE2_TOUCH_SCREEN_ADDR);
+			Wire1.write(regID);
+			Wire1.write(value);
+			Wire1.endTransmission();
+		}
+
+		static void touchInit() {
+			setCore2TouchScreenReg(0xA4, 0); // hold TOUCHED_PIN low while screen touched
+			pinMode(CORE2_SCREEN_TOUCHED_PIN, INPUT);
+			touchEnabled = true;
+		}
+
+		static uint32 lastTouchUpdate = 0;
+		static int touchScreenX = -1;
+		static int touchScreenY = -1;
+
+		static int screenTouched() {
+			if (!touchEnabled) touchInit();
+			return !digitalRead(CORE2_SCREEN_TOUCHED_PIN);
+		}
+
+		static void touchUpdate() {
+			if (!touchEnabled) touchInit();
+			uint32 now = millisecs();
+			if ((now - lastTouchUpdate) < 10) return;
+			if (screenTouched()) {
+				uint8 data[4];
+				Wire1.beginTransmission(CORE2_TOUCH_SCREEN_ADDR);
+				Wire1.write(3);
+				Wire1.endTransmission();
+				Wire1.requestFrom(CORE2_TOUCH_SCREEN_ADDR, sizeof(data));
+				for (int i = 0; i < sizeof(data); i++) {
+					data[i] = Wire1.read();
+				}
+				touchScreenX = ((data[0] & 0xF) << 8) | data[1];
+				touchScreenY = ((data[2] & 0xF) << 8) | data[3];
+			} else {
+				touchScreenX = -1;
+				touchScreenY = -1;
+			}
+			lastTouchUpdate = now;
+		}
+
+		static int screenTouchX() {
+			touchUpdate();
+			return touchScreenX;
+		}
+
+		static int screenTouchY() {
+			touchUpdate();
+			return touchScreenY;
+		}
+
+		static int screenTouchPressure() {
+			// pressure not supported; return a constant value if screen is touched, -1 if not
+			if (!touchEnabled) touchInit();
+			return screenTouched() ? 10 : -1;
+		}
+	#elif defined(ARDUINO_M5STACK_Core2) && defined(TFT_ESPI)
+		// Preliminary: this is not yet working...
+		#include <TFT_eSPI.h>
+
+		// in User_Setup,h #define ILI9341_DRIVER
+		// this definition also defines width and height.
+
+		TFT_eSPI tft = TFT_eSPI();  // Invoke TFT object
+
+//SPIClass mySPI(HSPI); 
+
+		int readAXP(int reg) {
+			Wire1.beginTransmission(0x34);
+			Wire1.write(reg);
+			Wire1.endTransmission();
+			Wire1.requestFrom(0x34, 1);
+			return Wire1.available() ? Wire1.read() : 0;
+		}
+
+		void writeAXP(int reg, int value) {
+			Wire1.beginTransmission(0x34);
+			Wire1.write(reg);
+			Wire1.write(value);
+			Wire1.endTransmission();
+		}
+
+		void AXP192_SetDCVoltage(uint8_t number, uint16_t voltage) {
+			uint8_t addr;
+			if (number > 2) return;
+			voltage = (voltage < 700) ? 0 : (voltage - 700) / 25;
+			switch (number) {
+			case 0:
+				addr = 0x26;
+				break;
+			case 1:
+				addr = 0x25;
+				break;
+			case 2:
+				addr = 0x27;
+				break;
+			}
+			writeAXP(addr, (readAXP(addr) & 0x80) | (voltage & 0x7F));
+		}
+
+		void AXP192_SetLDOVoltage(uint8_t number, uint16_t voltage) {
+			voltage = (voltage > 3300) ? 15 : (voltage / 100) - 18;
+			if (2 == number) writeAXP(0x28, (readAXP(0x28) & 0x0F) | (voltage << 4));
+			if (3 == number) writeAXP(0x28, (readAXP(0x28) & 0xF0) | voltage);
+		}
+
+		void AXP192_SetLDOEnable(uint8_t number, bool state) {
+			uint8_t mark = 0x01;
+			if ((number < 2) || (number > 3)) return;
+
+			mark <<= number;
+			if (state) {
+				writeAXP(0x12, (readAXP(0x12) | mark));
+			} else {
+				writeAXP(0x12, (readAXP(0x12) & (~mark)));
+			}
+		}
+
+		void AXP192_SetDCDC3(bool state) {
+			uint8_t buf = readAXP(0x12);
+			if (state == true) {
+				buf = (1 << 1) | buf;
+			} else {
+				buf = ~(1 << 1) & buf;
+			}
+			writeAXP(0x12, buf);
+		}
+
+		void AXP192_SetLCDRSet(bool state) {
+			uint8_t reg_addr = 0x96;
+			uint8_t gpio_bit = 0x02;
+			uint8_t data = readAXP(reg_addr);
+
+			if (state) {
+				data |= gpio_bit;
+			} else {
+				data &= ~gpio_bit;
+			}
+			writeAXP(reg_addr, data);
+		}
+
+		void AXP192_SetLed(uint8_t state) {
+			uint8_t reg_addr = 0x94;
+			uint8_t data = readAXP(reg_addr);
+
+			if (state) {
+				data = data & 0xFD;
+			} else {
+				data |= 0x02;
+			}
+			writeAXP(reg_addr, data);
+		}
+
+		void AXP192_SetSpkEnable(uint8_t state) {
+			// Set true to enable speaker
+
+			uint8_t reg_addr = 0x94;
+			uint8_t gpio_bit = 0x04;
+			uint8_t data;
+			data = readAXP(reg_addr);
+
+			if (state) {
+				data |= gpio_bit;
+			} else {
+				data &= ~gpio_bit;
+			}
+			writeAXP(reg_addr, data);
+		}
+
+		void AXP192_SetCHGCurrent(uint8_t state) {
+			uint8_t data = readAXP(0x33);
+			data &= 0xf0;
+			data = data | ( state & 0x0f );
+			writeAXP(0x33, data);
+		}
+
+		void AXP192_SetBusPowerMode(uint8_t state) {
+			// Select source for BUS_5V
+			// 0 : powered by USB or battery; use internal boost
+			// 1 : powered externally
+
+			uint8_t data;
+			if (state == 0) {
+				// Set GPIO to 3.3V (LDO OUTPUT mode)
+				data = readAXP(0x91);
+				writeAXP(0x91, (data & 0x0F) | 0xF0);
+				// Set GPIO0 to LDO OUTPUT, pullup N_VBUSEN to disable VBUS supply from BUS_5V
+				data = readAXP(0x90);
+				writeAXP(0x90, (data & 0xF8) | 0x02);
+				// Set EXTEN to enable 5v boost
+				data = readAXP(0x10);
+				writeAXP(0x10, data | 0x04);
+			} else {
+				// Set EXTEN to disable 5v boost
+				data = readAXP(0x10);
+				writeAXP(0x10, data & ~0x04);
+				// Set GPIO0 to float, using enternal pulldown resistor to enable VBUS supply from BUS_5V
+				data = readAXP(0x90);
+				writeAXP(0x90, (data & 0xF8) | 0x07);
+			}
+		}
+
+		void AXP192_begin() {
+			// derived from AXP192.cpp from https://github.com/m5stack/M5Core2
+			Wire1.begin(21, 22);
+			Wire1.setClock(400000);
+
+			writeAXP(0x30, (readAXP(0x30) & 0x04) | 0x02); // turn vbus limit off
+			writeAXP(0x92, readAXP(0x92) & 0xf8); // set gpio1 to output
+			writeAXP(0x93, readAXP(0x93) & 0xf8); // set gpio2 to output
+			writeAXP(0x35, (readAXP(0x35) & 0x1c) | 0xa2); // enable rtc battery charging
+			AXP192_SetDCVoltage(0, 3350); // set esp32 power voltage to 3.35v
+			AXP192_SetDCVoltage(2, 2800); // set backlight voltage was set to 2.8v
+			AXP192_SetLDOVoltage(2, 3300); // set peripheral voltage (LCD_logic, SD card) voltage to 2.0v
+			AXP192_SetLDOVoltage(3, 2000); // set vibrator motor voltage to 2.0v
+			AXP192_SetLDOEnable(2, true);
+			AXP192_SetDCDC3(true); // LCD backlight
+			AXP192_SetLed(false);
+			AXP192_SetSpkEnable(true);
+
+			AXP192_SetCHGCurrent(0); // charge current: 100mA
+			writeAXP(0x95, (readAXP(0x95) & 0x72) | 0x84); // GPIO4
+
+			writeAXP(0x36, 0x4C); // ???
+			writeAXP(0x82,0xff); // ???
+
+			AXP192_SetLCDRSet(0);
+			delay(100);
+			AXP192_SetLCDRSet(1);
+			delay(100);
+
+			// axp: check v-bus status
+			if (readAXP(0x00) & 0x08) {
+				writeAXP(0x30, readAXP(0x30) | 0x80);
+				// if has v-bus power, disable M-Bus 5V output to input
+				AXP192_SetBusPowerMode(1);
+			} else {
+				// otherwise, enable M-Bus 5V output
+				AXP192_SetBusPowerMode(0);
+			}
+		}
+
+		void tftInit() {
+			AXP192_begin();
+//------------
+
+		
+			tft.init();
+			tft.initDMA();
+			//tft.setSwapBytes(true);
+		
+			tft.begin();
+			tft.setRotation(3);
+			tft.invertDisplay(true);
+
+			//uint8_t m = 0x08 | 0x04; // RGB pixel order, refresh LCD right to left
+			//tft.sendCommand(ILI9341_MADCTL, &m, 1);
+			#define ILI9341_MADCTL 0x36
+
+			uint8_t m = 0b00001000;  // Example MADCTL value (bit 3 = bgr)
+			tft.writecommand(ILI9341_MADCTL);
+			tft.writedata(m);
+	//			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
+			tftClear();
+			// Turn on backlight on IoT-Bus
+		
+			useTFT = true;
+	}
 
 		// M5 Core2 touchscreen support
 
@@ -2493,7 +2771,7 @@ void setup_lvgl() {
 	disp = lv_display_create(TFT_WIDTH, TFT_HEIGHT);
     lv_display_set_buffers(disp, buf1, buf2, TFT_WIDTH * 40, LV_DISPLAY_RENDER_MODE_PARTIAL);
     lv_display_set_flush_cb(disp, my_disp_flush);
-	#if defined(TFT_ESPI)
+	#if defined(TFT_ESPI) 
 		lv_display_set_resolution(disp, TFT_HEIGHT, TFT_WIDTH);
 	#else
     	lv_display_set_resolution(disp, TFT_WIDTH, TFT_HEIGHT);
@@ -2721,6 +2999,25 @@ void ui_create_tabview(char * obj_name, const char * parent) {
 	}
 }
 
+void ui_create_tileview(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_tileview_create(registry.get(parent));
+		// lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
+
+void ui_create_roller(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_roller_create(registry.get(parent));
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
+
+
 void ui_add_tab(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
 		lv_obj_t* obj = lv_tabview_add_tab(registry.get(parent),obj_name);
@@ -2728,6 +3025,15 @@ void ui_add_tab(char * obj_name, const char * parent) {
 		registry.add(obj_name, obj);
 	}
 }
+
+void ui_add_tile(char * obj_name, const char * parent, int col_id, int row_id, lv_dir_t dir ) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_tileview_add_tile(registry.get(parent), col_id, row_id, dir);
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
 
 void ui_create_list(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
@@ -2795,8 +3101,11 @@ void ui_set_value(char * obj_name, int value) {
 		if (lv_obj_get_class(obj) == &lv_led_class) {
 			if (value==0) lv_led_off(obj);
 			else if (value&1) lv_led_on(obj);
-			else lv_led_set_brightness(obj,value);
+			lv_led_set_brightness(obj,value);
 			
+		} else
+		if (lv_obj_get_class(obj) == &lv_roller_class) {
+			lv_roller_set_visible_row_count(obj,value);
 		}
 	}
 }
@@ -2804,8 +3113,42 @@ void ui_set_value(char * obj_name, int value) {
 void ui_set_text(char * obj_name, char * text, int scale) {
     lv_obj_t* obj = registry.get(obj_name);
 	if (obj) {
-		lv_label_set_text(obj, text);
-		lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_PART_MAIN);
+		if (lv_obj_get_class(obj) == &lv_label_class) {
+			lv_label_set_text(obj, text);
+			lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_PART_MAIN);
+		} else 
+		if (lv_obj_get_class(obj) == &lv_button_class) {
+			lv_obj_t *label = lv_obj_get_child(obj, 0);
+			if (label) {
+				lv_label_set_text(label, text);
+				lv_obj_set_style_text_font(label, get_font_from_scale(scale), LV_PART_MAIN);
+			}
+		} if (lv_obj_get_class(obj) == &lv_roller_class) {
+			lv_roller_set_options(obj, text, LV_ROLLER_MODE_INFINITE);
+		}
+		
+	}
+}
+
+void ui_set_style(char * obj_name, char * style_name, int to_val, int until_val){
+	lv_obj_t* obj = registry.get(obj_name);
+	if (obj) {
+		if (lv_obj_get_class(obj) == &lv_arc_class) {
+			if (strcmp(style_name,"range")==0) lv_arc_set_range(obj, to_val, until_val);
+			else if (strstr(style_name,"angles")) lv_arc_set_bg_angles(obj, to_val, until_val);
+			else if (strstr(style_name,"rotation")) lv_arc_set_rotation(obj, to_val);
+		} else 
+		if (lv_obj_get_class(obj) == &lv_slider_class) {
+			if (strcmp(style_name,"range")==0) lv_slider_set_range(obj, to_val, until_val);
+		} else
+		if (lv_obj_get_class(obj) == &lv_bar_class) {
+			if (strcmp(style_name,"range")==0) lv_bar_set_range(obj, to_val, until_val);
+		}
+		if (lv_obj_get_class(obj) == &lv_bar_class) {
+			if (strcmp(style_name,"brightness")==0) lv_led_set_brightness(obj,to_val );
+		}
+
+
 	}
 }
 
@@ -2814,10 +3157,13 @@ int ui_get_value(char * obj_name) {
 	if (obj) {
 		if (lv_obj_get_class(obj) == &lv_arc_class) {
 			return lv_arc_get_value(obj);
- 		   } else 
+ 		} else 
 		if (lv_obj_get_class(obj) == &lv_slider_class) {
 			return lv_slider_get_value(obj);
-		}
+		} else 
+		if (lv_obj_get_class(obj) == &lv_switch_class) {
+			return lv_obj_has_state(obj, LV_STATE_CHECKED);
+		} 
 		else return 0x10000000;
 	} else return 0x10000000;
 }
@@ -2826,9 +3172,21 @@ void ui_set_color(char * obj_name, int color) {
 	lv_obj_t* obj = registry.get(obj_name);
 	if (obj) {
 		if (lv_obj_get_class(obj) == &lv_label_class) {
-			lv_obj_set_style_text_color(obj, lv_color_hex(color), LV_PART_MAIN); // Red text
+			lv_obj_set_style_text_color(obj, lv_color_hex(color), LV_PART_MAIN); 
+		} else 
+		if  (lv_obj_get_class(obj) == &lv_led_class) {
+			lv_led_set_color(obj,lv_color_hex(color));
 		} else
-		lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_MAIN);
+		if  (lv_obj_get_class(obj) == &lv_switch_class) {
+			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_MAIN  | LV_STATE_DEFAULT);
+			lv_obj_set_style_bg_opa(obj, LV_OPA_COVER,LV_PART_MAIN |LV_STATE_DEFAULT);
+	    } else
+		if  (lv_obj_get_class(obj) == &lv_arc_class) {
+			outputString("change color arc");
+			lv_obj_set_style_arc_color(obj, lv_color_hex(color), LV_PART_MAIN);
+ 		} else
+			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_MAIN);
+	
 	}
 }
 
@@ -2840,16 +3198,21 @@ void ui_set_color_2nd(char * obj_name, int color) {
 			lv_obj_set_style_text_color(label, lv_color_hex(color), 0); 
 		} else if (lv_obj_get_class(obj) == &lv_arc_class) {
 			lv_obj_set_style_arc_color(obj, lv_color_hex(color), LV_PART_INDICATOR);
+		} else if (lv_obj_get_class(obj) == &lv_switch_class) {
+			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_INDICATOR|LV_STATE_CHECKED);
+		    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_INDICATOR|LV_STATE_CHECKED);
 		}
- 		else {
+ 		else 
 			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_INDICATOR);
-		}
+		
 	}
 }
+
 void ui_set_color_3rd(char * obj_name, int color) {
 	lv_obj_t* obj = registry.get(obj_name);
 	if (obj) {
 		lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_KNOB);
+		if (lv_obj_get_class(obj) == &lv_switch_class) lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_KNOB);
 	}
 }
 
@@ -2871,7 +3234,9 @@ typedef enum {
     CMD_SWITCH,
 	CMD_BAR,
 	CMD_TABVIEW,
+	CMD_TILEVIEW,
 	CMD_LIST,
+	CMD_ROLLER,
     CMD_COUNT
 } Command;
 
@@ -2885,7 +3250,9 @@ Command lookup_cmd(const char *s) {
     if (strcmp(s, "switch") == 0)   return CMD_SWITCH;
 	if (strcmp(s, "bar") == 0)   	return CMD_BAR;
 	if (strcmp(s, "tabview") == 0)  return CMD_TABVIEW;
+	if (strcmp(s, "tileview") == 0) return CMD_TILEVIEW;
 	if (strcmp(s, "list") == 0)     return CMD_LIST;
+	if (strcmp(s, "roller") == 0)   return CMD_ROLLER;
 	
 	
     return CMD_UNKNOWN;
@@ -3002,7 +3369,19 @@ static OBJ primLVGLaddTab(int argCount, OBJ *args) {
 	return falseObj;
 }
 
-
+static OBJ primLVGLaddTile(int argCount, OBJ *args) {
+	char* obj_name = obj2str(args[0]);
+	char* parent = obj2str(args[1]);
+	int col_id = obj2int(args[2]);
+	int row_id = obj2int(args[3]);
+	uint8_t l = (trueObj == args[4]) ? 1:0;
+	uint8_t r = (trueObj == args[5]) ? 1:0;
+	uint8_t t = (trueObj == args[6]) ? 1:0;
+	uint8_t b = (trueObj == args[7]) ? 1:0;
+	lv_dir_t dir = (lv_dir_t)(l + (r<<1) + (t<<2) + (b<<3));
+	ui_add_tile(obj_name, parent, col_id, row_id, dir);
+	return falseObj;
+}
 
 static OBJ primLVGLaddArc(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
@@ -3056,9 +3435,17 @@ static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 			outputString("Handle TABVIEW");
 			ui_create_tabview(obj_name, parent);
 			break;
+		case CMD_TILEVIEW:
+			outputString("Handle TILEVIEW");
+			ui_create_tileview(obj_name, parent);
+			break;
 		case CMD_LIST:
-			outputString("Handle TABVIEW");
+			outputString("Handle LIST");
 			ui_create_list(obj_name, parent);
+			break;
+		case CMD_ROLLER:
+			outputString("Handle ROLLER");
+			ui_create_roller(obj_name, parent);
 			break;
 			
 		// case CMD_SCALE:
@@ -3103,10 +3490,35 @@ static OBJ primLVGLsetPos(int argCount, OBJ *args) {
 
 static OBJ primLVGLsetVal(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
-	int value = obj2int(args[1]);
-	ui_set_value(obj_name, value);
+	lv_obj_t* obj = registry.get(obj_name);
+	int value;
+	if (obj) {
+		if (lv_obj_get_class(obj) == &lv_led_class) {
+			if (trueObj == args[1]) lv_led_on(obj);
+			else lv_led_off(obj);
+		} else value = obj2int(args[1]);
+		if (lv_obj_get_class(obj) == &lv_arc_class) {
+			lv_arc_set_value(obj, value);
+		} else 
+		if (lv_obj_get_class(obj) == &lv_slider_class) {
+			lv_slider_set_value(obj, value, LV_ANIM_OFF);
+		} else
+		if (lv_obj_get_class(obj) == &lv_bar_class) {
+			lv_bar_set_value(obj, value, LV_ANIM_OFF);
+		} else
+		if (lv_obj_get_class(obj) == &lv_switch_class) {
+			if (value==0) lv_obj_remove_state(obj, LV_STATE_CHECKED);
+			else if (value&1) lv_obj_add_state(obj, LV_STATE_CHECKED);
+			else if (value>1) lv_obj_add_state(obj, value);
+			else if (value<0) lv_obj_remove_state(obj, -value);
+		}  else
+		if (lv_obj_get_class(obj) == &lv_roller_class) {
+			lv_roller_set_visible_row_count(obj,value);
+		}
+	}
 	return falseObj;
 }
+
 
 static OBJ primLVGLsetText(int argCount, OBJ *args) {
 	int scale = 1;
@@ -3119,15 +3531,42 @@ static OBJ primLVGLsetText(int argCount, OBJ *args) {
 	return falseObj;
 }
 
+static OBJ primLVGLsetstyle(int argCount, OBJ *args) {
+	char* style_name = obj2str(args[0]);
+	char* obj_name = obj2str(args[1]);
+	int to_val = obj2int(args[2]);
+	int until_val=100;	
+	if (argCount >3) {
+		until_val = obj2int(args[3]);
+	}
+	ui_set_style(obj_name, style_name, to_val, until_val);
+	return falseObj;
+}
+
 static OBJ primLVGLgetVal(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
-	int val = ui_get_value(obj_name);
-	if (val&0x10000000) {
-		return falseObj;
-	} else {
-	   return int2obj(val);
-	}
+	lv_obj_t* obj = registry.get(obj_name);
+	if (obj) {
+		if (lv_obj_get_class(obj) == &lv_arc_class) {
+			return int2obj(lv_arc_get_value(obj));
+ 		} else 
+		if (lv_obj_get_class(obj) == &lv_slider_class) {
+			return int2obj(lv_slider_get_value(obj));
+		} else 
+		if (lv_obj_get_class(obj) == &lv_switch_class) {
+			return lv_obj_has_state(obj, LV_STATE_CHECKED)  ? trueObj : falseObj;
+		} else 
+		if (lv_obj_get_class(obj) == &lv_roller_class) {
+			char buf[100];
+			lv_roller_get_selected_str(obj, buf, sizeof(buf));
+			return  newStringFromBytes(buf, strlen(buf));
+		} 
+		else return falseObj;
+	} else return falseObj;
 }
+
+
+
 
 static OBJ primLVGLsetColor(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
@@ -3142,7 +3581,8 @@ static OBJ primLVGLsetColor(int argCount, OBJ *args) {
 		ui_set_color_3rd(obj_name, color);
 	}
 	
-	return falseObj;}
+	return falseObj;
+}
 
 
 static OBJ primLVGLgetEvent(int argCount, OBJ *args) {
@@ -3285,6 +3725,7 @@ static PrimEntry entries[] = {
 	{"LVGLaddslider",primLVGLaddSlider},
 	{"LVGLaddarc",primLVGLaddArc},
 	{"LVGLaddtab",primLVGLaddTab},
+	{"LVGLaddtile",primLVGLaddTile},
 	{"LVGLaddobj",primLVGLaddObject},
 	{"LVGLdelobj",primLVGLdelObj},
 	{"LVGLsetparent",primLVGLsetParent},
@@ -3292,6 +3733,7 @@ static PrimEntry entries[] = {
 	{"LVGLsetsize",primLVGLsetSize},
 	{"LVGLsetval", primLVGLsetVal},
 	{"LVGLsettext",primLVGLsetText},
+	{"LVGLsetstyle",primLVGLsetstyle},
 	{"LVGLgetval", primLVGLgetVal},
 	{"LVGLgetevent",primLVGLgetEvent},
 	{"LVGLsetcolor", primLVGLsetColor},

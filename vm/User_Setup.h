@@ -1,5 +1,5 @@
 //#error "✅ Custom User_Setup.h is being used!"
-
+#if defined(LMSDISPLAY)
 #define ILI9341_DRIVER
 //#define ILI9342_DRIVER
 
@@ -35,5 +35,47 @@
 #define SUPPORT_TRANSACTIONS
 #define USE_HSPI_PORT         // Use HSPI (VSPI also works, but this matches the custom pins above)
 #define ENABLE_8_BIT_PALETTES
-#define TFT_DMA_BUFFER_SIZE  32768
+#define TFT_DMA_BUFFER_SIZE  132768
 #define TFT_DMA_MODE         1   
+#elif defined(ARDUINO_M5STACK_Core2)
+
+//#define ILI9341_DRIVER
+#define ILI9341_DRIVER
+
+// SPI pin configuration
+
+//#define TFT_WIDTH  320
+//#define TFT_HEIGHT 240
+#define TFT_MOSI 23
+#define TFT_MISO 38
+#define TFT_SCLK 18
+#define TFT_CS 5
+#define TFT_DC 15
+#define TFT_RST 32
+
+//#define TOUCH_CS 26  // For XPT2046
+
+#define LOAD_GLCD
+#define LOAD_FONT2
+#define LOAD_FONT4
+#define SMOOTH_FONT
+#define TFT_ROTATION 2
+#define TFT_SPI_PORT HSPI 
+// Optional: set SPI clock speed
+#define CONFIG_TFT_HSPI_PORT
+#define SPI_FREQUENCY  40000000
+#define SPI_READ_FREQUENCY 20000000
+
+// Optional: enable touch or fonts
+//#define SUPPORT_TOUCH
+//#define LOAD_GLCD
+//#define LOAD_FONT2
+// swap R and B
+//#define TFT_RGB_ORDER TFT_BGR 
+
+#define SUPPORT_TRANSACTIONS
+#define USE_HSPI_PORT         // Use HSPI (VSPI also works, but this matches the custom pins above)
+#define ENABLE_8_BIT_PALETTES
+#define TFT_DMA_BUFFER_SIZE  132768
+#define TFT_DMA_MODE         1  
+#endif
