@@ -3,14 +3,21 @@ author unknown
 version 1 0 
 description ''
 
-script 272 40 {
+script 520 60 {
 whenBroadcastReceived 'LVGLevent'
-sayIt ('[tft:LVGLgetevent]') ('[tft:LVGLgetval]' ('[tft:LVGLgetevent]'))
+sayIt 123 ('[tft:LVGLgetval]' ('[tft:LVGLgetevent]'))
+if (('[tft:LVGLgetevent]') == 'sw1') {
+  '[tft:LVGLsetval]' 'led1' ('[tft:LVGLgetval]' 'sw1')
+} (('[tft:LVGLgetevent]') == 'sw2') {
+  '[tft:LVGLsetval]' 'led2' ('[tft:LVGLgetval]' 'sw2')
+} else {
+}
 }
 
 script 40 152 {
 whenStarted
 '[tft:LVGLon]' true
+delete_all_objects
 comment 'create tiles'
 '[tft:LVGLaddobj]' 'tileview' 'tiles'
 '[tft:LVGLaddtile]' 'tile1' 'tiles' 0 0 false true false false
@@ -36,6 +43,21 @@ comment 'add tabview in tile4'
 '[tft:LVGLaddobj]' 'arc' 'arc' 'tab1'
 '[tft:LVGLaddobj]' 'slider' 'slider' 'tab2'
 '[tft:LVGLsetpos]' 'slider' 10 30
+'[tft:LVGLaddobj]' 'tileview' 'tiles'
+'[tft:LVGLaddobj]' 'led' 'led1' 'tile1'
+'[tft:LVGLsetpos]' 'led1' 100 100
+'[tft:LVGLsetcolor]' 'led1' (colorSwatch 35 190 30 255)
+'[tft:LVGLaddobj]' 'led' 'led2' 'tile1'
+'[tft:LVGLsetpos]' 'led2' 200 100
+'[tft:LVGLsetcolor]' 'led2' (colorSwatch 190 38 8 255)
+'[tft:LVGLaddobj]' 'switch' 'sw1' 'tile1'
+'[tft:LVGLsetpos]' 'sw1' 70 150
+'[tft:LVGLsetsize]' 'sw1' 100 50
+'[tft:LVGLsetcolor]' 'sw1' (colorSwatch 169 190 166 255) (colorSwatch 35 190 30 255)
+'[tft:LVGLaddobj]' 'switch' 'sw2' 'tile1'
+'[tft:LVGLsetpos]' 'sw2' 200 150
+'[tft:LVGLsetsize]' 'sw2' 100 50
+'[tft:LVGLsetcolor]' 'sw2' (colorSwatch 190 166 178 255) (colorSwatch 190 13 47 255)
 }
 
 
