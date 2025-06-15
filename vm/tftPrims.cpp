@@ -2505,7 +2505,7 @@ static lv_color_t *buf1;
 static lv_color_t *buf2;
 //static lv_color_t buf[TFT_WIDTH * TFT_BUFFER_LINES];
 
- 
+bool event_seen = false;
 
 static lv_display_t * disp;
 
@@ -2841,8 +2841,10 @@ void ui_log_event_cb(lv_event_t *e) {
 		// sprintf(s,"Event %d on obj name %s", last_event.code, last_event.name.c_str());
 		// outputString(s);
 	// send broadcast
+	event_seen = true; // set to false in getevent
+	
 	char eventmessage[] = "LVGLevent";
-	// send a broadact with text: LVGLevent
+	// send a broadcast with text: LVGLevent
 	startReceiversOfBroadcast(eventmessage, 9);
 	sendBroadcastToIDE(eventmessage, 9);
 }
@@ -3592,6 +3594,15 @@ static OBJ primLVGLgetEvent(int argCount, OBJ *args) {
 	return result;
 }
 
+static OBJ primLVGLEvent(int argCount, OBJ *args) {
+	bool check_event = event_seen;
+	// char s[100];
+	// sprintf(s,"event %d",event_seen);
+	// outputString(s);
+	event_seen = false; // wipe event for next event
+	if (check_event) return trueObj; else return falseObj;
+}
+
  
 static OBJ primLVGLon(int argCount, OBJ *args) {
 	set_lvgl(trueObj == args[0]);
@@ -3735,6 +3746,7 @@ static PrimEntry entries[] = {
 	{"LVGLsettext",primLVGLsetText},
 	{"LVGLsetstyle",primLVGLsetstyle},
 	{"LVGLgetval", primLVGLgetVal},
+	{"LVGLevent",primLVGLEvent},
 	{"LVGLgetevent",primLVGLgetEvent},
 	{"LVGLsetcolor", primLVGLsetColor},
 	{"LVGLgetallobjs", primLVGLgetallobjs},
