@@ -2885,6 +2885,7 @@ const lv_font_t* get_font_from_scale(int scale_x) {
         case 1: return &lv_font_montserrat_14;
         case 2: return &lv_font_montserrat_24;
         case 3: return &lv_font_montserrat_40;
+		case 4: return &lv_font_montserrat_48;
         default: return &lv_font_montserrat_14; // default fallback
     }
 }
