@@ -2,13 +2,14 @@ module LVGL Output
 author Ste7an
 version 1 2 
 choices style_types range rotation angles brightness 
-choices obj_types arc slider led switch bar tabview roller list tileview 
+choices obj_types arc slider led switch bar tabview roller list tileview button_matrix
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 
 
   spec ' ' '[tft:LVGLon]' 'enable_lvgl _' 'bool' true
   spec ' ' '[tft:LVGLaddbtn]' 'btn _ : scale _ : text _ : parent _' 'str num str str' 'btn' 1 'btn' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddlabel]' 'label _ : scale _ : text _ : parent _' 'str num str str' 'label' 1 'label' 'lv_scr_act'
+  spec ' ' '[tft:LVGLaddobj]' 'add _ as _ : parent _' 'str.obj_types str str' 'arc' '' 'lv_scr_act'
   spec ' ' '[tft:LVGLsetpos]' 'set_pos _ x _ y _' 'str num num' '' 100 100
   spec ' ' '[tft:LVGLsetsize]' 'set_size _ width _ height _' 'str num num' '' 100 10
   spec ' ' '[tft:LVGLsetval]' 'set_val _ value _' 'str num' '' 10
@@ -25,7 +26,7 @@ variables _lvgl_call_backs
   spec 'r' '[tft:LVGLgetallobjs]' 'get_all_objects'
   spec ' ' '[tft:LVGLdelobj]' 'del_obj _' 'str' ''
   spec ' ' 'delete_all_objects' 'delete_all_objects'
-  spec ' ' '[tft:LVGLaddobj]' 'add _ as _ : parent _' 'str.obj_types str str' 'arc' '' 'lv_scr_act'
+  advanced
   spec ' ' '[tft:LVGLaddimg]' 'img path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
   spec ' ' '[tft:LVGLsetstyle]' 'set _ of _ to _ : until _' 'str.style_types str auto auto' 'range' '' '' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''

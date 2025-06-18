@@ -3044,6 +3044,13 @@ void ui_create_roller(char * obj_name, const char * parent) {
 	}
 }
 
+void ui_create_button_matrix(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_buttonmatrix_create(registry.get(parent));
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
 
 
 void ui_add_tab(char * obj_name, const char * parent) {
@@ -3151,10 +3158,10 @@ void ui_set_text(char * obj_name, char * text, int scale) {
 				lv_label_set_text(label, text);
 				lv_obj_set_style_text_font(label, get_font_from_scale(scale), LV_PART_MAIN);
 			}
-		} if (lv_obj_get_class(obj) == &lv_roller_class) {
+		} else 
+		if (lv_obj_get_class(obj) == &lv_roller_class) {
 			lv_roller_set_options(obj, text, LV_ROLLER_MODE_INFINITE);
 		}
-		
 	}
 }
 
@@ -3283,8 +3290,6 @@ Command lookup_cmd(const char *s) {
 	if (strcmp(s, "tileview") == 0) return CMD_TILEVIEW;
 	if (strcmp(s, "list") == 0)     return CMD_LIST;
 	if (strcmp(s, "roller") == 0)   return CMD_ROLLER;
-	
-	
     return CMD_UNKNOWN;
 }
 
@@ -3424,6 +3429,11 @@ static OBJ primLVGLaddArc(int argCount, OBJ *args) {
 	ui_create_arc(obj_name, parent);
 	return falseObj;
 }
+
+
+//static OBJ primLVGLaddButtonMatrix(int argCount, OBJ *args) {
+
+
 
 static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 	char* obj_type = obj2str(args[0]);
@@ -3768,6 +3778,7 @@ static PrimEntry entries[] = {
 	{"LVGLaddarc",primLVGLaddArc},
 	{"LVGLaddtab",primLVGLaddTab},
 	{"LVGLaddtile",primLVGLaddTile},
+	{"LVGLaddbuttonmatrix",primLVGLaddButtonMatrix},
 	{"LVGLaddobj",primLVGLaddObject},
 	{"LVGLdelobj",primLVGLdelObj},
 	{"LVGLsetparent",primLVGLsetParent},
