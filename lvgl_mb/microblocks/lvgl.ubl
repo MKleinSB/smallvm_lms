@@ -1,9 +1,10 @@
 module LVGL Output
 author Ste7an
-version 1 1 
-choices style_types range rotation angles brightness
-choices obj_types arc slider led switch bar tabview roller list tileview
+version 1 2 
+choices style_types range rotation angles brightness 
+choices obj_types arc slider led switch bar tabview roller list tileview 
 description 'LVGL support for MicroBlocks'
+variables _lvgl_call_backs 
 
   spec ' ' '[tft:LVGLon]' 'enable_lvgl _' 'bool' true
   spec ' ' '[tft:LVGLaddbtn]' 'btn _ : scale _ : text _ : parent _' 'str num str str' 'btn' 1 'btn' 'lv_scr_act'
@@ -24,20 +25,40 @@ description 'LVGL support for MicroBlocks'
   spec 'r' '[tft:LVGLgetallobjs]' 'get_all_objects'
   spec ' ' '[tft:LVGLdelobj]' 'del_obj _' 'str' ''
   spec ' ' 'delete_all_objects' 'delete_all_objects'
-advanced
   spec ' ' '[tft:LVGLaddobj]' 'add _ as _ : parent _' 'str.obj_types str str' 'arc' '' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddimg]' 'img path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
   spec ' ' '[tft:LVGLsetstyle]' 'set _ of _ to _ : until _' 'str.style_types str auto auto' 'range' '' '' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
-  spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str  num num bool bool bool bool' 'tile' '' 0 0 false false false false
+  spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
- 
+  spec ' ' 'handle_event' 'handle_event _' 'auto' '10'
+  spec ' ' 'add_callback' 'add_callback _ function _' 'auto auto' '10' '10'
+  spec ' ' 'init_callback' 'init_callback'
+
+to add_callback obj function {
+  if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}
+  '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+}
 
 to delete_all_objects {
   local 'all_objects' ('[tft:LVGLgetallobjs]')
   for i (size all_objects) {
     '[tft:LVGLdelobj]' (at i all_objects)
   }
+}
+
+to handle_event event {
+  local 'var' 1
+  repeatUntil (or (var > (size _lvgl_call_backs)) (event == (at 1 (at var _lvgl_call_backs)))) {
+    var += 1
+  }
+  if (var <= (size _lvgl_call_backs)) {
+    callCustomCommand (at 2 (at var _lvgl_call_backs))
+  }
+}
+
+to init_callback {
+  _lvgl_call_backs = 0
 }
 
 to makeColor r g b {
