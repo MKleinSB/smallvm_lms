@@ -13,17 +13,21 @@ to imu x y z {
 
 script 326 62 {
 whenStarted
+digitalWriteOp 33 false
 init
 add_command 'imu' 0 3 'i'
 '[tft:LVGLon]' true
 '[tft:LVGLaddobj]' 'slider' 'x' 'lv_scr_act'
 '[tft:LVGLsetpos]' 'x' 10 50
+'[tft:LVGLsetsize]' 'x' 250 20
 '[tft:LVGLsetcolor]' 'x' (colorSwatch 35 190 30 255) (colorSwatch 35 190 30 255)
 '[tft:LVGLaddobj]' 'slider' 'y' 'lv_scr_act'
 '[tft:LVGLsetpos]' 'y' 10 120
+'[tft:LVGLsetsize]' 'y' 250 20
 '[tft:LVGLsetcolor]' 'y' (colorSwatch 30 7 190 255) (colorSwatch 45 40 190 255)
 '[tft:LVGLaddobj]' 'slider' 'z' 'lv_scr_act'
 '[tft:LVGLsetpos]' 'z' 10 190
+'[tft:LVGLsetsize]' 'z' 250 20
 '[tft:LVGLsetcolor]' 'z' (colorSwatch 190 23 8 255) (colorSwatch 190 14 54 255)
 '[tft:LVGLsetstyle]' 'range' 'x' -13000 13000
 '[tft:LVGLsetstyle]' 'range' 'y' -13000 13000
@@ -31,6 +35,12 @@ add_command 'imu' 0 3 'i'
 forever {
   process
 }
+}
+
+script 44 68 {
+whenStarted
+waitMillis 4000
+digitalWriteOp 33 true
 }
 
 script 60 256 {

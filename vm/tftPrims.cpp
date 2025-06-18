@@ -977,17 +977,11 @@ void pca9535_BL() {
 	}
   
 
-	
 #elif defined(LMS7789)
-	//disp = st7789(spimode=3,miso=12, mosi=13, clk=14, cs=15, dc=23, rst=25, backlight=2,power=-1,width=240, height=280,start_y=20, rot=PORTRAIT, colormode=COLOR_MODE_RGB)
-	// disp = st7789(spimode=3,miso=-1, mosi=26, clk=15 , cs=-1, dc=27, rst=13, backlight=12,power=-1,width=240, height=280,start_y=20, rot=PORTRAIT, colormode=COLOR_MODE_RGB)
+#if !defined(TFT_ESPI)
 
-
-    // touch = xpt2046(spihost=esp.HSPI_HOST,cs=26,transpose=False,cal_x0=3865, 
 	#include "Adafruit_GFX.h"
 	#include "Adafruit_ST7789.h"
-	// #include <bb_captouch.h>
-	
 	
 	#define HAS_TOUCH_SCREEN 1
 	// sodb
@@ -1025,6 +1019,37 @@ void pca9535_BL() {
 		useTFT = true;
 	}
 
+#else 
+		#define HAS_TOUCH_SCREEN 1
+		#include <TFT_eSPI.h>
+
+	
+		TFT_eSPI tft = TFT_eSPI();  // Invoke TFT object
+	
+	#define TOUCH_I2C_SDA 32
+	#define TOUCH_I2C_SCL 33
+	#define CST820_ADDR 0x15
+
+
+		void tftInit() {
+			
+			tft.init();
+			tft.initDMA();
+		
+			tft.begin();
+			tft.setRotation(1);
+			//tft.setViewport(0, 20, 240, 300);
+	//			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
+			tftClear();
+			// Turn on backlight on IoT-Bus
+			pinMode(12, OUTPUT);
+			digitalWrite(12, HIGH);
+
+			useTFT = true;
+	}
+  
+	
+#endif	
 	
 	static int wireTouchStarted = false;
 
@@ -1129,7 +1154,7 @@ void pca9535_BL() {
 				data[i] = Wire1.read();
 			}
 			touchGesture = data[0];
-			touchScreenY = TFT_HEIGHT - (((data[2] & 0xF) << 8) | data[3]);
+			touchScreenY = TFT_WIDTH - (((data[2] & 0xF) << 8) | data[3]);
 			touchScreenX = ((data[4] & 0xF) << 8) | data[5];
 			//char s[100];
 			//sprintf(s,"touch ct820 gesture: %d x:%d y:%d\n",touchGesture,touchScreenX,touchScreenY);
