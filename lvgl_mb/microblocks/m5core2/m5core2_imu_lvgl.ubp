@@ -4,17 +4,33 @@ version 1 0
 description ''
 variables i2c_devs 
 
-script 371 49 {
+script 479 40 {
+comment 'open graph'
+}
+
+script 113 66 {
 whenStarted
 '[sensors:i2cSetClockSpeed]' 400000
 '[sensors:i2cSetPins]' 21 22
 '[tft:LVGLon]' true
+delete_all_objects
+'[tft:LVGLaddlabel]' 'lbl' 3 'Move me'
+'[tft:LVGLsetpos]' 'lbl' 50 0
+'[tft:LVGLaddlabel]' 'lbl1' 2 'imu x'
+'[tft:LVGLsetpos]' 'lbl1' 100 40
 '[tft:LVGLaddobj]' 'slider' 'sl1'
+'[tft:LVGLsetcolor]' 'sl1' (colorSwatch 35 190 30 255) (colorSwatch 35 190 30 255) (colorSwatch 35 190 30 255)
 '[tft:LVGLsetpos]' 'sl1' 20 80
+'[tft:LVGLaddlabel]' 'lbl2' 2 'imu y'
+'[tft:LVGLsetpos]' 'lbl2' 100 100
 '[tft:LVGLaddobj]' 'slider' 'sl2'
-'[tft:LVGLsetpos]' 'sl2' 20 120
+'[tft:LVGLsetcolor]' 'sl2' (colorSwatch 190 59 14 255) (colorSwatch 190 42 13 255) (colorSwatch 190 23 8 255)
+'[tft:LVGLsetpos]' 'sl2' 20 140
+'[tft:LVGLaddlabel]' 'lbl3' 2 'imu z'
+'[tft:LVGLsetpos]' 'lbl3' 100 160
 '[tft:LVGLaddobj]' 'slider' 'sl3'
-'[tft:LVGLsetpos]' 'sl3' 20 160
+'[tft:LVGLsetcolor]' 'sl3' (colorSwatch 14 7 190 255) (colorSwatch 14 13 190 255) (colorSwatch 13 11 190 255)
+'[tft:LVGLsetpos]' 'sl3' 20 200
 '[tft:LVGLsetstyle]' 'range' 'sl1' -100 100
 '[tft:LVGLsetstyle]' 'range' 'sl2' -100 100
 '[tft:LVGLsetstyle]' 'range' 'sl3' -100 100

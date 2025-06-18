@@ -13,17 +13,17 @@ to make_tiles {
   '[tft:LVGLaddtile]' 'tile2' 'tiles' 1 0 true false false true
   '[tft:LVGLaddtile]' 'tile3' 'tiles' 1 1 false false true true
   '[tft:LVGLaddtile]' 'tile4' 'tiles' 1 2 false false true false
-  '[tft:LVGLaddbtn]' 'btn1' 3 'tile1 ->' 'tile1'
-  '[tft:LVGLaddbtn]' 'btn2' 3 'tile2  v' 'tile2'
-  '[tft:LVGLaddbtn]' 'btn3' 3 'tile3 v' 'tile3'
+  '[tft:LVGLaddbtn]' 'btn1' 3 'tile1' 'tile1'
+  '[tft:LVGLaddbtn]' 'btn2' 3 'tile2' 'tile2'
+  '[tft:LVGLaddbtn]' 'btn3' 3 'tile3' 'tile3'
   '[tft:LVGLsetcolor]' 'btn2' (colorSwatch 35 190 30 255)
   '[tft:LVGLsetcolor]' 'btn3' (colorSwatch 190 14 36 255)
 }
 
 to tile2 {
   comment 'create roller on tile 2'
-  '[tft:LVGLaddlabel]' 'label' 2 'select:' 'tile2'
-  '[tft:LVGLsetpos]' 'label' 100 90
+  '[tft:LVGLaddlabel]' 'label' 2 'select ->' 'tile2'
+  '[tft:LVGLsetpos]' 'label' 90 80
   '[tft:LVGLaddobj]' 'roller' 'roller' 'tile2'
   '[tft:LVGLsetpos]' 'roller' 200 30
   '[tft:LVGLsettext]' 'roller' 'left
