@@ -32,9 +32,10 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
   spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
-  spec ' ' 'handle_event' 'handle_event _' 'auto' '10'
-  spec ' ' 'add_callback' 'add_callback _ function _' 'auto auto' '10' '10'
   spec ' ' 'init_callback' 'init_callback'
+  spec ' ' 'add_callback' 'add_callback _ function _' 'str str' '' ''
+  spec ' ' 'handle_event' 'handle_event _' 'str' ''
+  
 
 to add_callback obj function {
   if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}

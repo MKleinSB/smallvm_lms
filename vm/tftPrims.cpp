@@ -2642,7 +2642,7 @@ private:
     std::unordered_map<std::string, uint8_t*> registry;
 };
 
- LVObjectBuffer img_buffer;
+ LVObjectBuffer img_buffer, map_buffer;
 
 void fs_init() {
   if (!LittleFS.begin()) {
@@ -3044,14 +3044,6 @@ void ui_create_roller(char * obj_name, const char * parent) {
 	}
 }
 
-void ui_create_button_matrix(char * obj_name, const char * parent) {
-    if (!registry.get(obj_name) && registry.get(parent)) {
-		lv_obj_t* obj = lv_buttonmatrix_create(registry.get(parent));
-		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-		registry.add(obj_name, obj);
-	}
-}
-
 
 void ui_add_tab(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
@@ -3092,6 +3084,11 @@ void ui_delete_obj(char * obj_name) {
 			uint8_t* buffer = img_buffer.get(obj_name);
 			heap_caps_free(buffer);
 			img_buffer.remove(obj_name);
+		} else
+		if (lv_obj_get_class(obj) == &lv_buttonmatrix_class) {
+			uint8_t* buffer = map_buffer.get(obj_name);
+			heap_caps_free(buffer);
+			map_buffer.remove(obj_name);
 		}
         registry.remove(obj_name);
     }
@@ -3431,8 +3428,46 @@ static OBJ primLVGLaddArc(int argCount, OBJ *args) {
 }
 
 
-//static OBJ primLVGLaddButtonMatrix(int argCount, OBJ *args) {
+static OBJ primLVGLaddButtonMatrix(int argCount, OBJ *args) {
+	/*
+	int count;
+	char* obj_name = obj2str(args[0]);
+	OBJ obj = args[1];
+	if (IS_TYPE(obj, ListType)) {
+		count = obj2int(FIELD(obj, 0));
+		if (count >= WORDS(obj)) count = WORDS(obj) - 1;
+	}
+	// alloc array of strings 
+	uint8_t** result = malloc(count * sizeof(uint8_t*));
+	for (size_t i = 0; i < count; i++) {
+        OBJ field =  FIELD(obj, i);
+		char* string_n = obj2str(field)
+		size_t len = strlen(field_n);
+        result[i] = malloc(len + 1); // +1 for null terminator
+        if (!result[i]) {
+            // Free already allocated strings on error
+            for (size_t j = 0; j < i; j++) free(result[j]);
+            free(result);
+            return NULL;
+        }
+        memcpy(result[i], field_n, len);
+        result[i][len] = '\0'; // Null-terminate
+    }
+	map_
+	if (argCount > 2) {
+		parent = obj2str(args[2]);
+	} else {
+		parent = "lv_scr_act";
+	}
 
+   if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_buttonmatrix_create(registry.get(parent));
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+		*/
+	return falseObj;
+}
 
 
 static OBJ primLVGLaddObject(int argCount, OBJ *args) {
