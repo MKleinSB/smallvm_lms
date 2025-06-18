@@ -4,21 +4,31 @@ version 1 0
 description ''
 variables count 
 
-script 224 52 {
+script 111 175 {
+whenStarted
 count = 0
+comment 'remove all exsiting widgets'
 delete_all_objects
+comment 'switch on lvgl screen'
 '[tft:LVGLon]' true
+comment 'Set label'
+'[tft:LVGLaddlabel]' 'label' 2 'This is an LVGL example'
+'[tft:LVGLsetpos]' 'label' 20 5
+comment 'define button 1'
 '[tft:LVGLaddbtn]' 'btn1' 4
 '[tft:LVGLsetpos]' 'btn1' 100 60
 '[tft:LVGLsetcolor]' 'btn1' (colorSwatch 35 190 30 255)
+comment 'define button 2'
 '[tft:LVGLaddbtn]' 'btn2' 4
 '[tft:LVGLsetpos]' 'btn2' 100 150
 '[tft:LVGLsetcolor]' 'btn2' (colorSwatch 190 35 7 255)
 }
 
-script 544 151 {
+script 548 251 {
 whenCondition ('[tft:LVGLevent]')
+comment 'This is called for every event'
 count += 1
+comment 'get_event contains name of event generating object'
 sayIt ('[tft:LVGLgetevent]') count
 }
 
