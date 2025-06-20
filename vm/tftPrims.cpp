@@ -34,7 +34,7 @@ static int deferUpdates = false;
 	defined(TTGO_RP2040) || defined(TTGO_DISPLAY) || defined(ARDUINO_M5STACK_Core2) || \
 	defined(GAMEPAD_DISPLAY) || defined(PICO_ED) || defined(OLED_128_64) || defined(COCUBE) || \
 	defined(ARDUINO_M5Atom_S3) || defined(LMSDISPLAY) || defined(LMS7789) || defined(UNIHIKER) ||\
-	defined(M5Atom_S3_TFT)
+	defined(M5Atom_S3_TFT) || defined(CYD)
 
 	//sodb
 	//#if !defined(TFT_ESPI)
@@ -832,6 +832,175 @@ static int deferUpdates = false;
 		return ts.getPoint().z;
 		}
 		
+
+ #elif defined(CYD) && defined(TFT_ESPI)
+	#define HAS_TOUCH_SCREEN 1
+		#include <TFT_eSPI.h>
+
+	
+		TFT_eSPI tft = TFT_eSPI();  // Invoke TFT object
+	
+	#define TOUCH_I2C_SDA 33
+	#define TOUCH_I2C_SCL 32
+	#define CST820_ADDR 0x15
+
+
+		void tftInit() {
+			
+			tft.init();
+			tft.initDMA();
+		
+			tft.begin();
+			tft.setRotation(1);
+			//tft.setViewport(0, 20, 240, 300);
+	//			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
+			tftClear();
+			// Turn on backlight on IoT-Bus
+			pinMode(27, OUTPUT);
+			digitalWrite(27, HIGH);
+			outputString("TFT initialized");
+			useTFT = true;
+	}
+  
+	
+
+	
+	static int wireTouchStarted = false;
+
+	static void startTouchWire() {
+		//if (internalWireStarted) {
+			Wire1.end(); // stop wire interfacebefore setting pins
+			Wire1.setPins(TOUCH_I2C_SDA,TOUCH_I2C_SCL);
+			Wire1.begin();
+			Wire1.setClock(400000); 
+			wireTouchStarted = true;
+		//}
+	}
+	
+	int readI2CTouchReg(int deviceID, int reg) {
+		if (!wireTouchStarted) startTouchWire();
+		if (!wireTouchStarted) return -100; // could not start I2C; missing pullup resistors?
+	
+		Wire1.beginTransmission(deviceID);
+		Wire1.write(reg);
+		int error = Wire1.endTransmission();
+		if (error) return -error; // error; bad device ID?
+	
+		Wire1.requestFrom(deviceID, 1);
+	
+		return Wire1.available() ? Wire1.read() : 0;
+	}
+	
+
+
+	void writeI2CTouchReg(int deviceID, int reg, int value) {
+		if (!wireTouchStarted) startTouchWire();
+		if (!wireTouchStarted) return;
+	
+		Wire1.beginTransmission(deviceID);
+		Wire1.write(reg);
+		Wire1.write(value);
+		Wire1.endTransmission();
+	}
+
+
+	// uint8_t i2c_read(uint16_t addr, uint8_t reg_addr, uint8_t *reg_data, size_t length)
+	// {
+	// 	Wire1.beginTransmission(addr);
+	// 	Wire1.write(reg_addr);
+	// 	if ( Wire1.endTransmission(true))return -1;
+	// 	Wire1.requestFrom(addr, length, true);
+	// 	for (int i = 0; i < length; i++) {
+	// 		*reg_data++ = Wire.read();
+	// 	}
+	// 	return 0;
+	// }
+
+	
+	static void touchInit() {
+		startTouchWire();
+		writeI2CTouchReg(CST820_ADDR, 0xfe, 0xff); // do not sleep 
+		touchEnabled = true;
+	}
+
+	static uint32 lastTouchUpdate = 0;
+	static int touchScreenX = -1;
+	static int touchScreenY = -1;
+	static int touchGesture = -1;
+
+    // https://github.com/fbiego/CST816S
+
+	static int screenTouched() {
+		touchInit();
+ 		Wire1.beginTransmission(CST820_ADDR);
+  		Wire1.write(0x00);  // Read from register 0x00
+  		if (Wire1.endTransmission(false) != 0) {
+    		//outputString("CST820 not responding\n");
+	    	return 0;
+		}
+
+		  Wire1.requestFrom(CST820_ADDR, 7);
+  		if (Wire1.available() < 7) {
+    		//outputString("Incomplete data\n");
+    		return 0;
+  		}
+
+		
+		if (!touchEnabled) touchInit();
+		int points = readI2CTouchReg(CST820_ADDR, 2); // read touch count
+		if (points < 1 || points > 5) { // something went wrong
+			return 0;
+		} else return points;
+
+	}
+
+	static void touchUpdate() {
+		if (!touchEnabled) touchInit();
+		uint32 now = millisecs();
+		if ((now - lastTouchUpdate) < 10) return;
+		if (screenTouched()) {
+			uint8 data[6];
+			Wire1.beginTransmission(CST820_ADDR);
+			Wire1.write(1);
+			Wire1.endTransmission();
+			Wire1.requestFrom(CST820_ADDR, sizeof(data));
+			for (int i = 0; i < sizeof(data); i++) {
+				data[i] = Wire1.read();
+			}
+			touchGesture = data[0];
+			touchScreenY = TFT_WIDTH - (((data[2] & 0xF) << 8) | data[3]);
+			touchScreenX = ((data[4] & 0xF) << 8) | data[5];
+			//char s[100];
+			//sprintf(s,"touch ct820 gesture: %d x:%d y:%d\n",touchGesture,touchScreenX,touchScreenY);
+			//outputString(s);
+		} else {
+			touchScreenX = -1;
+			touchScreenY = -1;
+		}
+		lastTouchUpdate = now;
+	}
+
+	static int screenTouchX() {
+		touchUpdate();
+		return touchScreenX;
+	}
+
+	static int screenTouchY() {
+		touchUpdate();
+		return touchScreenY;
+	}
+
+	static int screenTouchGesture() {
+		touchUpdate();
+		return touchGesture;
+	}
+
+	static int screenTouchPressure() {
+		// pressure not supported; return a constant value if screen is touched, -1 if not
+		if (!touchEnabled) touchInit();
+		return screenTouched() ? 1000 : -1;
+	}
+
 
 
     #elif defined(LMSDISPLAY) && !defined(TFT_ESPI)
@@ -1676,9 +1845,9 @@ static int hasTFT() {
 
 #define BUFFER_PIXELS_SIZE (TFT_WIDTH * 8)
 //sodb move buffer to psram. Warning: No check whether psram exists!
-#if defined(LVGL)
+#if defined(LVGL) && defined(BOARD_HAS_PSRAM  )
   __attribute__((section(".ext_ram"))) uint16_t bufferPixels[BUFFER_PIXELS_SIZE];
-#else
+#elif !defined(CYG)
   uint16_t bufferPixels[BUFFER_PIXELS_SIZE]; // used by primPixelRow and primDrawBuffer
 #endif
 
@@ -1860,6 +2029,8 @@ static OBJ primSetPixel(int argCount, OBJ *args) {
 	return falseObj;
 }
 
+
+#if !defined(CYD)
 static OBJ primPixelRow(int argCount, OBJ *args) {
 	// Draw a single row of pixels (a list or byte array) at the given y.
 	// If a byte array is provided the optional argument bytesPerPixel
@@ -1950,6 +2121,8 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 	UPDATE_DISPLAY();
 	return falseObj;
 }
+
+#endif 
 
 static OBJ primLine(int argCount, OBJ *args) {
 	if (!hasTFT()) return falseObj;
@@ -2403,7 +2576,7 @@ static OBJ primSetBacklight(int argCount, OBJ *args) { return falseObj; }
 static OBJ primGetWidth(int argCount, OBJ *args) { return int2obj(0); }
 static OBJ primGetHeight(int argCount, OBJ *args) { return int2obj(0); }
 static OBJ primSetPixel(int argCount, OBJ *args) { return falseObj; }
-static OBJ primPixelRow(int argCount, OBJ *args) { return falseObj; }
+//static OBJ primPixelRow(int argCount, OBJ *args) { return falseObj; }
 static OBJ primLine(int argCount, OBJ *args) { return falseObj; }
 static OBJ primRect(int argCount, OBJ *args) { return falseObj; }
 static OBJ primRoundedRect(int argCount, OBJ *args) { return falseObj; }
@@ -3777,7 +3950,7 @@ static PrimEntry entries[] = {
 	{"getWidth", primGetWidth},
 	{"getHeight", primGetHeight},
 	{"setPixel", primSetPixel},
-	{"pixelRow", primPixelRow},
+//	{"pixelRow", primPixelRow},
 	{"line", primLine},
 	{"rect", primRect},
 	{"roundedRect", primRoundedRect},
