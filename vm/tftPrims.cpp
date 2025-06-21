@@ -1357,7 +1357,7 @@ void pca9535_BL() {
 	}
 
 
-	#elif defined(ARDUINO_IOT_BUS)
+	#elif defined(ARDUINO_IOT_BUS) & !defined(TFT_ESPI)
 		#include "Adafruit_GFX.h"
 		#include "Adafruit_ILI9341.h"
 		#include <XPT2046_Touchscreen.h>
@@ -1531,6 +1531,85 @@ void pca9535_BL() {
 
 		#undef UPDATE_DISPLAY
 		#define UPDATE_DISPLAY() { if (!deferUpdates) { oledUpdate(); taskSleep(-1); }}
+    #elif defined(ARDUINO_IOT_BUS) & defined(TFT_ESPI)
+	#define HAS_TOUCH_SCREEN 1
+		#include <TFT_eSPI.h>
+
+		// in User_Setup,h #define ILI9341_DRIVER
+		// this definition also defines width and height.
+
+		#include <XPT2046_Touchscreen.h>
+		TFT_eSPI tft = TFT_eSPI();  // Invoke TFT object
+		XPT2046_Touchscreen ts(TOUCH_CS);
+		SPIClass& spix = SPI;
+//SPIClass mySPI(HSPI); 
+
+		void tftInit() {
+			
+			tft.init();
+			tft.initDMA();
+			//tft.setSwapBytes(true);
+			spix = tft.getSPIinstance(); 
+			//tft.fillScreen(TFT_BLACK);
+		
+			tft.begin();
+			tft.setRotation(3);
+	//			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
+			tftClear();
+			// Turn on backlight on IoT-Bus
+			pinMode(2, OUTPUT);
+			digitalWrite(, HIGH);
+
+			useTFT = true;
+	}
+  
+	static void touchInit() {
+		
+		ts.begin(spix);
+		//pinMode(TOUCH_CS, INPUT);
+		//mySPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, TOUCH_CS);
+		//ts.begin(mySPI);
+  		ts.setRotation(3);
+		//ts.setCalibration(X_MIN, X_MAX, Y_MIN, Y_MAX);
+		//ts.setRotation(1);
+		touchEnabled = true;
+	}
+
+	static int screenTouched() {
+		if (!touchEnabled) touchInit();
+		// char s[100];
+		// sprintf(s,"touch init: %d ",ts.touched());
+		// outputString(s);
+		return ts.touched();
+	}
+
+	static int screenTouchX() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		int16_t x = ts.getPoint().x;
+		// char s[100];
+		// sprintf(s,"touch x: %d ",x);
+		// outputString(s);
+		return map(x, 200, 3800, TFT_HEIGHT,0);
+		}
+		
+	static int screenTouchY() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		int16_t y = ts.getPoint().y;
+		// char s[100];
+		// sprintf(s,"touch y: %d ",y);
+		// outputString(s);
+		return  map(y, 300, 3900, 0, TFT_WIDTH);
+		}
+		
+	static int screenTouchPressure() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		return ts.getPoint().z;
+		}
+		
+
 
 	#elif defined(TTGO_DISPLAY)
 		#include "Adafruit_GFX.h"

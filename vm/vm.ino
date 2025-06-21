@@ -24,7 +24,10 @@
 
 // #endif
 
+#include <LittleFS.h>
+
 void setup() {
+	 LittleFS.format(); 
 #ifdef ARDUINO_NRF52_PRIMO
 	sd_softdevice_disable();
 #endif

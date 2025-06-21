@@ -21,7 +21,7 @@ REM Use timestamp in filename
 set "FILENAME=log_%TIMESTAMP%.txt"
 echo Creating file: %FILENAME%
 
-
+REM 0x210000 spiffs.bin 
 
 echo Parameter is: %param%
 copy ..\.pio\build\%param%\*.bin .

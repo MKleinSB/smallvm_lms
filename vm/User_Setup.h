@@ -29,14 +29,14 @@ GND	Ground
 
 //#define TFT_WIDTH  320
 //#define TFT_HEIGHT 240
-#define TFT_MOSI 23
-#define TFT_MISO 19
-#define TFT_SCLK 18
-#define TFT_CS 15
-#define TFT_DC 27
-#define TFT_RST -1
+#define TFT_MOSI 13 //23
+#define TFT_MISO 12 //19
+#define TFT_SCLK 14 //18
+#define TFT_CS 15 //21 //5
+#define TFT_DC 23
+#define TFT_RST 25 // -1
 
-#define TOUCH_CS 16  // For XPT2046
+//#define TOUCH_CS 26 //14  // 12
 
 #define LOAD_GLCD
 #define LOAD_FONT2
