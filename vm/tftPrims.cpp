@@ -3823,7 +3823,13 @@ static OBJ primLVGLsetVal(int argCount, OBJ *args) {
 		if (lv_obj_get_class(obj) == &lv_led_class) {
 			if (trueObj == args[1]) lv_led_on(obj);
 			else lv_led_off(obj);
-		} else value = obj2int(args[1]);
+		} else if (lv_obj_get_class(obj) == &lv_switch_class) {
+			if (IS_TYPE(args[1], BooleanType )) {
+				if (args[1]==trueObj) value = 1; else value=0;
+			} 
+		}
+		else
+		   value = obj2int(args[1]);
 		if (lv_obj_get_class(obj) == &lv_arc_class) {
 			lv_arc_set_value(obj, value);
 		} else 
@@ -3835,9 +3841,7 @@ static OBJ primLVGLsetVal(int argCount, OBJ *args) {
 		} else
 		if (lv_obj_get_class(obj) == &lv_switch_class) {
 			if (value==0) lv_obj_remove_state(obj, LV_STATE_CHECKED);
-			else if (value&1) lv_obj_add_state(obj, LV_STATE_CHECKED);
-			else if (value>1) lv_obj_add_state(obj, value);
-			else if (value<0) lv_obj_remove_state(obj, -value);
+			else if (value>0) lv_obj_add_state(obj, LV_STATE_CHECKED);
 		}  else
 		if (lv_obj_get_class(obj) == &lv_roller_class) {
 			lv_roller_set_visible_row_count(obj,value);
