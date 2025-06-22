@@ -780,9 +780,9 @@ static int deferUpdates = false;
 	//			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
 			tftClear();
 			// Turn on backlight on IoT-Bus
+			
 			pinMode(33, OUTPUT);
 			digitalWrite(33, HIGH);
-
 			useTFT = true;
 	}
   
