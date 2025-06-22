@@ -34,7 +34,7 @@ static int deferUpdates = false;
 	defined(TTGO_RP2040) || defined(TTGO_DISPLAY) || defined(ARDUINO_M5STACK_Core2) || \
 	defined(GAMEPAD_DISPLAY) || defined(PICO_ED) || defined(OLED_128_64) || defined(COCUBE) || \
 	defined(ARDUINO_M5Atom_S3) || defined(LMSDISPLAY) || defined(LMS7789) || defined(UNIHIKER) ||\
-	defined(M5Atom_S3_TFT) || defined(CYD)
+	defined(M5Atom_S3_TFT) || defined(CYD) || defined(ELECROW)
 
 	//sodb
 	//#if !defined(TFT_ESPI)
@@ -75,6 +75,207 @@ static int deferUpdates = false;
 			tft.initR(INITR_144GREENTAB);
 			tft.setRotation(1);
 			tftClear();
+			useTFT = true;
+		}
+
+	#elif defined(ELECROW)
+	#include <Wire.h>
+	#include <LovyanGFX.hpp>
+
+	#define TOUCH_I2C_ADD 0x38
+
+	#define TOUCH_REG_XL 0x04
+	#define TOUCH_REG_XH 0x03
+	#define TOUCH_REG_YL 0x06
+	#define TOUCH_REG_YH 0x05
+
+	int readTouchReg(int reg)
+	{
+		int data = 0;
+		Wire.beginTransmission(TOUCH_I2C_ADD);
+		Wire.write(reg);
+		Wire.endTransmission();
+		Wire.requestFrom(TOUCH_I2C_ADD, 1);
+		if (Wire.available())
+		{
+			data = Wire.read();
+		}
+		return data;
+	}
+
+	/*
+	int getTouchPointX()
+	{
+		int XL = 0;
+		int XH = 0;
+
+		XH = readTouchReg(TOUCH_REG_XH);
+		XL = readTouchReg(TOUCH_REG_XL);
+
+		return ((XH & 0x0F) << 8) | XL;
+	}
+	*/
+
+	int getTouchPointX()
+	{
+		int XL = 0;
+		int XH = 0;
+
+		XH = readTouchReg(TOUCH_REG_XH);
+		//Serial.println(XH >> 6,HEX);
+		if(XH >> 6 == 1)
+			return -1;
+		XL = readTouchReg(TOUCH_REG_XL);
+
+		return ((XH & 0x0F) << 8) | XL;
+	}
+
+	int getTouchPointY()
+	{
+		int YL = 0;
+		int YH = 0;
+
+		YH = readTouchReg(TOUCH_REG_YH);
+		YL = readTouchReg(TOUCH_REG_YL);
+
+		return ((YH & 0x0F) << 8) | YL;
+	}
+
+	void ft6236_pos(int pos[2])
+	{
+		int XL = 0;
+		int XH = 0;
+		int YL = 0;
+		int YH = 0;
+
+		XH = readTouchReg(TOUCH_REG_XH);
+		if(XH >> 6 == 1)
+		{
+			pos[0] = -1;
+			pos[1] = -1;
+			return;
+		}
+		XL = readTouchReg(TOUCH_REG_XL);
+		YH = readTouchReg(TOUCH_REG_YH);
+		YL = readTouchReg(TOUCH_REG_YL);
+	
+		pos[0] = ((XH & 0x0F) << 8) | XL;
+		pos[1] = ((YH & 0x0F) << 8) | YL;
+	}
+
+const int i2c_touch_addr = TOUCH_I2C_ADD;
+#define LCD_BL 46
+
+#define SDA_FT6236 38
+#define SCL_FT6236 39
+//FT6236 ts = FT6236();
+
+class LGFX : public lgfx::LGFX_Device
+{
+    lgfx::Panel_ILI9488 _panel_instance;
+    lgfx::Bus_Parallel16 _bus_instance;
+  public:
+    LGFX(void)
+    {
+      {
+        auto cfg = _bus_instance.config();
+        cfg.port = 0;
+        cfg.freq_write = 80000000;
+        cfg.pin_wr = 18;
+        cfg.pin_rd = 48;
+        cfg.pin_rs = 45;
+
+        cfg.pin_d0 = 47;
+        cfg.pin_d1 = 21;
+        cfg.pin_d2 = 14;
+        cfg.pin_d3 = 13;
+        cfg.pin_d4 = 12;
+        cfg.pin_d5 = 11;
+        cfg.pin_d6 = 10;
+        cfg.pin_d7 = 9;
+        cfg.pin_d8 = 3;
+        cfg.pin_d9 = 8;
+        cfg.pin_d10 = 16;
+        cfg.pin_d11 = 15;
+        cfg.pin_d12 = 7;
+        cfg.pin_d13 = 6;
+        cfg.pin_d14 = 5;
+        cfg.pin_d15 = 4;
+        _bus_instance.config(cfg);
+        _panel_instance.setBus(&_bus_instance);
+      }
+
+      {
+        auto cfg = _panel_instance.config();
+
+        cfg.pin_cs = -1;
+        cfg.pin_rst = -1;
+        cfg.pin_busy = -1;
+        cfg.memory_width = 320;
+        cfg.memory_height = 480;
+        cfg.panel_width = 320;
+        cfg.panel_height = 480;
+        cfg.offset_x = 0;
+        cfg.offset_y = 0;
+        cfg.offset_rotation = 2;
+        cfg.dummy_read_pixel = 8;
+        cfg.dummy_read_bits = 1;
+        cfg.readable = true;
+        cfg.invert = false;
+        cfg.rgb_order = false;
+        cfg.dlen_16bit = true;
+        cfg.bus_shared = true;
+        _panel_instance.config(cfg);
+      }
+      setPanel(&_panel_instance);
+    }
+};
+
+
+void touch_init()
+{
+  // I2C init
+  Wire.begin(SDA_FT6236, SCL_FT6236);
+  byte error, address;
+
+  Wire.beginTransmission(i2c_touch_addr);
+  error = Wire.endTransmission();
+
+  if (error == 0)
+  {
+    Serial.print("I2C device found at address 0x");
+    Serial.print(i2c_touch_addr, HEX);
+    Serial.println("  !");
+  }
+  else if (error == 4)
+  {
+    Serial.print("Unknown error at address 0x");
+    Serial.println(i2c_touch_addr, HEX);
+  }
+}
+
+
+	LGFX tft;
+	/*Change to your screen resolution*/
+	static const uint16_t screenWidth  = 480;
+	static const uint16_t screenHeight = 320;
+
+	#define TFT_WIDTH 480
+	#define TFT_HEIGHT 320
+	void tftInit() {
+				// test TFT_RST to see if we need to invert the display
+				// (from https://github.com/m5stack/M5Stack/blob/master/src/utility/In_eSPI.cpp)
+				Serial.begin( 115200 ); /* prepare for possible serial debug */
+	
+	tft.begin();          /* TFT init */
+	tft.setRotation( 1 ); /* Landscape orientation, flipped */
+	tft.fillScreen(TFT_BLACK);
+	delay(500);
+	pinMode(LCD_BL, OUTPUT);
+	digitalWrite(LCD_BL, HIGH);
+	touch_init();
+
+
 			useTFT = true;
 		}
 
@@ -2109,7 +2310,7 @@ static OBJ primSetPixel(int argCount, OBJ *args) {
 }
 
 
-#if !defined(CYD)
+#if !defined(CYD) && !defined(ELECROW)
 static OBJ primPixelRow(int argCount, OBJ *args) {
 	// Draw a single row of pixels (a list or byte array) at the given y.
 	// If a byte array is provided the optional argument bytesPerPixel
@@ -2150,8 +2351,10 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 			bufferPixels[i] = (isInt(pixelObj)) ? color24to16b(obj2int(pixelObj)) : 0;
 		}
 		//sodb
-		 #if defined(TFT_ESPI)
+		#if defined(TFT_ESPI) 
 		   tft.pushImageDMA(x,y,pixelCount,1,bufferPixels);
+		#elif defined(ELECROW)
+		   tft.pushImage(x,y,pixelCount,1,bufferPixels);
 		#else
 		  tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 		#endif
@@ -2190,8 +2393,10 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 		//sodb
 		// tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 		//tft.draw16bitRGBBitmap(x, y, bufferPixels, pixelCount, 1);
-		#if defined(TFT_ESPI)
+		#if defined(TFT_ESPI) 
 			tft.pushImageDMA(x, y, pixelCount, 1, bufferPixels);
+		#elif defined(ELECROW)
+			tft.pushImage(x,y,pixelCount,1,bufferPixels);
 		#else
 		  tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 		#endif
@@ -2552,7 +2757,7 @@ static OBJ primDrawBuffer(int argCount, OBJ *args) {
 		// 	originWidth * scale,
 		// 	scale
 		// );
-		#if defined(TFT_ESPI)
+		#if defined(TFT_ESPI) 
 		tft.pushImageDMA(
 			originX * scale,
 			(originY + y) * scale,
@@ -2560,7 +2765,14 @@ static OBJ primDrawBuffer(int argCount, OBJ *args) {
 			scale,
 			bufferPixels
 		);
-	
+		#elif defined(ELECROW)
+		tft.pushImage(
+			originX * scale,
+			(originY + y) * scale,
+			originWidth * scale,
+			scale,
+			bufferPixels
+		);
 		#else
 		tft.drawRGBBitmap(
 			originX * scale,
