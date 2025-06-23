@@ -56,11 +56,8 @@
 #if LV_USE_STDLIB_MALLOC == LV_STDLIB_BUILTIN
     /*Size of the memory available for `lv_malloc()` in bytes (>= 2kB)*/
     // sodb
-    #if defined(BOARD_HAS_PSRAM)
-      #define LV_MEM_SIZE (128 * 1024U)          /*[bytes]*/
-    #else
-       #define LV_MEM_SIZE (32 * 1024U)          /*[bytes]*/
-    #endif
+    //#define LV_MEM_SIZE (128 * 1024U)          /*[bytes]*/
+    #define LV_MEM_SIZE (32 * 1024U)          /*[bytes]*/
 
     /*Size of the memory expand for `lv_malloc()` in bytes*/
     #define LV_MEM_POOL_EXPAND_SIZE 0
@@ -69,13 +66,10 @@
     #define LV_MEM_ADR 0     /*0: unused*/
     /*Instead of an address give a memory allocator that will be called to get a memory pool for LVGL. E.g. my_malloc*/
     #if LV_MEM_ADR == 0
-        #if defined(BOARD_HAS_PSRAM)
-            #define LV_MEM_POOL_INCLUDE     "esp_heap_caps.h"
-            #define LV_MEM_POOL_ALLOC(size) heap_caps_malloc(size, MALLOC_CAP_SPIRAM)
-        #else
-            #undef LV_MEM_POOL_INCLUDE
-            #undef LV_MEM_POOL_ALLOC
-        #endif
+        //#define LV_MEM_POOL_INCLUDE     "esp_heap_caps.h"
+        //#define LV_MEM_POOL_ALLOC(size) heap_caps_malloc(size, MALLOC_CAP_SPIRAM)
+        #undef LV_MEM_POOL_INCLUDE
+        #undef LV_MEM_POOL_ALLOC
     #endif
 #endif  /*LV_USE_STDLIB_MALLOC == LV_STDLIB_BUILTIN*/
 
