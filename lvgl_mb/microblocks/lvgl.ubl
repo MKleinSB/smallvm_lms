@@ -24,7 +24,7 @@ variables _lvgl_call_backs
   spec 'r' 'screen' 'screen'
   spec ' ' '[tft:LVGLsetparent]' 'set _ parent _' 'str str' '' ''
   spec 'r' '[tft:LVGLgetallobjs]' 'get all objects'
-  spec ' ' '[tft:LVGLdelobj]' 'del_obj _' 'str' ''
+  spec ' ' '[tft:LVGLdelobj]' 'delete object _' 'str' ''
   spec ' ' 'delete_all_objects' 'delete all objects'
   advanced
   spec ' ' '[tft:LVGLaddimg]' 'imgage path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
