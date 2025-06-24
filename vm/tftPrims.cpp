@@ -1408,9 +1408,9 @@ void pca9535_BL() {
 			uint16_t x, y;
 			uint8_t pressure;
 			ts.readData(&x, &y, &pressure);
-			x = (320 * (x - 256)) / 10;
-			if (x < 0) x = 0;
-			if (x > 320) x = 320;
+// 			x = (320 * (x - 256)) / 10;
+// 			if (x < 0) x = 0;
+// 			if (x > 320) x = 320;
 			return x;
 		}
 
@@ -1420,9 +1420,9 @@ void pca9535_BL() {
 			uint16_t x, y;
 			uint8_t pressure;
 			ts.readData(&x, &y, &pressure);
-			y = (240 * (y - 274)) / 14;
-			if (y < 0) y = 0;
-			if (y > 240) y = 240;
+// 			y = (240 * (y - 274)) / 14;
+// 			if (y < 0) y = 0;
+// 			if (y > 240) y = 240;
 			return y;
 		}
 

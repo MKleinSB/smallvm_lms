@@ -160,6 +160,11 @@ void writeI2CReg(int deviceID, int reg, int value) {
 
 #define HAS_INTERNAL_I2C 1
 
+#if defined(DUELink)
+	// DUELink pins 52 and 47 are the downlink connector
+	TwoWire Wire1 = TwoWire(PA2, PA3);
+#endif
+
 static int internalWireStarted = false;
 
 static void startInternalWire() {
