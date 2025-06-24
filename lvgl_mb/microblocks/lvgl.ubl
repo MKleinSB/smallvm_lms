@@ -11,7 +11,7 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLaddlabel]' 'label _ : scale _ : text _ : parent _' 'str num str str' 'label' 1 'label' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddobj]' 'add _ as _ : parent _' 'str.obj_types str str' 'arc' '' 'lv_scr_act'
   spec ' ' '[tft:LVGLsetpos]' 'set position _ x _ y _' 'str num num' '' 100 100
-  spec ' ' '[tft:LVGLsetsize]' 'set_size _ width _ height _' 'str num num' '' 100 10
+  spec ' ' '[tft:LVGLsetsize]' 'set size _ width _ height _' 'str num num' '' 100 10
   spec ' ' '[tft:LVGLsetval]' 'set value _ value _' 'str num' '' 10
   spec 'r' '[tft:LVGLgetval]' 'get value _' 'str' ''
   spec ' ' '[tft:LVGLsettext]' 'set text _ text _ : scale _' 'str str num' '' 'text' 1
