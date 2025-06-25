@@ -62,7 +62,7 @@ to tile4 {
   '[tft:LVGLsetstyle]' 'range' 'sl1' 120 255
 }
 
-script 520 40 {
+script 520 50 {
 whenBroadcastReceived 'LVGLevent'
 sayIt ('[tft:LVGLgetevent]') ('[tft:LVGLgetval]' ('[tft:LVGLgetevent]'))
 if (('[tft:LVGLgetevent]') == 'sw1') {
@@ -76,7 +76,7 @@ if (('[tft:LVGLgetevent]') == 'sw1') {
 }
 }
 
-script 126 90 {
+script 126 100 {
 whenStarted
 '[tft:LVGLon]' true
 delete_all_objects
@@ -86,19 +86,19 @@ tile2
 tile4
 }
 
-script 152 326 {
+script 152 336 {
 '[tft:LVGLsetval]' 'sw1' (booleanConstant false)
 }
 
-script 52 410 {
+script 52 420 {
 to make_tiles {}
 }
 
-script 505 479 {
+script 505 489 {
 to tile4 {}
 }
 
-script 74 901 {
+script 74 911 {
 to tile2 {}
 }
 
@@ -147,40 +147,41 @@ to file_SkipBytes offset file {
 
 module LVGL Output
 author Ste7an
-version 1 2 
+version 1 3 
 choices style_types range rotation angles brightness 
 choices obj_types arc slider led switch bar tabview roller list tileview button_matrix 
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 
 
-  spec ' ' '[tft:LVGLon]' 'enable_lvgl _' 'bool' true
-  spec ' ' '[tft:LVGLaddbtn]' 'btn _ : scale _ : text _ : parent _' 'str num str str' 'btn' 1 'btn' 'lv_scr_act'
+  spec ' ' '[tft:LVGLon]' 'enable lvgl _' 'bool' true
+  spec ' ' '[tft:LVGLaddbtn]' 'button _ : scale _ : text _ : parent _' 'str num str str' 'button' 1 'button' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddlabel]' 'label _ : scale _ : text _ : parent _' 'str num str str' 'label' 1 'label' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddobj]' 'add _ as _ : parent _' 'str.obj_types str str' 'arc' '' 'lv_scr_act'
-  spec ' ' '[tft:LVGLsetpos]' 'set_pos _ x _ y _' 'str num num' '' 100 100
-  spec ' ' '[tft:LVGLsetsize]' 'set_size _ width _ height _' 'str num num' '' 100 10
-  spec ' ' '[tft:LVGLsetval]' 'set_val _ value _' 'str num' '' 10
-  spec 'r' '[tft:LVGLgetval]' 'get_val _' 'str' ''
-  spec ' ' '[tft:LVGLsettext]' 'set_text _ text _ : scale _' 'str str num' '' 'text' 1
-  spec ' ' '[tft:LVGLsetcolor]' 'set_color _ background _ : indicator _ : knob _' 'str color color color' ''
+  spec ' ' '[tft:LVGLsetpos]' 'set position _ x _ y _' 'str num num' '' 100 100
+  spec ' ' '[tft:LVGLsetsize]' 'set size _ width _ height _' 'str num num' '' 100 10
+  spec ' ' '[tft:LVGLsetval]' 'set value _ value _' 'str num' '' 10
+  spec 'r' '[tft:LVGLgetval]' 'get value _' 'str' ''
+  spec ' ' '[tft:LVGLsettext]' 'set text _ text _ : scale _' 'str str num' '' 'text' 1
+  spec ' ' '[tft:LVGLsetcolor]' 'set color _ background _ : indicator _ : knob _' 'str color color color' ''
   spec 'r' 'makeColor' 'color r _ g _ b _ (0-255)' 'num num num' 0 100 100
   space
   spec 'r' '[tft:LVGLevent]' 'event available'
-  spec 'r' '[tft:LVGLgetevent]' 'get_event'
+  spec 'r' '[tft:LVGLgetevent]' 'get event'
   space
   spec 'r' 'screen' 'screen'
   spec ' ' '[tft:LVGLsetparent]' 'set _ parent _' 'str str' '' ''
-  spec 'r' '[tft:LVGLgetallobjs]' 'get_all_objects'
-  spec ' ' '[tft:LVGLdelobj]' 'del_obj _' 'str' ''
-  spec ' ' 'delete_all_objects' 'delete_all_objects'
-  spec ' ' '[tft:LVGLaddimg]' 'img path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
+  spec 'r' '[tft:LVGLgetallobjs]' 'get all objects'
+  spec ' ' '[tft:LVGLdelobj]' 'delete object _' 'str' ''
+  spec ' ' 'delete_all_objects' 'delete all objects'
+  advanced
+  spec ' ' '[tft:LVGLaddimg]' 'imgage path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
   spec ' ' '[tft:LVGLsetstyle]' 'set _ of _ to _ : until _' 'str.style_types str auto auto' 'range' '' '' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
   spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
-  spec ' ' 'init_callback' 'init_callback'
-  spec ' ' 'add_callback' 'add_callback _ function _' 'str str' '' ''
-  spec ' ' 'handle_event' 'handle_event _' 'str' ''
+  spec ' ' 'init_callback' 'init callback'
+  spec ' ' 'add_callback' 'add callback _ function _' 'str str' '' ''
+  spec ' ' 'handle_event' 'handle event _' 'str' ''
 
 to add_callback obj function {
   if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}

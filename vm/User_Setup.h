@@ -271,6 +271,8 @@ LMSDISPLAY
 #define TFT_DC 27
 #define TFT_RST 13
 
+#define TFT_BL 12
+#define TFT_BACKLIGHT_ON HIGH  
 
 #define LOAD_GLCD
 #define LOAD_FONT2
