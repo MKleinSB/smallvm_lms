@@ -758,6 +758,18 @@ AsyncWebServer* async_server;
 EspFileManager FileManager;
 bool async_server_running=false;
 
+/*
+static OBJ primgetupload(int argCount, OBJ *args) {
+	int i =  obj2int(args[0]);
+	return int2obj(FileManager.getupload(i));
+}
+
+static OBJ primgetnumupload(int argCount, OBJ *args) {
+	return int2obj(FileManager.getnumupload());
+}
+*/
+
+
 static OBJ primstartWifiFileManager(int argCount, OBJ *args) {
 	if (NO_WIFI()) return fail(noWiFi);
 	if (!isConnectedToWiFi()) return false;
@@ -1266,6 +1278,9 @@ static PrimEntry entries[] = {
 	#if defined(WEBFILE)
 	{"startWififilemanager",primstartWifiFileManager},
 	{"stopWififilemanager",primstopWifiFileManager},
+	//{"getnumupload",primgetnumupload},
+	//{"getupload",primgetupload},
+	
 	#endif
 	{"udpStart", primUDPStart},
 	{"udpStop", primUDPStop},

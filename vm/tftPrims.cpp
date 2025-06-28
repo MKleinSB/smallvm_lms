@@ -754,7 +754,9 @@ static int deferUpdates = false;
 			useTFT = true;
 		}
 	#elif defined(LMSDISPLAY) && defined(TFT_ESPI)
-
+		bool flip_x_y=false;
+		bool flip_x=false;
+		bool flip_y=false;
 		#define HAS_TOUCH_SCREEN 1
 		#include <TFT_eSPI.h>
 
@@ -809,21 +811,35 @@ static int deferUpdates = false;
 	static int screenTouchX() {
 		if (!touchEnabled) touchInit();
 		if (!ts.touched()) { return -1; }
-		int16_t x = ts.getPoint().x;
+		int16_t x;
+		if (flip_x_y) {
+			x = ts.getPoint().y;
+		} else
+		  	x = ts.getPoint().x;
 		// char s[100];
 		// sprintf(s,"touch x: %d ",x);
 		// outputString(s);
-		return map(x, 200, 3800, TFT_HEIGHT,0);
-		}
+		if (flip_x) 
+		   return map(x, 200, 3800, 0, TFT_HEIGHT);
+		else
+		   return map(x, 200, 3800, TFT_HEIGHT,0);
+	}
 		
 	static int screenTouchY() {
 		if (!touchEnabled) touchInit();
 		if (!ts.touched()) { return -1; }
-		int16_t y = ts.getPoint().y;
+		int16_t y;
+		if (flip_x_y) 
+			y = ts.getPoint().x;
+		else
+			y = ts.getPoint().y;
 		// char s[100];
 		// sprintf(s,"touch y: %d ",y);
 		// outputString(s);
-		return  map(y, 300, 3900, 0, TFT_WIDTH);
+		if (flip_y) 
+			return  map(y, 300, 3900, TFT_WIDTH,0);
+		else
+			return  map(y, 300, 3900, 0, TFT_WIDTH);
 		}
 		
 	static int screenTouchPressure() {
@@ -832,6 +848,14 @@ static int deferUpdates = false;
 		return ts.getPoint().z;
 		}
 		
+
+
+static OBJ primfliptouch(int argCount, OBJ *args) {
+	flip_x = (trueObj == args[0]);
+	flip_y = (trueObj == args[1]);
+	flip_x_y = (trueObj == args[2]);
+return falseObj;
+}
 
  #elif defined(CYD) && defined(TFT_ESPI)
 	#define HAS_TOUCH_SCREEN 1
@@ -3338,6 +3362,22 @@ void ui_create_tileview(char * obj_name, const char * parent) {
 	}
 }
 
+void ui_create_screen(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		#if defined(LMSDISPLAY)
+			#define _TFT_WIDTH TFT_HEIGHT
+			#define _TFT_HEIGHT TFT_WIDTH
+		#else
+			#define _TFT_WIDTH TFT_WIDTH
+			#define _TFT_HEIGHT TFT_HEIGHT
+		#endif
+		lv_obj_t* obj = lv_obj_create(0); // crete empty screen
+		lv_obj_set_pos(obj, 0, 0);
+		lv_obj_set_size(obj, _TFT_WIDTH, _TFT_HEIGHT);
+		registry.add(obj_name, obj);
+	}
+}
+
 
 void ui_create_roller(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
@@ -3574,6 +3614,7 @@ typedef enum {
 	CMD_TILEVIEW,
 	CMD_LIST,
 	CMD_ROLLER,
+	CMD_SCREEN,
     CMD_COUNT
 } Command;
 
@@ -3590,6 +3631,7 @@ Command lookup_cmd(const char *s) {
 	if (strcmp(s, "tileview") == 0) return CMD_TILEVIEW;
 	if (strcmp(s, "list") == 0)     return CMD_LIST;
 	if (strcmp(s, "roller") == 0)   return CMD_ROLLER;
+	if (strcmp(s, "screen") == 0)   return CMD_SCREEN;
     return CMD_UNKNOWN;
 }
 
@@ -3825,7 +3867,10 @@ static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 			outputString("Handle ROLLER");
 			ui_create_roller(obj_name, parent);
 			break;
-			
+		case CMD_SCREEN:
+			outputString("Handle SCREEN");
+			ui_create_screen(obj_name, parent);
+			break;
 		// case CMD_SCALE:
 		// 	outputString("Handle TABVIEW");
 		// 	ui_create_tabview(obj_name, parent);
@@ -3835,6 +3880,16 @@ static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 	}
 	return falseObj;
 }
+
+
+static OBJ primLVGLloadScreen(int argCount, OBJ *args) {
+	char* obj_name = obj2str(args[0]);
+	lv_obj_t* obj = registry.get(obj_name);
+	if (obj) lv_scr_load_anim(obj, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, false);
+	return falseObj;
+}
+
+
 
 static OBJ primLVGLsetParent(int argCount, OBJ *args) {
 	char* obj = obj2str(args[0]);
@@ -4130,6 +4185,7 @@ static PrimEntry entries[] = {
 	{"LVGLsettext",primLVGLsetText},
 	{"LVGLsetstyle",primLVGLsetstyle},
 	{"LVGLgetval", primLVGLgetVal},
+	{"LVGLloadscreen",primLVGLloadScreen},
 	{"LVGLevent",primLVGLEvent},
 	{"LVGLgetevent",primLVGLgetEvent},
 	{"LVGLsetcolor", primLVGLsetColor},
@@ -4137,6 +4193,7 @@ static PrimEntry entries[] = {
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},
 	{"LVGLpsram",primLVGLpsram},
+	{"fliptouch",primfliptouch},
 
 #endif
 };
