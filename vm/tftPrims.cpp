@@ -1922,13 +1922,13 @@ static int hasTFT() {
 	return useTFT;
 }
 
-#define BUFFER_PIXELS_SIZE (TFT_WIDTH * 8)
+#define BUFFER_PIXELS_SIZE (TFT_WIDTH * 4)
 //sodb move buffer to psram. Warning: No check whether psram exists!
-#if defined(LVGL) && defined(BOARD_HAS_PSRAM  )
-  __attribute__((section(".ext_ram"))) uint16_t bufferPixels[BUFFER_PIXELS_SIZE];
-#elif !defined(CYG)
+//#if defined(LVGL) && defined(BOARD_HAS_PSRAM  )
+//  __attribute__((section(".ext_ram"))) uint16_t bufferPixels[BUFFER_PIXELS_SIZE];
+//#elif !defined(CYG)
   uint16_t bufferPixels[BUFFER_PIXELS_SIZE]; // used by primPixelRow and primDrawBuffer
-#endif
+//#endif
 
 static int color24to16b(int color24b) {
 	// Convert 24-bit RGB888 format to the TFT's target pixel format.
@@ -2081,7 +2081,11 @@ static OBJ primGetWidth(int argCount, OBJ *args) {
 	if (!hasTFT()) return zeroObj;
 
 	#ifdef TFT_WIDTH
-		return int2obj(TFT_WIDTH);
+		#if defined(LMSDISPLAY)
+			return int2obj(TFT_HEIGHT);
+		#else
+			return int2obj(TFT_WIDTH);
+		#endif
 	#else
 		return int2obj(0);
 	#endif
@@ -2091,7 +2095,11 @@ static OBJ primGetHeight(int argCount, OBJ *args) {
 	if (!hasTFT()) return zeroObj;
 
 	#ifdef TFT_HEIGHT
-		return int2obj(TFT_HEIGHT);
+		#if defined(LMSDISPLAY)
+			return int2obj(TFT_WIDTH);
+		#else
+			return int2obj(TFT_HEIGHT);
+		#endif
 	#else
 		return int2obj(0);
 	#endif
@@ -2119,12 +2127,18 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 	// Used to accelerate BMP file display and other bitmap operations.
 
 	if (!hasTFT()) return falseObj;
-
+	#if defined(LMSDISPLAY)
+		#define _TFT_WIDTH TFT_HEIGHT
+		#define _TFT_HEIGHT TFT_WIDTH
+	#else
+		#define _TFT_WIDTH TFT_WIDTH
+		#define _TFT_HEIGHT TFT_HEIGHT
+	#endif
 	OBJ pixelDataObj = args[0];
 	int x = obj2int(args[1]);
-	if (x >= TFT_WIDTH) return falseObj;
+	if (x >= _TFT_WIDTH) return falseObj;
 	int y = obj2int(args[2]);
-	if ((y < 0) || (y >= TFT_HEIGHT)) return falseObj;
+	if ((y < 0) || (y >= _TFT_HEIGHT)) return falseObj;
 	int bytesPerPixel = ((argCount > 3) && isInt(args[3])) ? obj2int(args[3]) : 4;
 
 	uint32 palette[256];
@@ -2143,7 +2157,7 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 
 	if (IS_TYPE(pixelDataObj, ListType)) {
 		int pixelCount = obj2int(FIELD(pixelDataObj, 0));
-		if (pixelCount > (TFT_WIDTH - x)) pixelCount = TFT_WIDTH - x;
+		if (pixelCount > (_TFT_WIDTH - x)) pixelCount = _TFT_WIDTH - x;
 		if (pixelCount > BUFFER_PIXELS_SIZE) pixelCount = BUFFER_PIXELS_SIZE;
 		for (int i = 0; i < pixelCount; i++) {
 			OBJ pixelObj = FIELD(pixelDataObj, (i + 1));
@@ -2151,7 +2165,9 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 		}
 		//sodb
 		 #if defined(TFT_ESPI)
-		   tft.pushImageDMA(x,y,pixelCount,1,bufferPixels);
+		   //tft.pushImageDMA(x,y,pixelCount,1,bufferPixels);
+		   // no DMA possible from PSRAM
+		   tft.pushImage(x,y,pixelCount,1,bufferPixels);
 		#else
 		  tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 		#endif
@@ -2165,7 +2181,7 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 		if ((bytesPerPixel < 1) || (bytesPerPixel > 4)) return falseObj;
 
 		int pixelCount = BYTES(pixelDataObj) / bytesPerPixel;
-		if (pixelCount > (TFT_WIDTH - x)) pixelCount = TFT_WIDTH - x;
+		if (pixelCount > (_TFT_WIDTH - x)) pixelCount = _TFT_WIDTH - x;
 		if (pixelCount > BUFFER_PIXELS_SIZE) pixelCount = BUFFER_PIXELS_SIZE;
 		uint8 *byte = (uint8 *) &FIELD(pixelDataObj, 0);
 		if (1 == bytesPerPixel) {
@@ -2191,7 +2207,8 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 		// tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 		//tft.draw16bitRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 		#if defined(TFT_ESPI)
-			tft.pushImageDMA(x, y, pixelCount, 1, bufferPixels);
+			//tft.pushImageDMA(x, y, pixelCount, 1, bufferPixels);
+			tft.pushImage(x, y, pixelCount, 1, bufferPixels);
 		#else
 		  tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 		#endif
@@ -2376,14 +2393,20 @@ const int april_bit_y[52] = {
 
 static OBJ primAruco(int argCount, OBJ *args) {
 	if (!useTFT) return falseObj;
-
+	#if defined(LMSDISPLAY)
+		#define _TFT_WIDTH TFT_HEIGHT
+		#define _TFT_HEIGHT TFT_WIDTH
+	#else
+		#define _TFT_WIDTH TFT_WIDTH
+		#define _TFT_HEIGHT TFT_HEIGHT
+	#endif
 	int aruco_id = evalInt(args[0]);
 	if (aruco_id >= 100) {
 		return falseObj;
 	}
-	tft.drawRect(0, 0, TFT_HEIGHT, TFT_HEIGHT, BLACK);
-	const int cellSize = TFT_HEIGHT/8;
-	const int startX = TFT_WIDTH/2 - (4 * cellSize);
+	tft.drawRect(0, 0, _TFT_HEIGHT, _TFT_HEIGHT, BLACK);
+	const int cellSize = _TFT_HEIGHT/8;
+	const int startX = _TFT_WIDTH/2 - (4 * cellSize);
 	uint16_t tag = aruco_tags[aruco_id];
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
@@ -2422,9 +2445,16 @@ static OBJ primAprilTag(int argCount, OBJ *args) {
 	if (tag_id >= 100) {
 		return falseObj;
 	}
-	tft.drawRect(0, 0, TFT_HEIGHT, TFT_HEIGHT, BLACK);
-	const int cellSize = TFT_HEIGHT/10;
-	const int startX = TFT_WIDTH/2 - (5 * cellSize);
+	#if defined(LMSDISPLAY)
+		#define _TFT_WIDTH TFT_HEIGHT
+		#define _TFT_HEIGHT TFT_WIDTH
+	#else
+		#define _TFT_WIDTH TFT_WIDTH
+		#define _TFT_HEIGHT TFT_HEIGHT
+	#endif
+	tft.drawRect(0, 0, _TFT_HEIGHT, _TFT_HEIGHT, BLACK);
+	const int cellSize = _TFT_HEIGHT/10;
+	const int startX = _TFT_WIDTH/2 - (5 * cellSize);
 	uint64_t codedata = april_tags[tag_id];
 
 	// 绘制外圈的黑色方块 (draw outer black square)
@@ -2474,7 +2504,13 @@ OBJ primResumeUpdates(int argCount, OBJ *args) {
 
 static OBJ primMergeBitmap(int argCount, OBJ *args) {
 	if (!hasTFT()) return falseObj;
-
+	#if defined(LMSDISPLAY)
+		#define _TFT_WIDTH TFT_HEIGHT
+		#define _TFT_HEIGHT TFT_WIDTH
+	#else
+		#define _TFT_WIDTH TFT_WIDTH
+		#define _TFT_HEIGHT TFT_HEIGHT
+	#endif
 	OBJ bitmap = args[0];
 	int bitmapWidth = obj2int(args[1]);
 	OBJ buffer = args[2];
@@ -2507,7 +2543,13 @@ static OBJ primMergeBitmap(int argCount, OBJ *args) {
 
 static OBJ primDrawBuffer(int argCount, OBJ *args) {
 	if (!hasTFT()) return falseObj;
-
+	#if defined(LMSDISPLAY)
+		#define _TFT_WIDTH TFT_HEIGHT
+		#define _TFT_HEIGHT TFT_WIDTH
+	#else
+		#define _TFT_WIDTH TFT_WIDTH
+		#define _TFT_HEIGHT TFT_HEIGHT
+	#endif
 	OBJ buffer = args[0];
 	OBJ palette = args[1]; // List, index-1 based
 	int scale = max(min(obj2int(args[2]), 8), 1);
@@ -2524,8 +2566,8 @@ static OBJ primDrawBuffer(int argCount, OBJ *args) {
 		copyHeight = obj2int(args[6]);
 	}
 
-	int bufferWidth = TFT_WIDTH / scale;
-	int bufferHeight = TFT_HEIGHT / scale;
+	int bufferWidth = _TFT_WIDTH / scale;
+	int bufferHeight = _TFT_HEIGHT / scale;
 
 	int originWidth = copyWidth >= 0 ? copyWidth : bufferWidth;
 	int originHeight = copyHeight >= 0 ? copyHeight : bufferHeight;
@@ -2553,7 +2595,8 @@ static OBJ primDrawBuffer(int argCount, OBJ *args) {
 		// 	scale
 		// );
 		#if defined(TFT_ESPI)
-		tft.pushImageDMA(
+		//tft.pushImageDMA(
+		tft.pushImage(
 			originX * scale,
 			(originY + y) * scale,
 			originWidth * scale,
@@ -2584,14 +2627,20 @@ static OBJ primDrawBitmap(int argCount, OBJ *args) {
 
 	if (!hasTFT()) return falseObj;
 	uint32 palette[256];
-
+	#if defined(LMSDISPLAY)
+		#define _TFT_WIDTH TFT_HEIGHT
+		#define _TFT_HEIGHT TFT_WIDTH
+	#else
+		#define _TFT_WIDTH TFT_WIDTH
+		#define _TFT_HEIGHT TFT_HEIGHT
+	#endif
 	if (argCount < 4) return fail(notEnoughArguments);
 	OBJ bitmapObj = args[0]; // bitmap: a two-item list of [width (int), pixels (byte array)]
 	OBJ paletteObj = args[1]; // palette: a list of RGB values
 	int dstX = obj2int(args[2]);
 	int dstY = obj2int(args[3]);
 
-	if ((dstX > TFT_WIDTH) || (dstY > TFT_HEIGHT)) return falseObj; // off screen
+	if ((dstX > _TFT_WIDTH) || (dstY > _TFT_HEIGHT)) return falseObj; // off screen
 
 	// process bitmap arg
 	if (!IS_TYPE(bitmapObj, ListType) ||
@@ -2622,7 +2671,7 @@ static OBJ primDrawBitmap(int argCount, OBJ *args) {
 	int srcW = bitmapWidth;
 	if (dstX < 0) { srcX = -dstX; dstX = 0; srcW -= srcX; }
 	if (srcW < 0) return falseObj; // off screen to left
-	if ((dstX + srcW) > TFT_WIDTH) srcW = TFT_WIDTH - dstX;
+	if ((dstX + srcW) > _TFT_WIDTH) srcW = _TFT_WIDTH - dstX;
 
 	int srcY = 0;
 	int srcH = bitmapHeight;
@@ -2655,7 +2704,9 @@ static OBJ primSetBacklight(int argCount, OBJ *args) { return falseObj; }
 static OBJ primGetWidth(int argCount, OBJ *args) { return int2obj(0); }
 static OBJ primGetHeight(int argCount, OBJ *args) { return int2obj(0); }
 static OBJ primSetPixel(int argCount, OBJ *args) { return falseObj; }
-//static OBJ primPixelRow(int argCount, OBJ *args) { return falseObj; }
+#if defined(BOARD_HAS_PSRAM)
+static OBJ primPixelRow(int argCount, OBJ *args) { return falseObj; }
+#endif
 static OBJ primLine(int argCount, OBJ *args) { return falseObj; }
 static OBJ primRect(int argCount, OBJ *args) { return falseObj; }
 static OBJ primRoundedRect(int argCount, OBJ *args) { return falseObj; }
@@ -4033,7 +4084,7 @@ static PrimEntry entries[] = {
 	{"getWidth", primGetWidth},
 	{"getHeight", primGetHeight},
 	{"setPixel", primSetPixel},
-//	{"pixelRow", primPixelRow},
+	{"pixelRow", primPixelRow},
 	{"line", primLine},
 	{"rect", primRect},
 	{"roundedRect", primRoundedRect},

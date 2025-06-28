@@ -747,6 +747,49 @@ static OBJ primWebSocketSendToClient(int argCount, OBJ *args) {
 	return falseObj;
 }
 
+
+// ESP Wifi FileManager
+#if defined(WEBFILE)
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <EspFileManager.h>
+
+AsyncWebServer* async_server;
+EspFileManager FileManager;
+bool async_server_running=false;
+
+static OBJ primstartWifiFileManager(int argCount, OBJ *args) {
+	if (NO_WIFI()) return fail(noWiFi);
+	if (!isConnectedToWiFi()) return false;
+	if (async_server_running) return false;
+	async_server = new AsyncWebServer(80);
+	FileManager.initSDCard();
+	FileManager.setServer(async_server);
+
+	async_server->begin();
+	async_server_running = true;
+	outputString("Filemaneger started on wifi");
+	return falseObj;
+}
+
+static OBJ primstopWifiFileManager(int argCount, OBJ *args) {
+	if (NO_WIFI()) return fail(noWiFi);
+	if (!isConnectedToWiFi()) return false;
+	if (!async_server_running) return false;
+	if (async_server) {
+		async_server->reset();
+		delete async_server;
+		async_server = nullptr;
+		async_server_running = false;
+		outputString("Filemaneger stopped");
+	}
+	return falseObj;
+}
+
+#endif
+
+
+
 #endif
 
 #else // WiFi is not supported
@@ -823,6 +866,7 @@ static char esp_now_msg[250];
 #endif
 	esp_now_send_buffers++;
 }
+
 
 // ESP Now receive callback
 
@@ -1219,7 +1263,10 @@ static PrimEntry entries[] = {
 	{"httpIsConnected", primHttpIsConnected},
 	{"httpRequest", primHttpRequest},
 	{"httpResponse", primHttpResponse},
-
+	#if defined(WEBFILE)
+	{"startWififilemanager",primstartWifiFileManager},
+	{"stopWififilemanager",primstopWifiFileManager},
+	#endif
 	{"udpStart", primUDPStart},
 	{"udpStop", primUDPStop},
 	{"udpSendPacket", primUDPSendPacket},
