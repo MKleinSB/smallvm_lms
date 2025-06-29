@@ -82,6 +82,7 @@ drawn on the ''light'' screen as default'
   '[tft:LVGLaddbtn]' 'light_back' 2 'Back'
   '[tft:LVGLsetpos]' 'light_back' 200 10
   add_callback 'light_back' 'load_main'
+  comment 'switches'
   '[tft:LVGLaddobj]' 'switch' 'light_sw_kitchen'
   '[tft:LVGLsetpos]' 'light_sw_kitchen' 200 100
   '[tft:LVGLsetsize]' 'light_sw_kitchen' 70 40
@@ -91,9 +92,10 @@ drawn on the ''light'' screen as default'
   '[tft:LVGLaddobj]' 'switch' 'light_sw_garage'
   '[tft:LVGLsetpos]' 'light_sw_garage' 200 150
   '[tft:LVGLsetsize]' 'light_sw_garage' 70 40
-  '[tft:LVGLsetcolor]' 'light_sw_garage' (colorSwatch 148 190 140 255) (colorSwatch 35 190 30 255)
+  '[tft:LVGLsetcolor]' 'light_sw_garage' (colorSwatch 190 152 137 255) (colorSwatch 190 64 18 255)
   '[tft:LVGLaddlabel]' 'light_lbl_garage' 2 'garage'
   '[tft:LVGLsetpos]' 'light_lbl_garage' 70 150
+  comment 'callbacks'
   add_callback 'light_sw_kitchen' 'sw_kitchen'
   add_callback 'light_sw_garage' 'sw_garage'
 }
@@ -164,7 +166,7 @@ to sw_kitchen {
   }
 }
 
-script 92 44 {
+script 92 40 {
 whenStarted
 '[tft:LVGLon]' true
 comment 'delete all existing objects'
@@ -184,29 +186,29 @@ create_light_screen
 '[tft:LVGLloadscreen]' 'main'
 }
 
-script 516 49 {
+script 516 45 {
 whenCondition ('[tft:LVGLevent]')
 comment 'handle all callbacks'
 handle_event ('[tft:LVGLgetevent]')
 }
 
-script 564 534 {
+script 565 529 {
 to create_energy_screen {}
 }
 
-script 100 542 {
+script 100 539 {
 to create_main_screen {}
 }
 
-script 80 1114 {
+script 80 1110 {
 to create_light_screen {}
 }
 
-script 581 1270 {
+script 581 1267 {
 to create_heating_screen {}
 }
 
-script 76 1857 {
+script 80 2009 {
 whenStarted
 comment 'emulate power measurement'
 forever {
@@ -215,7 +217,7 @@ forever {
   comment 'update label and arc to new value'
   '[tft:LVGLsettext]' 'energy_power' power_measurment
   '[tft:LVGLsetval]' 'energy_arc_power' power_measurment
-  comment 'if power > 3000 red otherwise green'
+  comment 'if power > 3000 red, power > 2000 orange, otherwise green'
   if (power_measurment > 3000) {
     '[tft:LVGLsetcolor]' 'energy_arc_power' (colorSwatch 190 137 122 255) (colorSwatch 190 57 18 255) (colorSwatch 190 30 11 255)
   } (power_measurment > 2000) {
@@ -226,31 +228,31 @@ forever {
 }
 }
 
-script 77 2477 {
+script 80 2643 {
 to heat_arc_temp {}
 }
 
-script 628 2480 {
+script 632 2645 {
 to sw_garage {}
 }
 
-script 72 2674 {
+script 76 2839 {
 to load_main {}
 }
 
-script 636 2733 {
+script 638 2899 {
 to sw_kitchen {}
 }
 
-script 68 2823 {
+script 70 2989 {
 to load_heating {}
 }
 
-script 75 2973 {
+script 78 3139 {
 to load_light {}
 }
 
-script 73 3128 {
+script 76 3293 {
 to load_energy {}
 }
 
