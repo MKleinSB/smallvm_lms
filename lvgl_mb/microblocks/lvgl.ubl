@@ -34,12 +34,16 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
   spec ' ' 'init_callback' 'init callback'
-  spec ' ' 'add_callback' 'add callback _ function _' 'str str' '' ''
+  spec ' ' 'add_callback' 'add callback _ : function _' 'str str' '' ''
   spec ' ' 'handle_event' 'handle event _' 'str' ''
 
 to add_callback obj function {
   if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}
-  '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+   if ((pushArgCount) < 2) {
+    '[data:addLast]' ('[data:makeList]' obj obj) _lvgl_call_backs
+  } else {
+    '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+  }
 }
 
 to delete_all_objects {

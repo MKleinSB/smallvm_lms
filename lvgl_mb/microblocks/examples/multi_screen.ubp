@@ -166,7 +166,7 @@ to sw_kitchen {
   }
 }
 
-script 92 40 {
+script 92 44 {
 whenStarted
 '[tft:LVGLon]' true
 comment 'delete all existing objects'
@@ -186,29 +186,29 @@ create_light_screen
 '[tft:LVGLloadscreen]' 'main'
 }
 
-script 516 45 {
+script 516 49 {
 whenCondition ('[tft:LVGLevent]')
 comment 'handle all callbacks'
 handle_event ('[tft:LVGLgetevent]')
 }
 
-script 565 529 {
+script 565 533 {
 to create_energy_screen {}
 }
 
-script 100 539 {
+script 100 543 {
 to create_main_screen {}
 }
 
-script 80 1110 {
+script 80 1114 {
 to create_light_screen {}
 }
 
-script 581 1267 {
+script 581 1271 {
 to create_heating_screen {}
 }
 
-script 80 2009 {
+script 80 2013 {
 whenStarted
 comment 'emulate power measurement'
 forever {
@@ -228,31 +228,31 @@ forever {
 }
 }
 
-script 80 2643 {
+script 80 2647 {
 to heat_arc_temp {}
 }
 
-script 632 2645 {
+script 632 2649 {
 to sw_garage {}
 }
 
-script 76 2839 {
+script 76 2843 {
 to load_main {}
 }
 
-script 638 2899 {
+script 638 2903 {
 to sw_kitchen {}
 }
 
-script 70 2989 {
+script 70 2993 {
 to load_heating {}
 }
 
-script 78 3139 {
+script 78 3143 {
 to load_light {}
 }
 
-script 76 3293 {
+script 76 3297 {
 to load_energy {}
 }
 

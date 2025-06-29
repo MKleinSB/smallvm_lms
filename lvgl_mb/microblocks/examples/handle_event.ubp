@@ -32,11 +32,11 @@ to button2 {
   }
 }
 
-script 824 50 {
+script 824 40 {
 to button1 {}
 }
 
-script 50 63 {
+script 50 53 {
 whenStarted
 '[tft:LVGLon]' true
 comment 'add idgets'
@@ -55,21 +55,21 @@ comment 'init calbacks and add callbacks for btn and arc'
 button1 = (booleanConstant true)
 button2 = (booleanConstant true)
 init_callback
-add_callback 'button1' 'button1'
-add_callback 'button2' 'button2'
-add_callback 'arc' 'arc'
+add_callback 'button1'
+add_callback 'button2'
+add_callback 'arc'
 }
 
-script 474 68 {
+script 474 58 {
 whenCondition ('[tft:LVGLevent]')
 handle_event ('[tft:LVGLgetevent]')
 }
 
-script 821 351 {
+script 821 341 {
 to button2 {}
 }
 
-script 815 658 {
+script 815 648 {
 to arc {}
 }
 
@@ -110,19 +110,25 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
   spec ' ' 'init_callback' 'init callback'
-  spec ' ' 'add_callback' 'add callback _ function _' 'str str' '' ''
+  spec ' ' 'add_callback' 'add callback _ : function _' 'str str' '' ''
   spec ' ' 'handle_event' 'handle event _' 'str' ''
 
 to add_callback obj function {
   if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}
-  '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+  if ((pushArgCount) < 2) {
+    '[data:addLast]' ('[data:makeList]' obj obj) _lvgl_call_backs
+  } else {
+    '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+  }
 }
 
 to delete_all_objects {
   local 'all_objects' ('[tft:LVGLgetallobjs]')
   for i (size all_objects) {
-    '[tft:LVGLdelobj]' (at i all_objects)
+    if ((at i all_objects) != '!main_screen_default') {'[tft:LVGLdelobj]' (at i all_objects)}
   }
+  comment 'load original main screen that is stored'
+  '[tft:LVGLloadscreen]' '!main_screen_default'
 }
 
 to handle_event event {
