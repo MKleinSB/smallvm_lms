@@ -969,7 +969,7 @@ static int readTemperature() {
 #elif defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5Stick_C) || \
 	defined(M5Atom_Matrix) || defined(ARDUINO_M5STACK_Core2) || defined(M5Atom_S3_TFT)
 
-#ifdef ARDUINO_M5Stack_Core_ESP32 || defined(M5Atom_Matrix)
+#if defined(ARDUINO_M5Stack_Core_ESP32) || defined(M5Atom_Matrix)
 	#define Wire1 Wire
 #endif
 
