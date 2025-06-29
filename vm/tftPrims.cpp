@@ -3139,6 +3139,9 @@ void setup_lvgl() {
  fs_init() ;
 //lv_fs_littlefs_init();
 	LVGL_initialized = true;
+	// store main screen object in object with name '!main_screen_default'
+	// hide this object from user in get_all_objects
+	registry.add("!main_screen_default",lv_scr_act() );
 }
 
 
@@ -3678,7 +3681,7 @@ static OBJ primLVGLgetallobjs(int argCount, OBJ *args) {
 	FIELD(result, 0) = int2obj(count);
 	int i=1;
 	for (const auto& name : names) {
-     	FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
+		FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
 		i++;
 	}
 	return result;
@@ -3692,7 +3695,15 @@ static OBJ primLVGLaddBtn(int argCount, OBJ *args) {
 		scale = obj2int(args[1]);
 	} else scale=1;
 	if (argCount >2) {
-		label_text = obj2str(args[2]);
+		OBJ value = args[2];
+		if (IS_TYPE(value, StringType)) {
+			label_text = obj2str(value);
+		} else if (isInt(value)) {
+   			char s[20];
+   			sprintf(s, "%d", obj2int(value));
+			label_text=s;
+		} else
+			label_text="";
 	} else 	label_text = obj2str(args[0]);
 	const char *parent;
 	if (argCount > 3) {
@@ -3715,7 +3726,15 @@ static OBJ primLVGLaddLabel(int argCount, OBJ *args) {
 		scale = obj2int(args[1]);
 	} else scale =1;
 	if (argCount >2) {
-		label_text = obj2str(args[2]);
+		OBJ value = args[2];
+		if (IS_TYPE(value, StringType)) {
+			label_text = obj2str(args[2]);
+		} else if (isInt(value)) {
+   			char s[20];
+   			sprintf(s, "%d", obj2int(value));
+			label_text=s;
+		} else
+			label_text="";
 	} else 	label_text = obj2str(args[0]);
 	const char *parent;
 	if (argCount > 3) {
@@ -3885,7 +3904,8 @@ static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 static OBJ primLVGLloadScreen(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
 	lv_obj_t* obj = registry.get(obj_name);
-	if (obj) lv_scr_load_anim(obj, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, false);
+	//if (obj) lv_scr_load_anim(obj, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, false);
+	if (obj) lv_scr_load(obj);
 	return falseObj;
 }
 
@@ -3960,7 +3980,19 @@ static OBJ primLVGLsetVal(int argCount, OBJ *args) {
 static OBJ primLVGLsetText(int argCount, OBJ *args) {
 	int scale = 1;
 	char* obj_name = obj2str(args[0]);
-	char* obj_text = obj2str(args[1]);
+	char* obj_text;
+	OBJ value = args[1];
+	if (IS_TYPE(value, StringType)) {
+		obj_text = obj2str(value);
+	} else if (isInt(value)) {
+		char s[20];
+		sprintf(s, "%d", obj2int(value));
+		obj_text = s;
+	} else {
+		char s[1];
+		s[0]='\0';
+		obj_text=s;
+	}
 	if (argCount >2) {
 		scale = obj2int(args[2]);
 	}
