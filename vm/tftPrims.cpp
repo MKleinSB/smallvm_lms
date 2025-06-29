@@ -4225,7 +4225,9 @@ static PrimEntry entries[] = {
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},
 	{"LVGLpsram",primLVGLpsram},
-	{"fliptouch",primfliptouch},
+	#if defined(LMSDIAPLY) && defined(BREAKOUT)
+		{"fliptouch",primfliptouch},
+	#endif
 
 #endif
 };
