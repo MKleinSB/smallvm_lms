@@ -2,7 +2,7 @@ module LVGL Output
 author Ste7an
 version 1 4 
 choices style_types range rotation angles brightness 
-choices obj_types arc slider led switch bar roller list screen tabview tileview
+choices obj_types arc slider led switch bar roller list screen tabview tileview 
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 
 
@@ -26,8 +26,7 @@ variables _lvgl_call_backs
   spec 'r' '[tft:LVGLgetallobjs]' 'get all objects'
   spec ' ' '[tft:LVGLdelobj]' 'delete object _' 'str' ''
   spec ' ' 'delete_all_objects' 'delete all objects'
-  advanced
-  spec ' ' '[tft:fliptouch]' 'flip touch x _ y _  x/y _' 'bool bool bool'  false false false 
+  spec ' ' '[tft:fliptouch]' 'flip touch x _ y _  x/y _' 'bool bool bool' false false false
   spec ' ' '[tft:LVGLaddimg]' 'imgage path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
   spec ' ' '[tft:LVGLsetstyle]' 'set _ of _ to _ : until _' 'str.style_types str auto auto' 'range' '' '' ''
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
@@ -37,7 +36,6 @@ variables _lvgl_call_backs
   spec ' ' 'init_callback' 'init callback'
   spec ' ' 'add_callback' 'add callback _ function _' 'str str' '' ''
   spec ' ' 'handle_event' 'handle event _' 'str' ''
-  
 
 to add_callback obj function {
   if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}
@@ -47,8 +45,10 @@ to add_callback obj function {
 to delete_all_objects {
   local 'all_objects' ('[tft:LVGLgetallobjs]')
   for i (size all_objects) {
-    '[tft:LVGLdelobj]' (at i all_objects)
+    if ((at i all_objects) != '!main_screen_default') {'[tft:LVGLdelobj]' (at i all_objects)}
   }
+  comment 'load original main screen that is stored'
+  '[tft:LVGLloadscreen]' '!main_screen_default'
 }
 
 to handle_event event {
