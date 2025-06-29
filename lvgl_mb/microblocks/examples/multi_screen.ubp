@@ -66,7 +66,7 @@ drawn on the ''heating'' screen as default'
   '[tft:LVGLaddlabel]' 'heat_temp' 3 ('[tft:LVGLgetval]' 'heat_arc_temp')
   '[tft:LVGLsetpos]' 'heat_temp' 140 120
   comment 'callback'
-  add_callback 'heat_arc_temp' 'heat_arc_temp'
+  add_callback 'heat_arc_temp'
 }
 
 to create_light_screen {
@@ -83,21 +83,21 @@ drawn on the ''light'' screen as default'
   '[tft:LVGLsetpos]' 'light_back' 200 10
   add_callback 'light_back' 'load_main'
   comment 'switches'
-  '[tft:LVGLaddobj]' 'switch' 'light_sw_kitchen'
-  '[tft:LVGLsetpos]' 'light_sw_kitchen' 200 100
-  '[tft:LVGLsetsize]' 'light_sw_kitchen' 70 40
-  '[tft:LVGLsetcolor]' 'light_sw_kitchen' (colorSwatch 148 190 140 255) (colorSwatch 35 190 30 255)
+  '[tft:LVGLaddobj]' 'switch' 'sw_kitchen'
+  '[tft:LVGLsetpos]' 'sw_kitchen' 200 100
+  '[tft:LVGLsetsize]' 'sw_kitchen' 70 40
+  '[tft:LVGLsetcolor]' 'sw_kitchen' (colorSwatch 148 190 140 255) (colorSwatch 35 190 30 255)
   '[tft:LVGLaddlabel]' 'light_lbl_kitchen' 2 'kitchen'
   '[tft:LVGLsetpos]' 'light_lbl_kitchen' 70 100
-  '[tft:LVGLaddobj]' 'switch' 'light_sw_garage'
-  '[tft:LVGLsetpos]' 'light_sw_garage' 200 150
-  '[tft:LVGLsetsize]' 'light_sw_garage' 70 40
-  '[tft:LVGLsetcolor]' 'light_sw_garage' (colorSwatch 190 152 137 255) (colorSwatch 190 64 18 255)
+  '[tft:LVGLaddobj]' 'switch' 'sw_garage'
+  '[tft:LVGLsetpos]' 'sw_garage' 200 150
+  '[tft:LVGLsetsize]' 'sw_garage' 70 40
+  '[tft:LVGLsetcolor]' 'sw_garage' (colorSwatch 190 152 137 255) (colorSwatch 190 64 18 255)
   '[tft:LVGLaddlabel]' 'light_lbl_garage' 2 'garage'
   '[tft:LVGLsetpos]' 'light_lbl_garage' 70 150
   comment 'callbacks'
-  add_callback 'light_sw_kitchen' 'sw_kitchen'
-  add_callback 'light_sw_garage' 'sw_garage'
+  add_callback 'sw_kitchen'
+  add_callback 'sw_garage'
 }
 
 to create_main_screen {
@@ -117,9 +117,9 @@ drawn on the ''main'' screen as default'
   '[tft:LVGLaddbtn]' 'load_energy' 2 'Energy'
   '[tft:LVGLsetpos]' 'load_energy' 30 150
   comment 'define callback for all buttons on main screen'
-  add_callback 'load_heating' 'load_heating'
-  add_callback 'load_light' 'load_light'
-  add_callback 'load_energy' 'load_energy'
+  add_callback 'load_heating'
+  add_callback 'load_light'
+  add_callback 'load_energy'
 }
 
 to heat_arc_temp {
@@ -150,7 +150,7 @@ to load_main {
 
 to sw_garage {
   comment 'callback function for garage switch'
-  if ('[tft:LVGLgetval]' 'light_sw_garage') {
+  if ('[tft:LVGLgetval]' 'sw_garage') {
     sayIt 'light garage switched on'
   } else {
     sayIt 'light garage switched off'
@@ -159,7 +159,7 @@ to sw_garage {
 
 to sw_kitchen {
   comment 'callback function for kitchen switch'
-  if ('[tft:LVGLgetval]' 'light_sw_kitchen') {
+  if ('[tft:LVGLgetval]' 'sw_kitchen') {
     sayIt 'light kitchen switched on'
   } else {
     sayIt 'light kitchen switched off'
@@ -293,12 +293,16 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
   spec ' ' 'init_callback' 'init callback'
-  spec ' ' 'add_callback' 'add callback _ function _' 'str str' '' ''
+  spec ' ' 'add_callback' 'add callback _ : function _' 'str str' '' ''
   spec ' ' 'handle_event' 'handle event _' 'str' ''
 
 to add_callback obj function {
   if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}
-  '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+  if ((pushArgCount) < 2) {
+    '[data:addLast]' ('[data:makeList]' obj obj) _lvgl_call_backs
+  } else {
+    '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+  }
 }
 
 to delete_all_objects {
