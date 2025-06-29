@@ -62,7 +62,7 @@ add_callback 'arc'
 
 script 474 58 {
 whenCondition ('[tft:LVGLevent]')
-handle_event ('[tft:LVGLgetevent]')
+handle_event
 }
 
 script 821 341 {
@@ -111,7 +111,7 @@ variables _lvgl_call_backs
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
   spec ' ' 'init_callback' 'init callback'
   spec ' ' 'add_callback' 'add callback _ : function _' 'str str' '' ''
-  spec ' ' 'handle_event' 'handle event _' 'str' ''
+  spec ' ' 'handle_event' 'handle event'
 
 to add_callback obj function {
   if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}
@@ -131,8 +131,9 @@ to delete_all_objects {
   '[tft:LVGLloadscreen]' '!main_screen_default'
 }
 
-to handle_event event {
+to handle_event {
   local 'var' 1
+  local 'event' ('[tft:LVGLgetevent]')
   repeatUntil (or (var > (size _lvgl_call_backs)) (event == (at 1 (at var _lvgl_call_backs)))) {
     var += 1
   }
