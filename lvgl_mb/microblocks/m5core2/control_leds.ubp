@@ -10,84 +10,98 @@ neoPixelAttach 10 25
 delete_all_objects
 comment 'red slider'
 '[tft:LVGLaddobj]' 'slider' 'red'
-'[tft:LVGLsetpos]' 'red' 70 30
+'[tft:LVGLsetpos]' 'red' 50 30
 '[tft:LVGLsetsize]' 'red' 20 150
 '[tft:LVGLsetcolor]' 'red' (colorSwatch 190 14 5 255) (colorSwatch 190 23 3 255) (colorSwatch 190 27 8 255)
 '[tft:LVGLsetstyle]' 'range' 'red' 0 255
 '[tft:LVGLsetval]' 'red' 0
 comment 'green slider'
 '[tft:LVGLaddobj]' 'slider' 'green'
-'[tft:LVGLsetpos]' 'green' 150 30
+'[tft:LVGLsetpos]' 'green' 100 30
 '[tft:LVGLsetsize]' 'green' 20 150
 '[tft:LVGLsetcolor]' 'green' (colorSwatch 35 190 30 255) (colorSwatch 35 190 30 255) (colorSwatch 35 190 30 255)
 '[tft:LVGLsetstyle]' 'range' 'green' 0 255
 '[tft:LVGLsetval]' 'green' 10
 comment 'blue slider'
 '[tft:LVGLaddobj]' 'slider' 'blue'
-'[tft:LVGLsetpos]' 'blue' 230 30
+'[tft:LVGLsetpos]' 'blue' 150 30
 '[tft:LVGLsetsize]' 'blue' 20 150
 '[tft:LVGLsetcolor]' 'blue' (colorSwatch 23 8 190 255) (colorSwatch 29 8 190 255) (colorSwatch 9 5 190 255)
 '[tft:LVGLsetstyle]' 'range' 'blue' 0 255
 '[tft:LVGLsetval]' 'blue' 10
+'[tft:LVGLaddobj]' 'led' 'led'
+'[tft:LVGLsetpos]' 'led' 220 100
+'[tft:LVGLsetsize]' 'led' 50 50
+'[tft:LVGLsetcolor]' 'led' (colorFromRGB ('[tft:LVGLgetval]' 'red') ('[tft:LVGLgetval]' 'green') ('[tft:LVGLgetval]' 'blue'))
 }
 
 script 501 154 {
 whenCondition ('[tft:LVGLevent]')
 neoPixelSetAllToColor (colorFromRGB ('[tft:LVGLgetval]' 'red') ('[tft:LVGLgetval]' 'green') ('[tft:LVGLgetval]' 'blue'))
+'[tft:LVGLsetcolor]' 'led' (colorFromRGB ('[tft:LVGLgetval]' 'red') ('[tft:LVGLgetval]' 'green') ('[tft:LVGLgetval]' 'blue'))
 }
 
 
 module LVGL Output
 author Ste7an
-version 1 2 
+version 1 4 
 choices style_types range rotation angles brightness 
-choices obj_types arc slider led switch bar tabview roller list tileview button_matrix 
+choices obj_types arc slider led switch bar roller list screen tabview tileview 
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 
 
-  spec ' ' '[tft:LVGLon]' 'enable_lvgl _' 'bool' true
-  spec ' ' '[tft:LVGLaddbtn]' 'btn _ : scale _ : text _ : parent _' 'str num str str' 'btn' 1 'btn' 'lv_scr_act'
+  spec ' ' '[tft:LVGLon]' 'enable lvgl _' 'bool' true
+  spec ' ' '[tft:LVGLaddbtn]' 'button _ : scale _ : text _ : parent _' 'str num str str' 'button' 1 'button' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddlabel]' 'label _ : scale _ : text _ : parent _' 'str num str str' 'label' 1 'label' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddobj]' 'add _ as _ : parent _' 'str.obj_types str str' 'arc' '' 'lv_scr_act'
-  spec ' ' '[tft:LVGLsetpos]' 'set_pos _ x _ y _' 'str num num' '' 100 100
-  spec ' ' '[tft:LVGLsetsize]' 'set_size _ width _ height _' 'str num num' '' 100 10
-  spec ' ' '[tft:LVGLsetval]' 'set_val _ value _' 'str num' '' 10
-  spec 'r' '[tft:LVGLgetval]' 'get_val _' 'str' ''
-  spec ' ' '[tft:LVGLsettext]' 'set_text _ text _ : scale _' 'str str num' '' 'text' 1
-  spec ' ' '[tft:LVGLsetcolor]' 'set_color _ background _ : indicator _ : knob _' 'str color color color' ''
+  spec ' ' '[tft:LVGLsetpos]' 'set position _ x _ y _' 'str num num' '' 100 100
+  spec ' ' '[tft:LVGLsetsize]' 'set size _ width _ height _' 'str num num' '' 100 10
+  spec ' ' '[tft:LVGLsetval]' 'set value _ value _' 'str num' '' 10
+  spec 'r' '[tft:LVGLgetval]' 'get value _' 'str' ''
+  spec ' ' '[tft:LVGLsettext]' 'set text _ text _ : scale _' 'str str num' '' 'text' 1
+  spec ' ' '[tft:LVGLsetcolor]' 'set color _ background _ : indicator _ : knob _' 'str color color color' ''
   spec 'r' 'makeColor' 'color r _ g _ b _ (0-255)' 'num num num' 0 100 100
   space
   spec 'r' '[tft:LVGLevent]' 'event available'
-  spec 'r' '[tft:LVGLgetevent]' 'get_event'
+  spec 'r' '[tft:LVGLgetevent]' 'get event'
   space
   spec 'r' 'screen' 'screen'
   spec ' ' '[tft:LVGLsetparent]' 'set _ parent _' 'str str' '' ''
-  spec 'r' '[tft:LVGLgetallobjs]' 'get_all_objects'
-  spec ' ' '[tft:LVGLdelobj]' 'del_obj _' 'str' ''
-  spec ' ' 'delete_all_objects' 'delete_all_objects'
-  spec ' ' '[tft:LVGLaddimg]' 'img path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
+  spec 'r' '[tft:LVGLgetallobjs]' 'get all objects'
+  spec ' ' '[tft:LVGLdelobj]' 'delete object _' 'str' ''
+  spec ' ' 'delete_all_objects' 'delete all objects'
+  spec ' ' '[tft:fliptouch]' 'flip touch x _ y _  x/y _' 'bool bool bool' false false false
+  spec ' ' '[tft:LVGLaddimg]' 'imgage path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
   spec ' ' '[tft:LVGLsetstyle]' 'set _ of _ to _ : until _' 'str.style_types str auto auto' 'range' '' '' ''
+  spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
   spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
-  spec ' ' 'init_callback' 'init_callback'
-  spec ' ' 'add_callback' 'add_callback _ function _' 'str str' '' ''
-  spec ' ' 'handle_event' 'handle_event _' 'str' ''
+  spec ' ' 'init_callback' 'init callback'
+  spec ' ' 'add_callback' 'add callback _ : function _' 'str str' '' ''
+  spec ' ' 'handle_event' 'handle event'
 
 to add_callback obj function {
   if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}
-  '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+  if ((pushArgCount) < 2) {
+    '[data:addLast]' ('[data:makeList]' obj obj) _lvgl_call_backs
+  } else {
+    '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+  }
 }
 
 to delete_all_objects {
   local 'all_objects' ('[tft:LVGLgetallobjs]')
   for i (size all_objects) {
-    '[tft:LVGLdelobj]' (at i all_objects)
+    if ((at i all_objects) != '!main_screen_default') {'[tft:LVGLdelobj]' (at i all_objects)}
   }
+  comment 'load original main screen that is stored'
+  '[tft:LVGLloadscreen]' '!main_screen_default'
 }
 
-to handle_event event {
+to handle_event {
   local 'var' 1
+  local 'event' ('[tft:LVGLgetevent]')
   repeatUntil (or (var > (size _lvgl_call_backs)) (event == (at 1 (at var _lvgl_call_backs)))) {
     var += 1
   }
