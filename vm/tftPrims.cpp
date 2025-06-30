@@ -2926,13 +2926,13 @@ private:
 LVObjectRegistry registry;
 
 
-class LVObjectBuffer {
+class LVFontBuffer {
 public:
-    void add(const std::string& name, uint8_t* buf) {
-        registry[name] = buf;
+    void add(const std::string& name, lv_font_t* font) {
+        registry[name] = font;
     }
 
-    uint8_t* get(const std::string& name) const {
+    lv_font_t* get(const std::string& name) const {
 		auto it = registry.find(name);
         return it != registry.end() ? it->second : nullptr;
     }
@@ -2953,7 +2953,7 @@ public:
         return names;
     }
 
-	std::string findNameFor(uint8_t* obj) const {
+	std::string findNameFor(lv_font_t* obj) const {
         for (const auto& pair : registry) {
             if (pair.second == obj) {
                 return pair.first;
@@ -2966,10 +2966,10 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, uint8_t*> registry;
+    std::unordered_map<std::string, lv_font_t*> registry;
 };
 
- LVObjectBuffer img_buffer, map_buffer;
+ LVFontBuffer font_buffer;
 
 void fs_init() {
   if (!LittleFS.begin()) {
@@ -3239,6 +3239,21 @@ void ui_add_image(char * obj_name, const char *path, const char * parent_name) {
 		registry.add(obj_name, obj);
 	}
 }
+
+
+void ui_add_font(char * obj_name, const char *path) {
+	lv_obj_t* obj;
+    // Create an img object
+    
+	if (!font_buffer.get(obj_name) ) {
+		lv_font_t *obj = lv_binfont_create(path);
+		// Set image source from file
+		if (obj) {
+			font_buffer.add(obj_name, obj);
+		}
+	}
+}
+
 /*
 void ui_add_image(char * obj_name, const char *path, const char * parent_name) {
 	lv_obj_t* parent = registry.get(parent_name);
@@ -3426,18 +3441,25 @@ void ui_delete_obj(char * obj_name) {
     lv_obj_t* obj = registry.get(obj_name);
     if (obj) {
 		lv_obj_del(obj);
-		if (lv_obj_get_class(obj) == &lv_image_class) {
-			uint8_t* buffer = img_buffer.get(obj_name);
-			heap_caps_free(buffer);
-			img_buffer.remove(obj_name);
-		} else
-		if (lv_obj_get_class(obj) == &lv_buttonmatrix_class) {
-			uint8_t* buffer = map_buffer.get(obj_name);
-			heap_caps_free(buffer);
-			map_buffer.remove(obj_name);
-		}
+		// if (lv_obj_get_class(obj) == &lv_image_class) {
+		// 	uint8_t* buffer = img_buffer.get(obj_name);
+		// 	heap_caps_free(buffer);
+		// 	img_buffer.remove(obj_name);
+		// } else
+		// if (lv_obj_get_class(obj) == &lv_buttonmatrix_class) {
+		// 	uint8_t* buffer = map_buffer.get(obj_name);
+		// 	heap_caps_free(buffer);
+		// 	map_buffer.remove(obj_name);
+		// }
         registry.remove(obj_name);
-    }
+    } else {
+		lv_font_t* font = font_buffer.get(obj_name);
+		if (font) {
+			outputString("deleting font");
+			lv_binfont_destroy(font);
+			font_buffer.remove(obj_name);
+		}
+	}
 }
 
 void ui_set_size(char * obj_name,  lv_coord_t w, lv_coord_t h ) {
@@ -3507,6 +3529,33 @@ void ui_set_text(char * obj_name, char * text, int scale) {
 		}
 	}
 }
+
+void ui_set_text_font(char * obj_name, char * text, char * font_name) {
+    lv_obj_t* obj = registry.get(obj_name);
+
+				
+	if (obj) {
+		lv_font_t * font = font_buffer.get(font_name);
+		if (lv_obj_get_class(obj) == &lv_label_class) {
+			lv_label_set_text(obj, text);
+			if (font) {
+				lv_obj_set_style_text_font(obj, font, LV_PART_MAIN);
+			}
+		} else 
+		if (lv_obj_get_class(obj) == &lv_button_class) {
+			lv_obj_t *label = lv_obj_get_child(obj, 0);
+			if (label) {
+				lv_label_set_text(label, text);
+				if (font)
+					lv_obj_set_style_text_font(label, font, LV_PART_MAIN);
+			}
+		} else 
+		if (lv_obj_get_class(obj) == &lv_roller_class) {
+			lv_roller_set_options(obj, text, LV_ROLLER_MODE_INFINITE);
+		}
+	}
+}
+
 
 void ui_set_style(char * obj_name, char * style_name, int to_val, int until_val){
 	lv_obj_t* obj = registry.get(obj_name);
@@ -3653,6 +3702,15 @@ static OBJ primLVGLaddimg(int argCount, OBJ *args) {
 	return falseObj;
 }
 */
+
+static OBJ primLVGLaddfont(int argCount, OBJ *args) {
+	char* obj_name = obj2str(args[1]);
+	char* filename = obj2str(args[0]);
+	
+	ui_add_font(obj_name,filename);
+	return falseObj;
+}
+
 
 static OBJ primLVGLaddimg(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[1]);
@@ -3981,6 +4039,7 @@ static OBJ primLVGLsetText(int argCount, OBJ *args) {
 	int scale = 1;
 	char* obj_name = obj2str(args[0]);
 	char* obj_text;
+	char *font_name; 
 	OBJ value = args[1];
 	if (IS_TYPE(value, StringType)) {
 		obj_text = obj2str(value);
@@ -3994,9 +4053,15 @@ static OBJ primLVGLsetText(int argCount, OBJ *args) {
 		obj_text=s;
 	}
 	if (argCount >2) {
-		scale = obj2int(args[2]);
+		if (IS_TYPE(value, StringType)) {
+			font_name = obj2str(args[2]);
+			ui_set_text_font(obj_name, obj_text, font_name);
+		} else {
+			scale = obj2int(args[2]);
+			ui_set_text(obj_name, obj_text, scale);
+		}
 	}
-	ui_set_text(obj_name, obj_text, scale);
+	
 	return falseObj;
 }
 
@@ -4224,6 +4289,7 @@ static PrimEntry entries[] = {
 	{"LVGLgetallobjs", primLVGLgetallobjs},
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},
+ 	{"LVGLaddfont",primLVGLaddfont},
 	{"LVGLpsram",primLVGLpsram},
 	#if defined(LMSDIAPLY) && defined(BREAKOUT)
 		{"fliptouch",primfliptouch},

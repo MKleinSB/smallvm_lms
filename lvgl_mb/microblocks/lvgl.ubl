@@ -14,7 +14,7 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLsetsize]' 'set size _ width _ height _' 'str num num' '' 100 10
   spec ' ' '[tft:LVGLsetval]' 'set value _ value _' 'str num' '' 10
   spec 'r' '[tft:LVGLgetval]' 'get value _' 'str' ''
-  spec ' ' '[tft:LVGLsettext]' 'set text _ text _ : scale _' 'str str num' '' 'text' 1
+  spec ' ' '[tft:LVGLsettext]' 'set text _ text _ : scale _' 'str str auto' '' 'text' 1
   spec ' ' '[tft:LVGLsetcolor]' 'set color _ background _ : indicator _ : knob _' 'str color color color' ''
   spec 'r' 'makeColor' 'color r _ g _ b _ (0-255)' 'num num num' 0 100 100
   space
@@ -27,7 +27,8 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLdelobj]' 'delete object _' 'str' ''
   spec ' ' 'delete_all_objects' 'delete all objects'
   spec ' ' '[tft:fliptouch]' 'flip touch x _ y _  x/y _' 'bool bool bool' false false false
-  spec ' ' '[tft:LVGLaddimg]' 'imgage path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
+  spec ' ' '[tft:LVGLaddimg]' 'image path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
+  spec ' ' '[tft:LVGLaddfont]' 'font path _  as  _' 'str str' '' '' 
   spec ' ' '[tft:LVGLsetstyle]' 'set _ of _ to _ : until _' 'str.style_types str auto auto' 'range' '' '' ''
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
