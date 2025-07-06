@@ -1582,7 +1582,7 @@ void pca9535_BL() {
 			tftClear();
 			// Turn on backlight on IoT-Bus
 			pinMode(2, OUTPUT);
-			digitalWrite(, HIGH);
+			digitalWrite(2, HIGH);
 
 			useTFT = true;
 	}
@@ -3745,6 +3745,20 @@ static OBJ primLVGLgetallobjs(int argCount, OBJ *args) {
 	return result;
 }
 
+
+static OBJ primLVGLgetallfonts(int argCount, OBJ *args) {
+	std::vector<std::string> names = font_buffer.getAllNames();
+	int count = font_buffer.size();
+	OBJ result = newObj(ListType, count+1, zeroObj);
+	FIELD(result, 0) = int2obj(count);
+	int i=1;
+	for (const auto& name : names) {
+		FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
+		i++;
+	}
+	return result;
+}
+
 static OBJ primLVGLaddBtn(int argCount, OBJ *args) {
 	int scale = 1;
 	char* obj_name = obj2str(args[0]);
@@ -4060,7 +4074,8 @@ static OBJ primLVGLsetText(int argCount, OBJ *args) {
 			scale = obj2int(args[2]);
 			ui_set_text(obj_name, obj_text, scale);
 		}
-	}
+	} else 
+		ui_set_text(obj_name, obj_text, scale);
 	
 	return falseObj;
 }
@@ -4236,7 +4251,7 @@ static PrimEntry entries[] = {
 	{"getWidth", primGetWidth},
 	{"getHeight", primGetHeight},
 	{"setPixel", primSetPixel},
-	{"pixelRow", primPixelRow},
+	//{"pixelRow", primPixelRow},
 	{"line", primLine},
 	{"rect", primRect},
 	{"roundedRect", primRoundedRect},
@@ -4287,6 +4302,7 @@ static PrimEntry entries[] = {
 	{"LVGLgetevent",primLVGLgetEvent},
 	{"LVGLsetcolor", primLVGLsetColor},
 	{"LVGLgetallobjs", primLVGLgetallobjs},
+	{"LVGLgetallfonts",primLVGLgetallfonts},
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},
  	{"LVGLaddfont",primLVGLaddfont},
