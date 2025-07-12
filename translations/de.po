@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: interest@microblocks.fun\n"
 "POT-Creation-Date: 2024-10-28 16:43+0200\n"
-"PO-Revision-Date: 2025-06-23 02:30+0000\n"
+"PO-Revision-Date: 2025-07-04 00:06+0000\n"
 "Last-Translator: Ralf Krause <ralf.krause@moodleschule.de>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/microblocks/ide/"
 "de/>\n"
@@ -458,7 +458,7 @@ msgstr "Radio Nachricht erhalten?"
 
 #. Block in Data category
 msgid "replace item _ of list _ with _"
-msgstr "ersetze Element _ in Liste _ durch _"
+msgstr "setze Element _ in Liste _ auf _"
 
 #. Primitive block. Mostly hidden from end users.
 msgid "radio last signal strength"
@@ -727,7 +727,7 @@ msgstr "ByteListe oder Text"
 
 #. Block in Data category
 msgid "delete item _ of list _"
-msgstr "entferne Element _ aus Liste _"
+msgstr "lösche Element _ aus Liste _"
 
 #. Block in Variables category
 msgid "set _ to _"
@@ -1551,7 +1551,7 @@ msgstr ""
 #. Tip Bar text for a block (at the bottom of the IDE, gives info on the currently hovered block or input)
 msgid "Call the function with the given name and optional parameter list."
 msgstr ""
-"ruft die Funktion mit dem angegebenen Namen und den optionalen Parametern "
+"Ruft die Funktion mit dem angegebenen Namen und den optionalen Parametern "
 "auf."
 
 #. BirdBrain Technologies Hummingbird kit library block
@@ -2844,7 +2844,7 @@ msgstr "stoppe alles"
 
 #. Block in Control category
 msgid "call _"
-msgstr "rufe _"
+msgstr "rufe _ auf"
 
 #. "Operators" blocks category label
 msgid "cat;Operators"
@@ -6688,7 +6688,7 @@ msgstr "SCD40 relative Luftfeuchtigkeit (%)"
 
 #. Firmware install instruction
 msgid "Do not switch browser tabs!"
-msgstr "Wechsle keinen Tab im Browser!"
+msgstr "Wechsle keine Browser-Tabs!"
 
 #. Gas (SCD40) library block
 msgid "°F"
@@ -6905,3 +6905,22 @@ msgstr ""
 #. Firmware install instruction
 msgid "Connecting..."
 msgstr "verbinden ..."
+
+#. Generic robot side input. Used in robot libraries
+#. as in "left" side
+msgid "left"
+msgstr "links"
+
+#. Generic robot side input. Used in robot libraries
+#. as in "right" side
+msgid "right"
+msgstr "rechts"
+
+#. Generic robot side input. Used in robot libraries
+#. as in "both" sides
+msgid "both"
+msgstr "beide"
+
+#. Microphone library block
+msgid "turn off microphone"
+msgstr "schalte Mikrofon aus"

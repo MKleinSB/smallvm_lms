@@ -400,6 +400,15 @@ void hardwareInit() {
 	static const int analogPin[6] = {A0, A1, A2, A3, A4, A5};
 	// Note: pins 0 and 1 are reserved for primary UART
 
+#elif defined(ARDUINO_SEEED_XIAO_NRF52840_SENSE)
+
+	#define BOARD_TYPE "Xiao NRF52840"
+	#define DIGITAL_PINS 14
+	#define ANALOG_PINS 6
+	#define TOTAL_PINS 33
+	#define INVERT_USER_LED true
+	static const int analogPin[] = {A0, A1, A2, A3, A4, A5};
+
 #elif defined(ARDUINO_TEENSY31)
 	#define BOARD_TYPE "Teensy 3.1"
 	#define DIGITAL_PINS 24
@@ -505,6 +514,15 @@ void hardwareInit() {
 	#define TOTAL_PINS 20
 	static const int analogPin[] = {A0, A1, A2, A3, A4, A5};
 
+#elif defined(ARDUINO_SEEED_XIAO_M0) // must come before Zero
+
+	#define BOARD_TYPE "Xiao SAMD21"
+	#define DIGITAL_PINS 14
+	#define ANALOG_PINS 11
+	#define TOTAL_PINS 14
+	#define INVERT_USER_LED true
+	static const int analogPin[] = {A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10};
+
 #elif defined(ARDUINO_SAMD_ZERO)
 
 	#define BOARD_TYPE "Zero"
@@ -527,12 +545,12 @@ void hardwareInit() {
 	#define DIGITAL_PINS 9
 	#define ANALOG_PINS 1
 	#define TOTAL_PINS 18 // A0 is pin 17
+	#define INVERT_USER_LED true
 	#define USE_DIGITAL_PIN_MAP true
 	static const int analogPin[] = {A0};
 	static const char digitalPin[9] = {16, 5, 4, 0, 2, 14, 12, 13, 15};
 	#define PIN_LED LED_BUILTIN
 	#define PIN_BUTTON_A 0
-	#define INVERT_USER_LED true
 
 #elif defined(ARDUINO_CITILAB_ED1)
 
@@ -1060,6 +1078,42 @@ void hardwareInit() {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 1, 1, 1, 0, 0, 0};
 
+#elif defined(ARDUINO_SEEED_XIAO_RP2040)
+
+	#define BOARD_TYPE "Xiao RP2040"
+	#define DIGITAL_PINS 15
+	#define ANALOG_PINS 4
+	#define TOTAL_PINS 30
+	#define INVERT_USER_LED true
+	#define USE_DIGITAL_PIN_MAP true
+	static const int analogPin[ANALOG_PINS] = {A0, A1, A2, A3};
+	static const char digitalPin[DIGITAL_PINS] = {
+		D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10,
+		PIN_LED_R, PIN_LED_G, PIN_LED_B, PIN_NEOPIXEL};
+	static const char reservedPin[TOTAL_PINS] = {
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+#elif defined(ARDUINO_SEEED_XIAO_RP2350)
+
+	#define BOARD_TYPE "Xiao RP2350"
+	#define DIGITAL_PINS 21
+	#define ANALOG_PINS 3
+	#define TOTAL_PINS 30
+	#define INVERT_USER_LED true
+	#define PIN_NEOPIXEL 22
+	#define USE_DIGITAL_PIN_MAP true
+	static const int analogPin[ANALOG_PINS] = {A0, A1, A2};
+	static const char digitalPin[DIGITAL_PINS] = {
+		D0, D1, D2, D3, D4, D5, D6, D7, D8, D9,
+		D10, D11, D12, D13, D14, D15, D16, D17, D18, PIN_LED,
+		PIN_NEOPIXEL};
+	static const char reservedPin[TOTAL_PINS] = {
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 #elif defined(ARDUINO_ARCH_RP2040)
 
 	#define BOARD_TYPE "RP2040"
@@ -1083,7 +1137,7 @@ void hardwareInit() {
 		#elif defined(GIZMO_MECHATRONICS)
 			#undef BOARD_TYPE
 			#define BOARD_TYPE "RP2040 Gizmo"
-		#elif defined(RP2350)
+		#elif defined(RP2350) || defined(PICO_RP2350)
 			#undef BOARD_TYPE
 			#define BOARD_TYPE "RP2350"
 		#endif
@@ -1340,6 +1394,18 @@ static void initPins(void) {
 		pinMode(PIN_BUTTON_A, INPUT_PULLUP); // BUTTON A
 		pinMode(PIN_BUTTON_B, INPUT_PULLUP); // BUTTON B
 	#endif
+
+	#ifdef ARDUINO_SEEED_XIAO_M0
+		// put TX/RX LED into input mode to suppress flashing
+		SET_MODE(PIN_LED_RXL, INPUT);
+		SET_MODE(PIN_LED_TXL, INPUT);
+	#endif
+
+	#ifdef ARDUINO_SEEED_XIAO_RP2040
+		SET_MODE(PIN_LED_R, INPUT);
+		SET_MODE(PIN_LED_G, INPUT);
+		SET_MODE(PIN_LED_B, INPUT);
+	#endif
 }
 
 #if !defined(ARDUINO_SAM_DUE) && !defined(ESP8266) && !defined(PICO_RP2350)
@@ -1361,6 +1427,12 @@ void turnOffPins() {
 					int duePin = mapDigitalPinNum(pin);
 					if (duePin >= 0) digitalWrite(duePin, LOW);
 				}
+			#endif
+			#if defined(PICO_RP2350)
+				pinMode(pin, OUTPUT);
+				digitalWrite(pin, LOW); // workaround for RP2350 chip bug; set low before switching to input
+				delayMicroseconds(10);
+				pinMode(pin, INPUT);
 			#endif
 			SET_MODE(pin, INPUT);
 		}
@@ -1481,7 +1553,9 @@ OBJ primAnalogRead(int argCount, OBJ *args) {
 		SET_MODE(pinNum, mode);
 		return int2obj(adc_read_value((PinName) duePin, 10));
 	#endif
-	#if defined(ARDUINO_ARCH_RP2040) && !defined(PICO_ED)
+	#if defined(ARDUINO_SEEED_XIAO_RP2040) || defined(ARDUINO_SEEED_XIAO_RP2350)
+		if ((26 <= pinNum) && (pinNum <= 29)) pinNum -= 26; // map pins 26-29 are aliases for A0-A3
+	#elif defined(ARDUINO_ARCH_RP2040) && !defined(PICO_ED)
 		if ((pinNum < 26) || (pinNum > 29)) return int2obj(0);
 		pinNum -= 26; // map pins 26-29 to A0-A3
 	#endif

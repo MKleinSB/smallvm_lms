@@ -55,7 +55,7 @@
 
 #include "interp.h" // must be included *after* ESP8266WiFi.h
 
-#if (defined(ESP8266) || defined(ARDUINO_ARCH_ESP32)) // && !defined(BLE_IDE)
+#if (defined(ESP8266) || defined(ARDUINO_ARCH_ESP32))
 	#define ESP_NOW 1
 #endif
 
@@ -1003,7 +1003,7 @@ static OBJ primESPNowChannel(int argCount, OBJ *args) {
 static OBJ primESPNowSetChannel(int argCount, OBJ *args) {
 	int channel = ((argCount > 0) && isInt(args[0])) ? obj2int(args[0]) : 1;
 	if (channel < 1) channel = 1;
-	if (channel > 11) channel = 11;
+	if (channel > 13) channel = 13;
 
 	if (!esp_now_started) startESPNow();
 	setWiFiChannel(channel);
