@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: interest@microblocks.fun\n"
 "POT-Creation-Date: 2024-10-30 07:10+0200\n"
-"PO-Revision-Date: 2025-07-02 14:01+0000\n"
+"PO-Revision-Date: 2025-07-23 11:06+0000\n"
 "Last-Translator: Josep Ferràndiz <josep.ferrandiz@gmail.com>\n"
 "Language-Team: Catalan <https://hosted.weblate.org/projects/microblocks/ide/"
 "ca/>\n"
@@ -832,7 +832,7 @@ msgstr "escriu _ a x _ y _ color _ al NeoPanell"
 
 #. NeoPanel library block
 msgid "NeoPanel draw BMP file _ at x _ y _"
-msgstr "mostra imagen BMP _ x _ y _ al NeoPanell"
+msgstr "mostra imatge BMP _ x _ y _ al NeoPanell"
 
 #. Microphone library label
 msgid "Microphone"
@@ -6809,3 +6809,119 @@ msgstr "ambdós"
 #. Microphone library block
 msgid "turn off microphone"
 msgstr "apaga el micròfon"
+
+#. NeoPanel library block
+msgid "NeoPanel draw line from x _ y _ to x _ y _ color _"
+msgstr "dibuixa línia de x _ y _ a x _ y _ color _ al NeoPanell"
+
+#. NeoPanel library block
+msgid "NeoPanel draw circle at x _ y _ radius _ color _"
+msgstr "dibuixa cercle a x _ y _ radi _ color _ al NeoPanell"
+
+#. NeoPanel library block
+msgid "NeoPanel draw rectangle at x _ y _ width _ height _ color _"
+msgstr "dibuixa rectangle a x _ y _ amplada _ alçada _ color _ al NeoPanell"
+
+#. Octostudio shape names
+msgid "octo;circle"
+msgstr "cercle"
+
+#. Octostudio shape names
+msgid "octo;square"
+msgstr "quadrat"
+
+#. Octostudio shape names
+msgid "octo;star"
+msgstr "estrella"
+
+#. Octostudio shape names
+msgid "octo;heart"
+msgstr "cor"
+
+#. Octostudio shape names
+msgid "octo;triangle"
+msgstr "triangle"
+
+#. Octostudio shape names
+msgid "octo;clover"
+msgstr "trèbol"
+
+#. Octostudio shape names
+msgid "octo;diamond"
+msgstr "diamant"
+
+#. Octostudio shape names
+msgid "octo;moon"
+msgstr "lluna"
+
+#. micro:STEAMakers library block
+msgid "ms pin _ touched?"
+msgstr "ms tocant el pin _?"
+
+#. micro:STEAMakers library block
+msgid "ms accel _ m/s2"
+msgstr "ms acceleració _ m/s²"
+
+#. micro:STEAMakers library block
+msgid "ms gyro _ deg/s"
+msgstr "ms giroscopi _ graus/s"
+
+#. LogicLinks library block
+msgid "LogicLinks receive IR code"
+msgstr "LogicLinks rebre codi IR"
+
+#. LogicLinks library block
+msgid "LogicLinks IR Code"
+msgstr "LogicLinks codi IR"
+
+#. LogicLinks library block
+msgid "LogicLinks button"
+msgstr "LogicLinks botó"
+
+#. LogicLinks library block
+msgid "LogicLinks potentiometer"
+msgstr "LogicLinks potenciòmetre"
+
+#. LogicLinks library block
+msgid "LogicLinks random color"
+msgstr "LogicLinks color aleatori"
+
+#. LogicLinks library block
+msgid "LogicLinks beep _ ms"
+msgstr "LogicLinks bip _ ms"
+
+#. LogicLinks library block
+msgid "LogicLinks set relay _"
+msgstr "LogicLinks relé _"
+
+#. LogicLinks library block
+msgid "LogicLinks IR code received?"
+msgstr "LogicLinks codi IR rebut?"
+
+#. LogicLinks library block
+msgid "LogicLinks color r _ g _ b _ (0-255)"
+msgstr "LogicLinks color r _ g _ b _ (0-255)"
+
+#. LogicLinks library block
+msgid "LogicLinks humidity"
+msgstr "LogicLinks humitat"
+
+#. LogicLinks library block
+msgid "LogicLinks set RGB LED _"
+msgstr "LogicLinks led RGB _"
+
+#. LogicLinks library block
+msgid "LogicLinks turn off RGB LED"
+msgstr "LogicLinks apaga el led RGB"
+
+#. LogicLinks library block
+msgid "LogicLinks temperature (°C)"
+msgstr "LogicLinks temperatura (°C)"
+
+#. LogicLinks library block
+msgid "LogicLinks set red LED _"
+msgstr "LogicLinks led vermell _"
+
+#. LogicLinks library block
+msgid "LogicLinks light (0-100)"
+msgstr "LogicLinks llum (0-100)"
