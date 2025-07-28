@@ -34,7 +34,7 @@ static int deferUpdates = false;
 	defined(TTGO_RP2040) || defined(TTGO_DISPLAY) || defined(ARDUINO_M5STACK_Core2) || \
 	defined(GAMEPAD_DISPLAY) || defined(PICO_ED) || defined(OLED_128_64) || defined(COCUBE) || \
 	defined(ARDUINO_M5Atom_S3) || defined(LMSDISPLAY) || defined(LMS7789) || defined(UNIHIKER) ||\
-	defined(M5Atom_S3_TFT) || defined(CYD)
+	defined(M5Atom_S3_TFT) || defined(CYD) || defined(CYDS343)
 
 	//sodb
 	//#if !defined(TFT_ESPI)
@@ -753,6 +753,134 @@ static int deferUpdates = false;
 
 			useTFT = true;
 		}
+
+
+	#elif defined(CYDS343)
+
+
+	    // change: #if (!defined(ESP_ARDUINO_VERSION_MAJOR)) || (ESP_ARDUINO_VERSION_MAJOR <3>)
+		// in Arduino_ESP32RGBPanel.h
+
+		#include <Arduino_GFX_Library.h>
+
+#define GFX_BL 2
+// option 1:
+// Uncomment for ILI6485 LCD 480x272
+Arduino_ESP32RGBPanel *rgbpanel = new Arduino_ESP32RGBPanel(
+    40 /* DE */, 41 /* VSYNC */, 39 /* HSYNC */, 42 /* PCLK */,
+    45 /* R0 */, 48 /* R1 */, 47 /* R2 */, 21 /* R3 */, 14 /* R4 */,
+    5 /* G0 */, 6 /* G1 */, 7 /* G2 */, 15 /* G3 */, 16 /* G4 */, 4 /* G5 */,
+    8 /* B0 */, 3 /* B1 */, 46 /* B2 */, 9 /* B3 */, 1 /* B4 */,
+    0 /* hsync_polarity */, 1 /* hsync_front_porch */, 1 /* hsync_pulse_width */, 43 /* hsync_back_porch */,
+    0 /* vsync_polarity */, 3 /* vsync_front_porch */, 1 /* vsync_pulse_width */, 12 /* vsync_back_porch */,
+    1 /* pclk_active_neg */, 9000000 /* prefer_speed */);
+
+
+
+Arduino_RGB_Display tft = Arduino_RGB_Display(
+    480 /* width */, 272 /* height */, rgbpanel, 0 /* rotation */, true /* auto_flush */);
+// option 2:
+// Uncomment for ST7262 IPS LCD 800x480
+// Arduino_ESP32RGBPanel *rgbpanel = new Arduino_ESP32RGBPanel(
+//     40 /* DE */, 41 /* VSYNC */, 39 /* HSYNC */, 42 /* PCLK */,
+//     45 /* R0 */, 48 /* R1 */, 47 /* R2 */, 21 /* R3 */, 14 /* R4 */,
+//     5 /* G0 */, 6 /* G1 */, 7 /* G2 */, 15 /* G3 */, 16 /* G4 */, 4 /* G5 */,
+//     8 /* B0 */, 3 /* B1 */, 46 /* B2 */, 9 /* B3 */, 1 /* B4 */,
+//     0 /* hsync_polarity */, 8 /* hsync_front_porch */, 4 /* hsync_pulse_width */, 8 /* hsync_back_porch */,
+//     0 /* vsync_polarity */, 8 /* vsync_front_porch */, 4 /* vsync_pulse_width */, 8 /* vsync_back_porch */,
+//     1 /* pclk_active_neg */, 16000000 /* prefer_speed */);
+// Arduino_RGB_Display *gfx = new Arduino_RGB_Display(
+//     800 /* width */, 480 /* height */, rgbpanel, 0 /* rotation */, true /* auto_flush */);
+// option 3:
+// Uncomment for RPi DPI 1024x600
+// Arduino_ESP32RGBPanel *rgbpanel = new Arduino_ESP32RGBPanel(
+//     40 /* DE */, 41 /* VSYNC */, 39 /* HSYNC */, 42 /* PCLK */,
+//     45 /* R0 */, 48 /* R1 */, 47 /* R2 */, 21 /* R3 */, 14 /* R4 */,
+//     5 /* G0 */, 6 /* G1 */, 7 /* G2 */, 15 /* G3 */, 16 /* G4 */, 4 /* G5 */,
+//     8 /* B0 */, 3 /* B1 */, 46 /* B2 */, 9 /* B3 */, 1 /* B4 */,
+//     0 /* hsync_polarity */, 8 /* hsync_front_porch */, 4 /* hsync_pulse_width */, 43 /* hsync_back_porch */,
+//     0 /* vsync_polarity */, 8 /* vsync_front_porch */, 4 /* vsync_pulse_width */, 12 /* vsync_back_porch */,
+//     1 /* pclk_active_neg */, 9000000 /* prefer_speed */);
+// Arduino_RGB_Display *gfx = new Arduino_RGB_Display(
+//     1024 /* width */, 600 /* height */, rgbpanel, 0 /* rotation */, true /* auto_flush */);
+
+#define TFT_WIDTH 480
+#define TFT_HEIGHT 272
+
+void tftInit() {
+
+	
+#ifdef DEV_DEVICE_INIT
+  DEV_DEVICE_INIT();
+#endif
+
+  Serial.begin(115200);
+  // Serial.setDebugOutput(true);
+  // while(!Serial);
+  //Serial.println("Arduino_GFX Hello World example");
+
+  // Init Display
+  tft.begin();
+  tft.fillScreen(RGB565_BLACK);
+  useTFT = true;
+#ifdef GFX_BL
+  pinMode(GFX_BL, OUTPUT);
+  digitalWrite(GFX_BL, HIGH);
+#endif
+
+}
+
+		#include "touch.h"
+		#define HAS_TOUCH_SCREEN 1
+
+		static void touchInit() {
+		 	touch_init();
+			touchEnabled = true;
+		}
+
+		static uint32 lastTouchUpdate = 0;
+		static int touchScreenX = -1;
+		static int touchScreenY = -1;
+
+		static int screenTouched() {
+			if (!touchEnabled) touchInit();
+			bool is_touched = touch_touched();
+			return is_touched;
+		}
+
+		static void touchUpdate() {
+
+			if (!touchEnabled) touchInit();
+			uint32 now = millisecs();
+			if ((now - lastTouchUpdate) < 10) return;
+			if (screenTouched()) {
+				touchScreenX = touch_last_x;
+				touchScreenY = touch_last_y;
+			} 
+			/*else {
+				touchScreenX = -1;
+				touchScreenY = -1;
+			}*/
+			lastTouchUpdate = now;
+		}
+
+		static int screenTouchX() {
+			touchUpdate();
+			return touchScreenX;
+		}
+
+		static int screenTouchY() {
+			touchUpdate();
+			return touchScreenY;
+		}
+
+		static int screenTouchPressure() {
+			// pressure not supported; return a constant value if screen is touched, -1 if not
+			if (!touchEnabled) touchInit();
+			return screenTouched() ? 10 : -1;
+		}
+
+
 	#elif defined(LMSDISPLAY) && defined(TFT_ESPI)
 		bool flip_x_y=false;
 		bool flip_x=false;
@@ -2192,7 +2320,12 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 		   //tft.pushImageDMA(x,y,pixelCount,1,bufferPixels);
 		   // no DMA possible from PSRAM
 		   tft.pushImage(x,y,pixelCount,1,bufferPixels);
-		#else
+		  #elif defined(CYDS343)
+		  	// no tft
+			// translate tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+			// in block with w and h
+			// now just do nothing
+		   #else
 		  tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 		#endif
 		
@@ -2233,6 +2366,11 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 		#if defined(TFT_ESPI)
 			//tft.pushImageDMA(x, y, pixelCount, 1, bufferPixels);
 			tft.pushImage(x, y, pixelCount, 1, bufferPixels);
+		#elif defined(CYDS343)
+		  	// no tft
+			// translate tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+			// in block with w and h
+			// now just do nothing
 		#else
 		  tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 		#endif
@@ -2627,7 +2765,11 @@ static OBJ primDrawBuffer(int argCount, OBJ *args) {
 			scale,
 			bufferPixels
 		);
-	
+		#elif defined(CYDS343)
+		  	// no tft
+			// translate tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+			// in block with w and h
+			// now just do nothing
 		#else
 		tft.drawRGBBitmap(
 			originX * scale,
@@ -2752,6 +2894,66 @@ static OBJ primAprilTag(int argCount, OBJ *args) { return falseObj; }
 #endif
 
 // LVGL 
+
+
+#if defined(LVGL) && defined(CYDS343)
+#include <lvgl.h>
+extern bool useLVGL;
+extern bool LVGL_initialized;
+void setup_lvgl(void); 
+
+static uint32_t screenWidth;
+static uint32_t screenHeight;
+
+
+
+void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
+{
+#ifndef DIRECT_RENDER_MODE
+  uint32_t w = lv_area_get_width(area);
+  uint32_t h = lv_area_get_height(area);
+
+  tft.draw16bitBeRGBBitmap(area->x1, area->y1, (uint16_t *)px_map, w, h);
+  
+#endif // #ifndef DIRECT_RENDER_MODE
+
+  /*Call it to tell LVGL you are ready*/
+  lv_disp_flush_ready(disp);
+}
+
+
+void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
+{
+  if (touch_has_signal())
+  {
+    if (touch_touched())
+    {
+      data->state = LV_INDEV_STATE_PRESSED;
+
+      /*Set the coordinates*/
+      data->point.x = touch_last_x;
+      data->point.y = touch_last_y;
+	//   char s[100];
+	//   sprintf(s,"touch %d, %d",touch_last_x, touch_last_y);
+    //   outputString(s);
+    }
+    else if (touch_released())
+    {
+      data->state = LV_INDEV_STATE_RELEASED;
+    }
+  }
+  else
+  {
+    data->state = LV_INDEV_STATE_RELEASED;
+  }
+}
+
+
+
+
+#endif
+
+
 // only for these boards:
 #if defined(LVGL) && defined(TFT_ESPI)
 	#include <lvgl.h>
@@ -2801,7 +3003,7 @@ static OBJ primAprilTag(int argCount, OBJ *args) { return falseObj; }
 		}
 	#endif
 
-#elif defined(LVGL) && !defined(TFT_ESPI)
+#elif defined(LVGL) && !defined(TFT_ESPI)  && !defined(CYDS343)
 #include <lvgl.h>
 void setup_lvgl(void); 
 extern bool useLVGL;

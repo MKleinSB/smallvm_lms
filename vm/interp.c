@@ -1385,8 +1385,8 @@ void vmLoop() {
 	while (true) {
 		#if defined(LVGL)
 			if (LVGL_initialized & useLVGL) {
-					 lv_tick_inc(1);
-				     lv_timer_handler();
+					 lv_tick_inc(3);
+					 lv_timer_handler();
 
 				}
 		#endif

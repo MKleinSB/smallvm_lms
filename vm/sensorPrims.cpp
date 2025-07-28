@@ -404,6 +404,7 @@ static OBJ primI2cSetPins(int argCount, OBJ *args) {
 		Wire.end();
 		Wire.setPins(pinSDA, pinSCL);
 		Wire.begin();
+		// Wire.setClock(400000);  // sodb added
 	#elif defined(ARDUINO_ARCH_RP2040)
 		if (!legal_rp2040_SDA_pin(pinSDA)) return falseObj;
 		if (!legal_rp2040_SCL_pin(pinSCL)) return falseObj;
