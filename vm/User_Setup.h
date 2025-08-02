@@ -108,6 +108,65 @@ touch.writeto_mem(21, 0xfe, b'\xff') #
 #define ENABLE_8_BIT_PALETTES
 #define TFT_DMA_BUFFER_SIZE  132768
 #define TFT_DMA_MODE         1   
+
+
+#elif defined(CYDR)
+#define ILI9341_DRIVER
+
+/*
+ili9341(miso=12, mosi=13, clk=14, cs=15, dc=2, rst=-1, backlight=27, power=-1, width=320, height=240, rot=LANDSCAPE)
+from machine import I2S, Pin
+p=Pin(27,Pin.OUT)
+p.on()
+from machine import Pin, SPI, ADC, PWM, SDCard, SoftI2C
+import struct
+touch = SoftI2C(scl=Pin(32), sda=Pin(33), freq=400000)
+touch.writeto_mem(21, 0xfe, b'\xff') #
+
+*/
+//#define ILI9342_DRIVER
+
+// SPI pin configuration
+
+//#define TFT_WIDTH  320
+//#define TFT_HEIGHT 240
+#define TFT_MOSI 13
+#define TFT_MISO 12
+#define TFT_SCLK 14
+#define TFT_CS 15
+#define TFT_DC 2
+#define TFT_RST -1
+#define TFT_BL 21
+
+#define TP_CLK 25
+#define TP_CS 33
+#define TP_DIN 32
+#define TP_DOUT 39
+#define TP_IRQ 36
+
+
+#define LOAD_GLCD
+#define LOAD_FONT2
+#define LOAD_FONT4
+#define SMOOTH_FONT
+
+#define TFT_SPI_PORT HSPI 
+// Optional: set SPI clock speed
+#define CONFIG_TFT_HSPI_PORT
+#define SPI_FREQUENCY  40000000
+#define SPI_READ_FREQUENCY 20000000
+
+// Optional: enable touch or fonts
+//#define SUPPORT_TOUCH
+//#define LOAD_GLCD
+//#define LOAD_FONT2
+
+#define SUPPORT_TRANSACTIONS
+#define USE_HSPI_PORT         // Use HSPI (VSPI also works, but this matches the custom pins above)
+#define ENABLE_8_BIT_PALETTES
+#define TFT_DMA_BUFFER_SIZE  132768
+#define TFT_DMA_MODE         1   
+
 #elif defined(LMSDISPLAY) && defined(BREAKOUT)
 #define ILI9341_DRIVER
 //#define ILI9342_DRIVER
