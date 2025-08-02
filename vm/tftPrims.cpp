@@ -2327,7 +2327,7 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 		   tft.pushImage(x,y,pixelCount,1,bufferPixels);
 		  #elif defined(CYDS343)
 		  	// no tft
-			// translate tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+			tft.draw16bitRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 			// in block with w and h
 			// now just do nothing
 		   #else
@@ -2373,7 +2373,7 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 			tft.pushImage(x, y, pixelCount, 1, bufferPixels);
 		#elif defined(CYDS343)
 		  	// no tft
-			// translate tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+			tft.draw16bitRGBBitmap(x, y, bufferPixels, pixelCount, 1);
 			// in block with w and h
 			// now just do nothing
 		#else
@@ -2772,7 +2772,13 @@ static OBJ primDrawBuffer(int argCount, OBJ *args) {
 		);
 		#elif defined(CYDS343)
 		  	// no tft
-			// translate tft.drawRGBBitmap(x, y, bufferPixels, pixelCount, 1);
+			tft.draw16bitRGBBitmap(
+			originX * scale,
+			(originY + y) * scale,
+			bufferPixels,
+			originWidth * scale,
+			scale
+		);
 			// in block with w and h
 			// now just do nothing
 		#else
@@ -4458,7 +4464,7 @@ static PrimEntry entries[] = {
 	{"getWidth", primGetWidth},
 	{"getHeight", primGetHeight},
 	{"setPixel", primSetPixel},
-	//{"pixelRow", primPixelRow},
+	{"pixelRow", primPixelRow},
 	{"line", primLine},
 	{"rect", primRect},
 	{"roundedRect", primRoundedRect},
