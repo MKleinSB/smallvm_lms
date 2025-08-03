@@ -2392,7 +2392,7 @@ static OBJ primSetPixel(int argCount, OBJ *args) {
 }
 
 
-#if !defined(CYD)
+//#if !defined(CYD)
 static OBJ primPixelRow(int argCount, OBJ *args) {
 	// Draw a single row of pixels (a list or byte array) at the given y.
 	// If a byte array is provided the optional argument bytesPerPixel
@@ -2503,7 +2503,7 @@ static OBJ primPixelRow(int argCount, OBJ *args) {
 	return falseObj;
 }
 
-#endif 
+//#endif 
 
 static OBJ primLine(int argCount, OBJ *args) {
 	if (!hasTFT()) return falseObj;

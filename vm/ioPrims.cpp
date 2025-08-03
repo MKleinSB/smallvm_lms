@@ -969,9 +969,9 @@ void hardwareInit() {
 	#elif defined(KIDS_BITS)
 		#define BOARD_TYPE "KidsBits"
 // sodb define name
-	#elif defined(LMSDISPLAY) || defined(LMS7789)
+	//#elif defined(LMSDISPLAY) || defined(LMS7789) || defined(CYD) || defined (CYDR)
 		// name it as such; automatically tft and touch loaded + file transfers to ide
-		#define BOARD_TYPE "IOT-BUS"
+	//	#define BOARD_TYPE "IOT-BUS"
 	#else
 		#define BOARD_TYPE "ESP32"
 	#endif
@@ -996,8 +996,8 @@ void hardwareInit() {
 		
 		0, 1, 0, 1, 0, 0, 1, 0, 0, 1,
 		1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-		1, 0, 0, 0, 1, 0, 0, 0, 1, 1,
-		1, 1, 0, 0, 0, 0, 0, 1, 1, 0};
+		0, 0, 0, 0, 1, 0, 0, 0, 1, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 #elif defined(TTGO_RP2350)
 
@@ -1539,8 +1539,13 @@ OBJ primAnalogRead(int argCount, OBJ *args) {
 				pinNum = digitalPin[pinNum]; // map edge connector pin number to ESP32 pin number
 			}
 		#endif
+		//sodb
+		char s[50];
+		sprintf(s,"analog read: %d ",pinNum);
+		outputString(s);
 		// use the ESP32 pin number directly (if not reserved)
-		if (RESERVED(pinNum)) return int2obj(0);
+		if (RESERVED(pinNum)) { //sodb
+			 outputString("IO pin reserved"); return int2obj(0);}
 		SET_MODE(pinNum, INPUT);
 		return int2obj(analogRead(pinNum) >> 2); // convert from 12-bit to 10-bit resolution
 	#elif defined(ARDUINO_SAM_ZERO) // M0
