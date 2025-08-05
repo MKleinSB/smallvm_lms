@@ -1,7 +1,7 @@
 module LVGL Output
 author Ste7an
 version 1 4 
-choices style_types range rotation angles brightness 
+choices style_types range rotation angles brightness 'line width'
 choices obj_types arc slider led switch bar roller list screen tabview tileview 
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 

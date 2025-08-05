@@ -3895,6 +3895,11 @@ void ui_set_style(char * obj_name, char * style_name, int to_val, int until_val)
 			if (strcmp(style_name,"range")==0) lv_arc_set_range(obj, to_val, until_val);
 			else if (strstr(style_name,"angles")) lv_arc_set_bg_angles(obj, to_val, until_val);
 			else if (strstr(style_name,"rotation")) lv_arc_set_rotation(obj, to_val);
+			else if (strstr(style_name,"line width")) {
+				outputString("line width");
+				lv_obj_set_style_arc_width(obj,to_val,LV_PART_MAIN);
+				lv_obj_set_style_arc_width(obj,to_val,LV_PART_INDICATOR);
+			}
 		} else 
 		if (lv_obj_get_class(obj) == &lv_slider_class) {
 			if (strcmp(style_name,"range")==0) lv_slider_set_range(obj, to_val, until_val);
