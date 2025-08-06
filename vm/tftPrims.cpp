@@ -3857,6 +3857,8 @@ void ui_set_text(char * obj_name, char * text, int scale) {
 		} else 
 		if (lv_obj_get_class(obj) == &lv_roller_class) {
 			lv_roller_set_options(obj, text, LV_ROLLER_MODE_INFINITE);
+			lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_PART_MAIN);
+			lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_STATE_DEFAULT);
 		}
 	}
 }
@@ -3888,27 +3890,27 @@ void ui_set_text_font(char * obj_name, char * text, char * font_name) {
 }
 
 
-void ui_set_style(char * obj_name, char * style_name, int to_val, int until_val){
+void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int until_val){
 	lv_obj_t* obj = registry.get(obj_name);
 	if (obj) {
 		if (lv_obj_get_class(obj) == &lv_arc_class) {
-			if (strcmp(style_name,"range")==0) lv_arc_set_range(obj, to_val, until_val);
-			else if (strstr(style_name,"angles")) lv_arc_set_bg_angles(obj, to_val, until_val);
-			else if (strstr(style_name,"rotation")) lv_arc_set_rotation(obj, to_val);
-			else if (strstr(style_name,"line width")) {
+			if (strcmp(attribute_name,"range")==0) lv_arc_set_range(obj, to_val, until_val);
+			else if (strstr(attribute_name,"angles")) lv_arc_set_bg_angles(obj, to_val, until_val);
+			else if (strstr(attribute_name,"rotation")) lv_arc_set_rotation(obj, to_val);
+			else if (strstr(attribute_name,"line width")) {
 				outputString("line width");
 				lv_obj_set_style_arc_width(obj,to_val,LV_PART_MAIN);
 				lv_obj_set_style_arc_width(obj,to_val,LV_PART_INDICATOR);
 			}
 		} else 
 		if (lv_obj_get_class(obj) == &lv_slider_class) {
-			if (strcmp(style_name,"range")==0) lv_slider_set_range(obj, to_val, until_val);
+			if (strcmp(attribute_name,"range")==0) lv_slider_set_range(obj, to_val, until_val);
 		} else
 		if (lv_obj_get_class(obj) == &lv_bar_class) {
-			if (strcmp(style_name,"range")==0) lv_bar_set_range(obj, to_val, until_val);
+			if (strcmp(attribute_name,"range")==0) lv_bar_set_range(obj, to_val, until_val);
 		}
 		if (lv_obj_get_class(obj) == &lv_led_class) {
-			if (strcmp(style_name,"brightness")==0) {
+			if (strcmp(attribute_name,"brightness")==0) {
 				lv_led_set_brightness(obj,to_val );
 			}
 		}
@@ -4416,15 +4418,15 @@ static OBJ primLVGLsetText(int argCount, OBJ *args) {
 	return falseObj;
 }
 
-static OBJ primLVGLsetstyle(int argCount, OBJ *args) {
-	char* style_name = obj2str(args[0]);
+static OBJ primLVGLsetattribute(int argCount, OBJ *args) {
+	char* attribute_name = obj2str(args[0]);
 	char* obj_name = obj2str(args[1]);
 	int to_val = obj2int(args[2]);
 	int until_val=100;	
 	if (argCount >3) {
 		until_val = obj2int(args[3]);
 	}
-	ui_set_style(obj_name, style_name, to_val, until_val);
+	ui_set_attribute(obj_name, attribute_name, to_val, until_val);
 	return falseObj;
 }
 
@@ -4631,7 +4633,7 @@ static PrimEntry entries[] = {
 	{"LVGLsetsize",primLVGLsetSize},
 	{"LVGLsetval", primLVGLsetVal},
 	{"LVGLsettext",primLVGLsetText},
-	{"LVGLsetstyle",primLVGLsetstyle},
+	{"LVGLsetattribute",primLVGLsetattribute},
 	{"LVGLgetval", primLVGLgetVal},
 	{"LVGLloadscreen",primLVGLloadScreen},
 	{"LVGLevent",primLVGLEvent},
