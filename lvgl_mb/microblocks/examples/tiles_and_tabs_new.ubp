@@ -1,9 +1,110 @@
+module main
+author unknown
+version 1 0 
+description ''
+
+  spec ' ' 'make_tiles' 'make_tiles'
+  spec ' ' 'tile2' 'tile2'
+  spec ' ' 'tile4' 'tile4'
+
+to make_tiles {
+  '[tft:LVGLaddobj]' 'tileview' 'tiles'
+  '[tft:LVGLaddtile]' 'tile1' 'tiles' 0 0 false true false false
+  '[tft:LVGLaddtile]' 'tile2' 'tiles' 1 0 true false false true
+  '[tft:LVGLaddtile]' 'tile3' 'tiles' 1 1 false false true true
+  '[tft:LVGLaddtile]' 'tile4' 'tiles' 1 2 false false true false
+  '[tft:LVGLaddbtn]' 'btn1' 3 'tile1 ->' 'tile1'
+  '[tft:LVGLaddbtn]' 'btn2' 3 'tile2  v' 'tile2'
+  '[tft:LVGLaddbtn]' 'btn3' 3 'tile3 v' 'tile3'
+  '[tft:LVGLsetcolor]' 'btn2' (colorSwatch 35 190 30 255)
+  '[tft:LVGLsetcolor]' 'btn3' (colorSwatch 190 14 36 255)
+}
+
+to tile2 {
+  comment 'create roller on tile 2'
+  '[tft:LVGLaddlabel]' 'label' 2 'select:' 'tile2'
+  '[tft:LVGLsetpos]' 'label' 100 90
+  '[tft:LVGLaddobj]' 'roller' 'roller' 'tile2'
+  '[tft:LVGLsetpos]' 'roller' 200 30
+  '[tft:LVGLsettext]' 'roller' 'left
+right
+upper
+lower'
+}
+
+to tile4 {
+  comment 'add tabview in tile4'
+  '[tft:LVGLaddobj]' 'tabview' 'tabs' 'tile4'
+  '[tft:LVGLaddtab]' 'tab1' 'tabs'
+  '[tft:LVGLaddtab]' 'tab2' 'tabs'
+  '[tft:LVGLaddobj]' 'arc' 'arc' 'tab1'
+  '[tft:LVGLaddobj]' 'slider' 'slider' 'tab2'
+  '[tft:LVGLsetpos]' 'slider' 10 30
+  '[tft:LVGLaddobj]' 'tileview' 'tiles'
+  comment 'add leds'
+  '[tft:LVGLaddobj]' 'led' 'led1' 'tile1'
+  '[tft:LVGLsetpos]' 'led1' 100 120
+  '[tft:LVGLaddobj]' 'led' 'led2' 'tile1'
+  '[tft:LVGLsetpos]' 'led2' 200 120
+  '[tft:LVGLsetcolor]' 'led2' (colorSwatch 190 38 8 255)
+  comment 'add switches'
+  '[tft:LVGLaddobj]' 'switch' 'sw1' 'tile1'
+  '[tft:LVGLsetpos]' 'sw1' 70 180
+  '[tft:LVGLsetsize]' 'sw1' 100 50
+  '[tft:LVGLsetcolor]' 'sw1' (colorSwatch 169 190 166 255) (colorSwatch 35 190 30 255)
+  '[tft:LVGLaddobj]' 'switch' 'sw2' 'tile1'
+  '[tft:LVGLsetpos]' 'sw2' 200 180
+  '[tft:LVGLsetsize]' 'sw2' 100 50
+  '[tft:LVGLsetcolor]' 'sw2' (colorSwatch 190 166 178 255) (colorSwatch 190 13 47 255)
+  comment 'add slider'
+  '[tft:LVGLaddobj]' 'slider' 'sl1' 'tile1'
+  '[tft:LVGLsetpos]' 'sl1' 20 80
+  '[tft:LVGLsetattribute]' 'range' 'sl1' 120 256
+}
+
+script 508 40 {
+whenBroadcastReceived 'LVGLevent'
+sayIt ('[tft:LVGLgetval]' ('[tft:LVGLgetevent]'))
+if (('[tft:LVGLgetevent]') == 'sw1') {
+  '[tft:LVGLsetval]' 'led1' ('[tft:LVGLgetval]' 'sw1')
+} (('[tft:LVGLgetevent]') == 'sw2') {
+  '[tft:LVGLsetval]' 'led2' ('[tft:LVGLgetval]' 'sw2')
+} (('[tft:LVGLgetevent]') == 'sl1') {
+  '[tft:LVGLsetattribute]' 'brightness' 'led1' ('[tft:LVGLgetval]' 'sl1')
+  '[tft:LVGLsetattribute]' 'brightness' ';ed2' ('[tft:LVGLgetval]' 'sl1')
+} else {
+}
+}
+
+script 114 90 {
+whenStarted
+'[tft:LVGLon]' true
+delete_all_objects
+comment 'create tiles'
+make_tiles
+tile2
+tile4
+}
+
+script 40 410 {
+to make_tiles {}
+}
+
+script 493 479 {
+to tile4 {}
+}
+
+script 62 901 {
+to tile2 {}
+}
+
+
 module LVGL Output
 author Ste7an
 version 1 5 
-choices attribute_types range rotation angles brightness 'line width'
-choices style_types 'text font' color 'border width' 'border color'
-choices obj_types arc slider led switch bar roller list screen tabview tileview style
+choices attribute_types range rotation angles brightness 'line width' 
+choices style_types 'text font' color 'border width' 'border color' 
+choices obj_types arc slider led switch bar roller list screen tabview tileview style 
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 
 
@@ -29,7 +130,7 @@ variables _lvgl_call_backs
   spec ' ' 'delete_all_objects' 'delete all objects'
   spec ' ' '[tft:fliptouch]' 'flip touch x _ y _  x/y _' 'bool bool bool' false false false
   spec ' ' '[tft:LVGLaddimg]' 'image path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
-  spec ' ' '[tft:LVGLaddfont]' 'font path _  as  _' 'str str' '' '' 
+  spec ' ' '[tft:LVGLaddfont]' 'font path _  as  _' 'str str' '' ''
   spec ' ' '[tft:LVGLsetattribute]' 'set attribute _ of _ to _ : until _' 'str.attribute_types str auto auto' 'range' '' '' ''
   spec ' ' '[tft:LVGLsetstyle]' 'set style _ of _ to _ : and _' 'str.style_types str auto auto' 'text font' '' '' ''
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''

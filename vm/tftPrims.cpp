@@ -3199,20 +3199,20 @@ static lv_display_t * disp;
 #include <functional>
 #include <vector>
 
-class LVObjectRegistry {
+
+template<typename T>
+class ObjectRegistry {
 public:
-    void add(const std::string& name, lv_obj_t* obj) {
+    void add(const std::string& name, T* obj) {
         registry[name] = obj;
     }
 
-    lv_obj_t* get(const std::string& name) const {
-		if (name == "lv_scr_act") {
-			return lv_scr_act();
-		} else {
-     		auto it = registry.find(name);
+	
+
+    T* get(const std::string& name) const {
+		auto it = registry.find(name);
         return it != registry.end() ? it->second : nullptr;
-		}
-    }
+	}
 
     bool remove(const std::string& name) {
         return registry.erase(name) > 0;
@@ -3238,7 +3238,7 @@ public:
         return names;
     }
 
-	std::string findNameFor(lv_obj_t* obj) const {
+	std::string findNameFor(T* obj) const {
         for (const auto& pair : registry) {
             if (pair.second == obj) {
                 return pair.first;
@@ -3251,57 +3251,27 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, lv_obj_t*> registry;
+    std::unordered_map<std::string, T*> registry;
 };
 
-LVObjectRegistry registry;
-
-
-class LVFontBuffer {
-public:
-    void add(const std::string& name, lv_font_t* font) {
-        registry[name] = font;
-    }
-
-    lv_font_t* get(const std::string& name) const {
-		auto it = registry.find(name);
+template <>
+lv_obj_t* ObjectRegistry<lv_obj_t>::get(const std::string& name) const {
+    if (name == "lv_scr_act") {
+        return lv_scr_act();
+    } else {
+        auto it = registry.find(name);
         return it != registry.end() ? it->second : nullptr;
     }
+}
 
-    bool remove(const std::string& name) {
-        return registry.erase(name) > 0;
-    }
 
-    size_t size() const {
-        return registry.size();
-    }
+ObjectRegistry<lv_obj_t>  registry;
 
-	std::vector<std::string> getAllNames() const {
-        std::vector<std::string> names;
-        for (const auto& entry : registry) {
-            names.push_back(entry.first);
-        }
-        return names;
-    }
+ObjectRegistry<lv_font_t> font_buffer;
 
-	std::string findNameFor(lv_font_t* obj) const {
-        for (const auto& pair : registry) {
-            if (pair.second == obj) {
-                return pair.first;
-				//  char s[100];
-				// sprintf(s,"find name %s ",pair.first.c_str());
-				// outputString(s);
-            }
-        }
-        return "";
-    }
+ObjectRegistry<lv_style_t> style_registry;
 
-private:
-    std::unordered_map<std::string, lv_font_t*> registry;
-};
-
- LVFontBuffer font_buffer;
-
+ 
 void fs_init() {
   if (!LittleFS.begin()) {
     outputString("LittleFS mount failed");
@@ -3760,16 +3730,40 @@ void ui_create_list(char * obj_name, const char * parent) {
 		// lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 		registry.add(obj_name, obj);
 	}
+	if (strcmp(parent,"lv_scr_act") !=0) {
+		
+	}
 }
 
+void ui_create_style(char * obj_name, const char * parent) {
+    if (!style_registry.get(obj_name)) { 
+		lv_style_t* obj = new lv_style_t;
+		lv_style_init(obj);
+		// lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		style_registry.add(obj_name, obj);
+	}
+}
+
+
+
+
 void ui_set_parent(char * obj_name, const char * parent){
+	lv_obj_t* obj_parent =  registry.get(parent);
 	if (registry.get(obj_name) && registry.get(parent)) {
-		lv_obj_set_parent(registry.get(obj_name), registry.get(parent));
+		lv_obj_set_parent(registry.get(obj_name), obj_parent);
+	} else
+	if (style_registry.get(obj_name) && obj_parent) {
+		lv_style_t* style =  style_registry.get(obj_name);
+		if (lv_obj_get_class(obj_parent) == &lv_roller_class) 
+			lv_obj_add_style(obj_parent, style, LV_PART_SELECTED);
+		
 	}
 }
 
 void ui_delete_obj(char * obj_name) {
     lv_obj_t* obj = registry.get(obj_name);
+	lv_font_t* font = font_buffer.get(obj_name);
+	lv_style_t* style = style_registry.get(obj_name);
     if (obj) {
 		lv_obj_del(obj);
 		// if (lv_obj_get_class(obj) == &lv_image_class) {
@@ -3783,14 +3777,15 @@ void ui_delete_obj(char * obj_name) {
 		// 	map_buffer.remove(obj_name);
 		// }
         registry.remove(obj_name);
-    } else {
-		lv_font_t* font = font_buffer.get(obj_name);
-		if (font) {
+    } else if (font){
 			outputString("deleting font");
 			lv_binfont_destroy(font);
 			font_buffer.remove(obj_name);
-		}
+	} else if (style) { 
+		delete style;
+		style_registry.remove(obj_name);
 	}
+	
 }
 
 void ui_set_size(char * obj_name,  lv_coord_t w, lv_coord_t h ) {
@@ -3857,8 +3852,9 @@ void ui_set_text(char * obj_name, char * text, int scale) {
 		} else 
 		if (lv_obj_get_class(obj) == &lv_roller_class) {
 			lv_roller_set_options(obj, text, LV_ROLLER_MODE_INFINITE);
-			lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_PART_MAIN);
-			lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_STATE_DEFAULT);
+			lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_PART_MAIN | LV_STATE_DEFAULT | LV_STYLE_PROP_FLAG_INHERITABLE);
+			lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_PART_SELECTED|  LV_STATE_DEFAULT);
+			
 		}
 	}
 }
@@ -3908,16 +3904,32 @@ void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int un
 		} else
 		if (lv_obj_get_class(obj) == &lv_bar_class) {
 			if (strcmp(attribute_name,"range")==0) lv_bar_set_range(obj, to_val, until_val);
-		}
+		} else
 		if (lv_obj_get_class(obj) == &lv_led_class) {
 			if (strcmp(attribute_name,"brightness")==0) {
 				lv_led_set_brightness(obj,to_val );
 			}
+		
 		}
-
 
 	}
 }
+
+
+void ui_set_style(char * obj_name, char * style_name, int to_val, int until_val){
+	lv_style_t* obj = style_registry.get(obj_name);
+	if (obj) {
+		if (strcmp(style_name,"text font")==0) lv_style_set_text_font(obj,  get_font_from_scale(to_val));
+			else if (strstr(style_name,"color")) lv_style_set_bg_color(obj, lv_color_hex3(to_val));
+			else if (strstr(style_name,"border width")) lv_style_set_border_width(obj, 2);
+    		else if (strstr(style_name,"border color"))lv_style_set_border_color(obj, lv_color_hex3(0xf00));
+			
+		
+
+	}
+}
+
+
 
 int ui_get_value(char * obj_name) {
 	lv_obj_t* obj = registry.get(obj_name);
@@ -4005,6 +4017,7 @@ typedef enum {
 	CMD_LIST,
 	CMD_ROLLER,
 	CMD_SCREEN,
+	CMD_STYLE,
     CMD_COUNT
 } Command;
 
@@ -4021,6 +4034,7 @@ Command lookup_cmd(const char *s) {
 	if (strcmp(s, "tileview") == 0) return CMD_TILEVIEW;
 	if (strcmp(s, "list") == 0)     return CMD_LIST;
 	if (strcmp(s, "roller") == 0)   return CMD_ROLLER;
+	if (strcmp(s, "style") == 0)   return CMD_STYLE;
 	if (strcmp(s, "screen") == 0)   return CMD_SCREEN;
     return CMD_UNKNOWN;
 }
@@ -4087,6 +4101,20 @@ static OBJ primLVGLgetallobjs(int argCount, OBJ *args) {
 static OBJ primLVGLgetallfonts(int argCount, OBJ *args) {
 	std::vector<std::string> names = font_buffer.getAllNames();
 	int count = font_buffer.size();
+	OBJ result = newObj(ListType, count+1, zeroObj);
+	FIELD(result, 0) = int2obj(count);
+	int i=1;
+	for (const auto& name : names) {
+		FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
+		i++;
+	}
+	return result;
+}
+
+
+static OBJ primLVGLgetallstyles(int argCount, OBJ *args) {
+	std::vector<std::string> names = style_registry.getAllNames();
+	int count = style_registry.size();
 	OBJ result = newObj(ListType, count+1, zeroObj);
 	FIELD(result, 0) = int2obj(count);
 	int i=1;
@@ -4244,6 +4272,7 @@ static OBJ primLVGLaddButtonMatrix(int argCount, OBJ *args) {
 }
 
 
+
 static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 	char* obj_type = obj2str(args[0]);
 	char* obj_name = obj2str(args[1]);
@@ -4300,6 +4329,10 @@ static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 			outputString("Handle SCREEN");
 			ui_create_screen(obj_name, parent);
 			break;
+		case CMD_STYLE:
+		 	outputString("Handle STYLE");
+		 	ui_create_style(obj_name, parent);
+		 	break;
 		// case CMD_SCALE:
 		// 	outputString("Handle TABVIEW");
 		// 	ui_create_tabview(obj_name, parent);
@@ -4427,6 +4460,19 @@ static OBJ primLVGLsetattribute(int argCount, OBJ *args) {
 		until_val = obj2int(args[3]);
 	}
 	ui_set_attribute(obj_name, attribute_name, to_val, until_val);
+	return falseObj;
+}
+
+
+static OBJ primLVGLsetstyle(int argCount, OBJ *args) {
+	char* style_name = obj2str(args[0]);
+	char* obj_name = obj2str(args[1]);
+	int to_val = obj2int(args[2]);
+	int until_val=100;	
+	if (argCount >3) {
+		until_val = obj2int(args[3]);
+	}
+	ui_set_style(obj_name, style_name, to_val, until_val);
 	return falseObj;
 }
 
@@ -4633,7 +4679,10 @@ static PrimEntry entries[] = {
 	{"LVGLsetsize",primLVGLsetSize},
 	{"LVGLsetval", primLVGLsetVal},
 	{"LVGLsettext",primLVGLsetText},
+	// temporarely rename only internal function
 	{"LVGLsetattribute",primLVGLsetattribute},
+	//{"LVGLsetstyle",primLVGLsetattribute},
+	{"LVGLsetstyle",primLVGLsetstyle},
 	{"LVGLgetval", primLVGLgetVal},
 	{"LVGLloadscreen",primLVGLloadScreen},
 	{"LVGLevent",primLVGLEvent},
@@ -4641,6 +4690,7 @@ static PrimEntry entries[] = {
 	{"LVGLsetcolor", primLVGLsetColor},
 	{"LVGLgetallobjs", primLVGLgetallobjs},
 	{"LVGLgetallfonts",primLVGLgetallfonts},
+	{"LVGLgetallstyles",primLVGLgetallstyles},
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},
  	{"LVGLaddfont",primLVGLaddfont},
