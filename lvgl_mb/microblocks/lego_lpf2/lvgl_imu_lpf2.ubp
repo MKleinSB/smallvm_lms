@@ -11,48 +11,56 @@ to imu x y z {
   '[tft:LVGLsetval]' 'z' z
 }
 
-script 326 62 {
+script 575 40 {
+digitalWriteOp 12 false
+}
+
+script 323 49 {
 whenStarted
-digitalWriteOp 33 false
 init
 add_command 'imu' 0 3 'i'
 '[tft:LVGLon]' true
-'[tft:LVGLaddobj]' 'slider' 'x' 'lv_scr_act'
+delete_all_objects
+'[tft:LVGLaddobj]' 'slider' 'x'
 '[tft:LVGLsetpos]' 'x' 10 50
 '[tft:LVGLsetsize]' 'x' 250 20
-'[tft:LVGLsetcolor]' 'x' (colorSwatch 35 190 30 255) (colorSwatch 35 190 30 255)
-'[tft:LVGLaddobj]' 'slider' 'y' 'lv_scr_act'
+'[tft:LVGLsetcolor]' 'x' (colorSwatch 35 190 30 255) (colorSwatch 35 190 30 255) (colorSwatch 35 190 30 255)
+'[tft:LVGLaddobj]' 'slider' 'y'
 '[tft:LVGLsetpos]' 'y' 10 120
 '[tft:LVGLsetsize]' 'y' 250 20
-'[tft:LVGLsetcolor]' 'y' (colorSwatch 30 7 190 255) (colorSwatch 45 40 190 255)
-'[tft:LVGLaddobj]' 'slider' 'z' 'lv_scr_act'
+'[tft:LVGLsetcolor]' 'y' (colorSwatch 30 7 190 255) (colorSwatch 45 40 190 255) (colorSwatch 19 4 190 255)
+'[tft:LVGLaddobj]' 'slider' 'z'
 '[tft:LVGLsetpos]' 'z' 10 190
 '[tft:LVGLsetsize]' 'z' 250 20
-'[tft:LVGLsetcolor]' 'z' (colorSwatch 190 23 8 255) (colorSwatch 190 14 54 255)
-'[tft:LVGLsetstyle]' 'range' 'x' -13000 13000
-'[tft:LVGLsetstyle]' 'range' 'y' -13000 13000
-'[tft:LVGLsetstyle]' 'range' 'z' -13000 13000
+'[tft:LVGLsetcolor]' 'z' (colorSwatch 190 23 8 255) (colorSwatch 190 14 54 255) (colorSwatch 190 44 5 255)
+'[tft:LVGLsetattribute]' 'range' 'x' -13000 13000
+'[tft:LVGLsetattribute]' 'range' 'y' -13000 13000
+'[tft:LVGLsetattribute]' 'range' 'z' -13000 13000
 forever {
   process
 }
 }
 
-script 44 68 {
+script 41 55 {
 whenStarted
 waitMillis 4000
-digitalWriteOp 33 true
 }
 
-script 60 256 {
+script 40 149 {
+digitalWriteOp 12 true
+}
+
+script 57 243 {
 to imu {}
 }
 
 
 module 'LED Display' Output
 author MicroBlocks
-version 1 9 
+version 1 13 
 choices led_imageMenu heart 'small heart' yes no happy sad confused angry asleep surprised silly fabulous meh 't-shirt' 'roller skate' duck house tortoise butterfly 'stick figure' ghost sword giraffe skull umbrella snake rabbit cow 'quarter note' 'eight note' pitchfork target triangle 'left triangle' 'chess board' diamond 'small diamond' square 'small square' scissors 
-description 'Display primitives for the 5x5 LED display on the BBC micro:bit, Calliope mini and M5Atom Matrix. Boards with TFT displays (such as the Citilab ED1 or the M5Stack family) support these primitives with a simulated "fat pixel" display.'
+description 'Display primitives for the 5x5 LED display on the BBC micro:bit, Calliope mini and M5Atom Matrix. Boards with TFT displays (such as the Citilab ED1 or the M5Stack family) support these primitives with a simulated "fat pixel" display.
+'
 variables _stop_scrolling_text 
 
   spec ' ' '[display:mbDisplay]' 'display _' 'microbitDisplay' 15237440
@@ -65,16 +73,13 @@ variables _stop_scrolling_text
   spec ' ' 'displayCharacter' 'display character _' 'str' 'A'
   spec ' ' 'scroll_text' 'scroll text _ : pausing _ ms' 'str num' 'HELLO ROSA!' 100
   spec ' ' 'stopScrollingText' 'stop scrolling'
+  advanced
+  spec ' ' 'set display color' 'set display color _' 'color'
+  spec 'r' 'led_image' 'led image _' 'microbitDisplay' 15237440
   space
-  spec 'r' '_led_image' 'led image _' 'microbitDisplay' 15237440
   spec 'r' '_led_namedImage' '_led_namedImage _' 'menu.led_imageMenu' 'happy'
   spec 'r' '_led_imageData' '_led_imageData'
-  spec ' ' 'set display color' 'set display color _' 'color'
-
-to '_led_image' twentyFiveBitInt {
-  comment 'An LED image is a 25-bit integer'
-  return twentyFiveBitInt
-}
+  spec 'r' '_led_image' 'obsolete led image _' 'microbitDisplay' 15237440
 
 to '_led_imageData' {
   return 'heart:4685802,small heart:145728,yes:2269696,no:18157905,happy:15237440,sad:18284864,confused:22348096,angry:23036241,asleep:459616,surprised:4526090,silly:25984017,fabulous:15008639,meh:2236443,t-shirt:15154043,roller skate:11534104,duck:489702,house:10976708,tortoise:359872,butterfly:29332475,stick figure:18158564,ghost:23068334,sword:4657284,giraffe:10946627,skull:15171246,umbrella:6460398,snake:469859,rabbit:16104613,cow:4685361,quarter note:7573636,eight note:7590276,pitchfork:4357813,target:4681156,triangle:1026176,left triangle:32805985,chess board:11184810,diamond:4539716,small diamond:141440,square:33080895,small square:469440,scissors:20287859,'
@@ -98,7 +103,7 @@ to displayCharacter s {
     '[display:mbDisplayOff]'
     return 0
   }
-  '[display:mbDrawShape]' ('[display:mbShapeForLetter]' (at 1 s))
+  '[display:mbDrawShape]' ('[display:mbShapeForLetter]' (at 1 s)) 1 1
 }
 
 to led_displayImage imageName optionalX optionalY {
@@ -107,6 +112,11 @@ to led_displayImage imageName optionalX optionalY {
     image = ('_led_namedImage' imageName)
   }
   '[display:mbDrawShape]' image (argOrDefault 2 1) (argOrDefault 3 1)
+}
+
+to led_image twentyFiveBitInt {
+  comment 'An LED image is a 25-bit integer'
+  return twentyFiveBitInt
 }
 
 to scroll_text text optionalDelay {
@@ -123,6 +133,15 @@ to scroll_text text optionalDelay {
       '[tft:text]' text (17 - position) 0 (colorSwatch 125 125 125 255) 1 true
       waitMillis (delay / 2)
     }
+  } ('kidsIOT' == (boardType)) {
+    for position (((size text) * 6) + 21) {
+      if _stop_scrolling_text {return 0}
+      '[tft:deferUpdates]'
+      '[tft:clear]'
+      '[tft:text]' text (128 - (6 * position)) 6 (colorSwatch 255 255 255 255) 6 false
+      '[tft:resumeUpdates]'
+      waitMillis (delay / 8)
+    }
   } else {
     for position (((size text) * 6) + 6) {
       if _stop_scrolling_text {return 0}
@@ -135,7 +154,7 @@ to scroll_text text optionalDelay {
 }
 
 to 'set display color' color {
-  callCustomCommand '[display:mbSetColor]' ('[data:makeList]' color)
+  '[display:mbSetColor]' color
 }
 
 to stopScrollingText {
@@ -147,55 +166,69 @@ to stopScrollingText {
 
 module LVGL Output
 author Ste7an
-version 1 1 
-choices style_types range rotation angles brightness 
-choices obj_types arc slider led switch bar tabview roller list tileview 
+version 1 6 
+choices attribute_types range rotation angles brightness 'line width' 
+choices style_types 'text font' 'bg color' 'bg opa' 'border width' 'border color' radius 'shadow width' 'shadow offset x' 'shadow offset y' 'shadow opa' 
+choices obj_types arc slider led switch bar roller list screen tabview tileview style 
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 
 
-  spec ' ' '[tft:LVGLon]' 'enable_lvgl _' 'bool' true
-  spec ' ' '[tft:LVGLaddbtn]' 'btn _ : scale _ : text _ : parent _' 'str num str str' 'btn' 1 'btn' 'lv_scr_act'
+  spec ' ' '[tft:LVGLon]' 'enable lvgl _' 'bool' true
+  spec ' ' '[tft:LVGLaddbtn]' 'button _ : scale _ : text _ : parent _' 'str num str str' 'button' 1 'button' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddlabel]' 'label _ : scale _ : text _ : parent _' 'str num str str' 'label' 1 'label' 'lv_scr_act'
-  spec ' ' '[tft:LVGLsetpos]' 'set_pos _ x _ y _' 'str num num' '' 100 100
-  spec ' ' '[tft:LVGLsetsize]' 'set_size _ width _ height _' 'str num num' '' 100 10
-  spec ' ' '[tft:LVGLsetval]' 'set_val _ value _' 'str num' '' 10
-  spec 'r' '[tft:LVGLgetval]' 'get_val _' 'str' ''
-  spec ' ' '[tft:LVGLsettext]' 'set_text _ text _ : scale _' 'str str num' '' 'text' 1
-  spec ' ' '[tft:LVGLsetcolor]' 'set_color _ background _ : indicator _ : knob _' 'str color color color' ''
+  spec ' ' '[tft:LVGLaddobj]' 'add _ as _ : parent _' 'str.obj_types str str' 'arc' '' 'lv_scr_act'
+  spec ' ' '[tft:LVGLsetpos]' 'set position _ x _ y _' 'str num num' '' 100 100
+  spec ' ' '[tft:LVGLsetsize]' 'set size _ width _ height _' 'str num num' '' 100 10
+  spec ' ' '[tft:LVGLsetval]' 'set value _ value _' 'str num' '' 10
+  spec 'r' '[tft:LVGLgetval]' 'get value _' 'str' ''
+  spec ' ' '[tft:LVGLsettext]' 'set text _ text _ : scale _' 'str str auto' '' 'text' 1
+  spec ' ' '[tft:LVGLsetcolor]' 'set color _ background _ : indicator _ : knob _' 'str color color color' ''
   spec 'r' 'makeColor' 'color r _ g _ b _ (0-255)' 'num num num' 0 100 100
   space
   spec 'r' '[tft:LVGLevent]' 'event available'
-  spec 'r' '[tft:LVGLgetevent]' 'get_event'
+  spec 'r' '[tft:LVGLgetevent]' 'get event'
   space
   spec 'r' 'screen' 'screen'
-  spec ' ' '[tft:LVGLsetparent]' 'set _ parent _' 'str str' '' ''
-  spec 'r' '[tft:LVGLgetallobjs]' 'get_all_objects'
-  spec ' ' '[tft:LVGLdelobj]' 'del_obj _' 'str' ''
-  spec ' ' 'delete_all_objects' 'delete_all_objects'
-  spec ' ' '[tft:LVGLaddobj]' 'add _ as _ : parent _' 'str.obj_types str str' 'arc' '' 'lv_scr_act'
-  spec ' ' '[tft:LVGLaddimg]' 'img path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
-  spec ' ' '[tft:LVGLsetstyle]' 'set _ of _ to _ : until _' 'str.style_types str auto auto' 'range' '' '' ''
+  spec ' ' '[tft:LVGLsetparent]' 'set _ parent _ : states _ : parts _' 'str str num num' '' '' 0 0
+  spec 'r' '[tft:LVGLgetallobjs]' 'get all objects'
+  spec ' ' '[tft:LVGLdelobj]' 'delete object _' 'str' ''
+  spec ' ' 'delete_all_objects' 'delete all objects'
+  spec ' ' '[tft:fliptouch]' 'flip touch x _ y _  x/y _' 'bool bool bool' false false false
+  spec ' ' '[tft:LVGLaddimg]' 'image path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
+  spec ' ' '[tft:LVGLaddfont]' 'font path _  as  _' 'str str' '' ''
+  spec ' ' '[tft:LVGLsetattribute]' 'set attribute _ of _ to _ : until _' 'str.attribute_types str auto auto' 'range' '' '' ''
+  spec ' ' '[tft:LVGLsetstyle]' 'set style _ of _ to _' 'str.style_types str auto' 'text font' '' ''
+  spec 'r' 'set_states' 'state pressed _ : checked _ : scrolled _' 'bool bool bool bool' true false false
+  spec 'r' 'set_parts' 'parts selected _ : indicator _ : knob _ : #BR# items _ : scrollbar _' 'bool bool bool bool bool' true false false false false
+  spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
-  spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
+  spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ #BR# L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
-  spec ' ' 'handle_event' 'handle_event _' 'auto' '10'
-  spec ' ' 'add_callback' 'add_callback _ function _' 'auto auto' '10' '10'
-  spec ' ' 'init_callback' 'init_callback'
+  spec ' ' 'init_callback' 'init callback'
+  spec ' ' 'add_callback' 'add callback _ : function _' 'str str' '' ''
+  spec ' ' 'handle_event' 'handle event'
 
 to add_callback obj function {
   if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}
-  '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+  if ((pushArgCount) < 2) {
+    '[data:addLast]' ('[data:makeList]' obj obj) _lvgl_call_backs
+  } else {
+    '[data:addLast]' ('[data:makeList]' obj function) _lvgl_call_backs
+  }
 }
 
 to delete_all_objects {
   local 'all_objects' ('[tft:LVGLgetallobjs]')
   for i (size all_objects) {
-    '[tft:LVGLdelobj]' (at i all_objects)
+    if ((at i all_objects) != '!main_screen_default') {'[tft:LVGLdelobj]' (at i all_objects)}
   }
+  comment 'load original main screen that is stored'
+  '[tft:LVGLloadscreen]' '!main_screen_default'
 }
 
-to handle_event event {
+to handle_event {
   local 'var' 1
+  local 'event' ('[tft:LVGLgetevent]')
   repeatUntil (or (var > (size _lvgl_call_backs)) (event == (at 1 (at var _lvgl_call_backs)))) {
     var += 1
   }
@@ -219,10 +252,18 @@ to screen {
   return 'lv_scr_act'
 }
 
+to set_parts selected indicator knob items scrollbar {
+  return (sum (ifExpression scrollbar (hexToInt '10000') 0) (ifExpression indicator (hexToInt '20000') 0) (ifExpression knob (hexToInt '30000') 0) (ifExpression selected (hexToInt '40000') 0) (ifExpression items (hexToInt '50000') 0))
+}
+
+to set_states pressed checked scrolled {
+  return (sum (ifExpression checked 1 0) (ifExpression pressed (hexToInt '20') 0) (ifExpression scrolled (hexToInt '40') 0))
+}
+
 
 module TFT Output
 author MicroBlocks
-version 1 11 
+version 1 12 
 description 'Draw graphics and write text on boards with a TFT display, such as the M5Stack, M5Stick, Citilab ED1 or (discontinued) IoT-Bus.'
 
   spec ' ' '[tft:clear]' 'clear TFT display'
@@ -286,6 +327,7 @@ to tft_colorSwatch color {
 }
 
 to tft_drawText s x y color optionalScale optionalBGColor {
+  s = ('[data:convertType]' s 'string')
   local 'scale' (argOrDefault 5 2)
   local 'bgColor' (argOrDefault 6 '')
   local 'lines' ('[data:split]' s ('[data:unicodeString]' 10))

@@ -3747,15 +3747,14 @@ void ui_create_style(char * obj_name, const char * parent) {
 
 
 
-void ui_set_parent(char * obj_name, const char * parent){
+void ui_set_parent(char * obj_name, const char * parent, int states, int parts){
 	lv_obj_t* obj_parent =  registry.get(parent);
 	if (registry.get(obj_name) && registry.get(parent)) {
 		lv_obj_set_parent(registry.get(obj_name), obj_parent);
 	} else
 	if (style_registry.get(obj_name) && obj_parent) {
 		lv_style_t* style =  style_registry.get(obj_name);
-		if (lv_obj_get_class(obj_parent) == &lv_roller_class) 
-			lv_obj_add_style(obj_parent, style, LV_PART_SELECTED);
+		lv_obj_add_style(obj_parent, style, states + parts);
 		
 	}
 }
@@ -3916,13 +3915,20 @@ void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int un
 }
 
 
-void ui_set_style(char * obj_name, char * style_name, int to_val, int until_val){
+void ui_set_style(char * obj_name, char * style_name, int to_val){
 	lv_style_t* obj = style_registry.get(obj_name);
 	if (obj) {
 		if (strcmp(style_name,"text font")==0) lv_style_set_text_font(obj,  get_font_from_scale(to_val));
-			else if (strstr(style_name,"color")) lv_style_set_bg_color(obj, lv_color_hex3(to_val));
-			else if (strstr(style_name,"border width")) lv_style_set_border_width(obj, 2);
-    		else if (strstr(style_name,"border color"))lv_style_set_border_color(obj, lv_color_hex3(0xf00));
+			else if (strstr(style_name,"bg color")) lv_style_set_bg_color(obj, lv_color_hex(to_val));
+			else if (strstr(style_name,"bg opa")) lv_style_set_bg_opa(obj, to_val);
+			else if (strstr(style_name,"border width")) lv_style_set_border_width(obj, to_val);
+    		else if (strstr(style_name,"border color")) lv_style_set_border_color(obj, lv_color_hex(to_val));
+			else if (strstr(style_name,"radius")) lv_style_set_radius(obj, to_val);
+			else if (strstr(style_name,"shadow width")) lv_style_set_shadow_width(obj, to_val);
+			else if (strstr(style_name,"shadow offset x")) lv_style_set_shadow_offset_x(obj, to_val);
+			else if (strstr(style_name,"shadow offset y")) lv_style_set_shadow_offset_y(obj, to_val);
+			else if (strstr(style_name,"shadow opa")) lv_style_set_shadow_opa(obj, to_val);
+			
 			
 		
 
@@ -4357,7 +4363,16 @@ static OBJ primLVGLloadScreen(int argCount, OBJ *args) {
 static OBJ primLVGLsetParent(int argCount, OBJ *args) {
 	char* obj = obj2str(args[0]);
 	char* parent = obj2str(args[1]);
-	ui_set_parent(obj, parent);
+	// states and parts are only used when applying a style to an object]
+	int states = 0;
+	int parts = 0;
+	if (argCount >2) {
+		states = obj2int(args[2]);
+	}
+	if (argCount >3) {
+		parts = obj2int(args[3]);
+	}
+	ui_set_parent(obj, parent, states, parts);
 	return falseObj;
 }
 
@@ -4468,11 +4483,7 @@ static OBJ primLVGLsetstyle(int argCount, OBJ *args) {
 	char* style_name = obj2str(args[0]);
 	char* obj_name = obj2str(args[1]);
 	int to_val = obj2int(args[2]);
-	int until_val=100;	
-	if (argCount >3) {
-		until_val = obj2int(args[3]);
-	}
-	ui_set_style(obj_name, style_name, to_val, until_val);
+	ui_set_style(obj_name, style_name, to_val);
 	return falseObj;
 }
 
@@ -4679,9 +4690,7 @@ static PrimEntry entries[] = {
 	{"LVGLsetsize",primLVGLsetSize},
 	{"LVGLsetval", primLVGLsetVal},
 	{"LVGLsettext",primLVGLsetText},
-	// temporarely rename only internal function
 	{"LVGLsetattribute",primLVGLsetattribute},
-	//{"LVGLsetstyle",primLVGLsetattribute},
 	{"LVGLsetstyle",primLVGLsetstyle},
 	{"LVGLgetval", primLVGLgetVal},
 	{"LVGLloadscreen",primLVGLloadScreen},

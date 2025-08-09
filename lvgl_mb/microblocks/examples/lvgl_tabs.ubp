@@ -6,6 +6,7 @@ description ''
 script 68 40 {
 whenStarted
 '[tft:LVGLon]' true
+delete_all_objects
 comment 'tabview'
 '[tft:LVGLaddobj]' 'tabview' 'tabview'
 '[tft:LVGLaddtab]' 'Arcs' 'tabview'
@@ -14,7 +15,7 @@ comment 'add obects to tab Arcs'
 '[tft:LVGLaddobj]' 'arc' 'arc1' 'Arcs'
 '[tft:LVGLaddobj]' 'arc' 'arc2' 'Arcs'
 '[tft:LVGLsetpos]' 'arc2' 160 0
-'[tft:LVGLsetcolor]' 'arc2' (colorSwatch 157 190 155 255) (colorSwatch 35 190 30 255) (colorSwatch 35 190 30 255)
+'[tft:LVGLsetcolor]' 'arc2' (colorSwatch 157 190 155 255) (colorSwatch 190 17 38 255) (colorSwatch 35 190 30 255)
 comment 'add objects to tab Sliders'
 '[tft:LVGLaddobj]' 'slider' 'slider1' 'Sliders'
 '[tft:LVGLsetpos]' 'slider1' 20 20
@@ -33,9 +34,10 @@ sayIt ('[tft:LVGLgetevent]') ('[tft:LVGLgetval]' ('[tft:LVGLgetevent]'))
 
 module LVGL Output
 author Ste7an
-version 1 4 
-choices style_types range rotation angles brightness 
-choices obj_types arc slider led switch bar roller list screen tabview tileview 
+version 1 6 
+choices attribute_types range rotation angles brightness 'line width' 
+choices style_types 'text font' 'bg color' 'bg opa' 'border width' 'border color' radius 'shadow width' 'shadow offset x' 'shadow offset y' 'shadow opa' 
+choices obj_types arc slider led switch bar roller list screen tabview tileview style 
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 
 
@@ -47,7 +49,7 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLsetsize]' 'set size _ width _ height _' 'str num num' '' 100 10
   spec ' ' '[tft:LVGLsetval]' 'set value _ value _' 'str num' '' 10
   spec 'r' '[tft:LVGLgetval]' 'get value _' 'str' ''
-  spec ' ' '[tft:LVGLsettext]' 'set text _ text _ : scale _' 'str str num' '' 'text' 1
+  spec ' ' '[tft:LVGLsettext]' 'set text _ text _ : scale _' 'str str auto' '' 'text' 1
   spec ' ' '[tft:LVGLsetcolor]' 'set color _ background _ : indicator _ : knob _' 'str color color color' ''
   spec 'r' 'makeColor' 'color r _ g _ b _ (0-255)' 'num num num' 0 100 100
   space
@@ -55,16 +57,20 @@ variables _lvgl_call_backs
   spec 'r' '[tft:LVGLgetevent]' 'get event'
   space
   spec 'r' 'screen' 'screen'
-  spec ' ' '[tft:LVGLsetparent]' 'set _ parent _' 'str str' '' ''
+  spec ' ' '[tft:LVGLsetparent]' 'set _ parent _ : states _ : parts _' 'str str num num' '' '' 0 0
   spec 'r' '[tft:LVGLgetallobjs]' 'get all objects'
   spec ' ' '[tft:LVGLdelobj]' 'delete object _' 'str' ''
   spec ' ' 'delete_all_objects' 'delete all objects'
   spec ' ' '[tft:fliptouch]' 'flip touch x _ y _  x/y _' 'bool bool bool' false false false
-  spec ' ' '[tft:LVGLaddimg]' 'imgage path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
-  spec ' ' '[tft:LVGLsetstyle]' 'set _ of _ to _ : until _' 'str.style_types str auto auto' 'range' '' '' ''
+  spec ' ' '[tft:LVGLaddimg]' 'image path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
+  spec ' ' '[tft:LVGLaddfont]' 'font path _  as  _' 'str str' '' ''
+  spec ' ' '[tft:LVGLsetattribute]' 'set attribute _ of _ to _ : until _' 'str.attribute_types str auto auto' 'range' '' '' ''
+  spec ' ' '[tft:LVGLsetstyle]' 'set style _ of _ to _' 'str.style_types str auto' 'text font' '' ''
+  spec 'r' 'set_states' 'state pressed _ : checked _ : scrolled _' 'bool bool bool bool' true false false
+  spec 'r' 'set_parts' 'parts selected _ : indicator _ : knob _ : #BR# items _ : scrollbar _' 'bool bool bool bool bool' true false false false false
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
-  spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
+  spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ #BR# L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
   spec ' ' 'init_callback' 'init callback'
   spec ' ' 'add_callback' 'add callback _ : function _' 'str str' '' ''
@@ -112,5 +118,13 @@ to makeColor r g b {
 
 to screen {
   return 'lv_scr_act'
+}
+
+to set_parts selected indicator knob items scrollbar {
+  return (sum (ifExpression scrollbar (hexToInt '10000') 0) (ifExpression indicator (hexToInt '20000') 0) (ifExpression knob (hexToInt '30000') 0) (ifExpression selected (hexToInt '40000') 0) (ifExpression items (hexToInt '50000') 0))
+}
+
+to set_states pressed checked scrolled {
+  return (sum (ifExpression checked 1 0) (ifExpression pressed (hexToInt '20') 0) (ifExpression scrolled (hexToInt '40') 0))
 }
 
