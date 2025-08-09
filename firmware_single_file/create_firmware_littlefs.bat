@@ -26,7 +26,7 @@ REM 0x210000 littlefs.bin
 echo Parameter is: %param%
 copy ..\.pio\build\%param%\*.bin .
 copy ..\esp32\boot_app0.bin .
-esptool.exe --chip esp32 merge_bin  --flash_mode dio --flash_freq 80m --flash_size 4MB  0x1000 bootloader.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin 0x210000 littlefs.bin -o ../lvgl_mb/firmware/firmware_LVGL_databot2.0_%param%_%TIMESTAMP%.bin
+esptool.exe --chip esp32 merge_bin  --flash_mode dio --flash_freq 80m --flash_size 4MB  0x1000 bootloader.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin 0x210000 littlefs.bin -o ../lvgl_mb/firmware/firmware_%param%_%TIMESTAMP%_all.bin
 del boot_app0.bin
 del bootloader.bin
 del partitions.bin
