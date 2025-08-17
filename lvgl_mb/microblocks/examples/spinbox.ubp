@@ -1,8 +1,73 @@
+module main
+author unknown
+version 1 0 
+description ''
+
+  spec ' ' 'min' 'min'
+  spec ' ' 'plus' 'plus'
+
+to min {
+  '[tft:LVGLsetattribute]' 'decrement' 'spinbox' ''
+  sayIt 'value=' ('[tft:LVGLgetval]' 'spinbox')
+}
+
+to plus {
+  '[tft:LVGLsetattribute]' 'increment' 'spinbox' ''
+  sayIt 'value=' ('[tft:LVGLgetval]' 'spinbox')
+}
+
+script 432 40 {
+whenStarted
+init_callback
+'[tft:LVGLon]' true
+comment 'remove all existing objects'
+delete_all_objects
+comment 'add titile and labels'
+'[tft:LVGLaddlabel]' 'title' 2 'Spinbox demo'
+'[tft:LVGLsetpos]' 'title' 60 10
+'[tft:LVGLsetcolor]' 'title' (colorSwatch 190 8 38 255)
+'[tft:LVGLaddlabel]' 'angle' 2
+'[tft:LVGLsetpos]' 'angle' 120 70
+comment 'add + and - buttons'
+'[tft:LVGLaddbtn]' 'plus' 3 '+'
+'[tft:LVGLsetpos]' 'plus' 10 100
+'[tft:LVGLaddbtn]' 'min' 3 '-'
+'[tft:LVGLsetpos]' 'min' 230 100
+comment 'add spinbox'
+'[tft:LVGLaddobj]' 'spinbox' 'spinbox'
+comment 'set range (take decimal into account)'
+'[tft:LVGLsetattribute]' 'range' 'spinbox' -1800 1800
+comment 'set total digits to 4 and comma between 3 and 4th digit'
+'[tft:LVGLsetattribute]' 'digits' 'spinbox' 4 3
+'[tft:LVGLsetpos]' 'spinbox' 65 100
+'[tft:LVGLsetsize]' 'spinbox' 160 70
+comment 'add a style for text of spinbox'
+'[tft:LVGLaddobj]' 'style' 'sty_spin'
+'[tft:LVGLsetstyle]' 'text font' 'sty_spin' 3
+comment 'add a text style to spinbox'
+'[tft:LVGLsetparent]' 'sty_spin' 'spinbox'
+comment 'set callback functions for plus and minus buttons'
+add_callback 'plus'
+add_callback 'min'
+forever {
+  handle_event
+}
+}
+
+script 49 511 {
+to plus {}
+}
+
+script 48 646 {
+to min {}
+}
+
+
 module LVGL Output
 author Ste7an
-version 1 7 
-choices attribute_types range rotation angles brightness 'line width' digits increment decrement
-choices style_types 'text font' 'bg color' 'bg opa' 'border width' 'border color' radius 'shadow width' 'shadow offset x' 'shadow offset y' 'shadow opa'
+version 1 6 
+choices attribute_types range rotation angles brightness 'line width' digits increment decrement 
+choices style_types 'text font' 'bg color' 'bg opa' 'border width' 'border color' radius 'shadow width' 'shadow offset x' 'shadow offset y' 'shadow opa' 
 choices obj_types arc slider led switch bar spinbox roller list screen tabview tileview style 
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 
@@ -23,7 +88,7 @@ variables _lvgl_call_backs
   spec 'r' '[tft:LVGLgetevent]' 'get event'
   space
   spec 'r' 'screen' 'screen'
-  spec ' ' '[tft:LVGLsetparent]' 'set _ parent _ : states _ : parts _' 'str str num  num' '' '' 0 0
+  spec ' ' '[tft:LVGLsetparent]' 'set _ parent _ : states _ : parts _' 'str str num num' '' '' 0 0
   spec 'r' '[tft:LVGLgetallobjs]' 'get all objects'
   spec ' ' '[tft:LVGLdelobj]' 'delete object _' 'str' ''
   spec ' ' 'delete_all_objects' 'delete all objects'
@@ -32,7 +97,7 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLaddfont]' 'font path _  as  _' 'str str' '' ''
   spec ' ' '[tft:LVGLsetattribute]' 'set attribute _ of _ to _ : until _' 'str.attribute_types str auto auto' 'range' '' '' ''
   spec ' ' '[tft:LVGLsetstyle]' 'set style _ of _ to _' 'str.style_types str auto' 'text font' '' ''
-  spec 'r' 'set_states' 'state pressed _ : checked _ : scrolled _' 'bool bool bool bool' true false false  
+  spec 'r' 'set_states' 'state pressed _ : checked _ : scrolled _' 'bool bool bool bool' true false false
   spec 'r' 'set_parts' 'parts selected _ : indicator _ : knob _ : #BR# items _ : scrollbar _' 'bool bool bool bool bool' true false false false false
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''

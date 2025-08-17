@@ -3707,6 +3707,16 @@ void ui_create_roller(char * obj_name, const char * parent) {
 }
 
 
+void ui_create_spinbox(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_spinbox_create(registry.get(parent));
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		registry.add(obj_name, obj);
+	}
+}
+
+
+
 void ui_add_tab(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
 		lv_obj_t* obj = lv_tabview_add_tab(registry.get(parent),obj_name);
@@ -3816,6 +3826,12 @@ void ui_set_value(char * obj_name, int value) {
 		if (lv_obj_get_class(obj) == &lv_bar_class) {
 			lv_bar_set_value(obj, value, LV_ANIM_OFF);
 		} else
+		if (lv_obj_get_class(obj) == &lv_spinbox_class) {
+		char s[100];
+		sprintf(s,"set_value %s: %d",obj_name,value);
+		outputString(s);
+			lv_spinbox_set_value(obj, value);
+		} else
 		if (lv_obj_get_class(obj) == &lv_switch_class) {
 			if (value==0) lv_obj_remove_state(obj, LV_STATE_CHECKED);
 			else if (value&1) lv_obj_add_state(obj, LV_STATE_CHECKED);
@@ -3903,6 +3919,12 @@ void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int un
 		} else
 		if (lv_obj_get_class(obj) == &lv_bar_class) {
 			if (strcmp(attribute_name,"range")==0) lv_bar_set_range(obj, to_val, until_val);
+		} else
+		if (lv_obj_get_class(obj) == &lv_spinbox_class) {
+			if (strcmp(attribute_name,"range")==0) lv_spinbox_set_range(obj, to_val, until_val);
+			if (strcmp(attribute_name,"digits")==0) lv_spinbox_set_digit_format(obj, to_val, until_val);
+			if (strcmp(attribute_name,"increment")==0) lv_spinbox_increment(obj);
+			if (strcmp(attribute_name,"decrement")==0) lv_spinbox_decrement(obj);
 		} else
 		if (lv_obj_get_class(obj) == &lv_led_class) {
 			if (strcmp(attribute_name,"brightness")==0) {
@@ -4024,6 +4046,7 @@ typedef enum {
 	CMD_ROLLER,
 	CMD_SCREEN,
 	CMD_STYLE,
+	CMD_SPINBOX,
     CMD_COUNT
 } Command;
 
@@ -4041,6 +4064,7 @@ Command lookup_cmd(const char *s) {
 	if (strcmp(s, "list") == 0)     return CMD_LIST;
 	if (strcmp(s, "roller") == 0)   return CMD_ROLLER;
 	if (strcmp(s, "style") == 0)   return CMD_STYLE;
+	if (strcmp(s, "spinbox") == 0)   return CMD_SPINBOX;
 	if (strcmp(s, "screen") == 0)   return CMD_SCREEN;
     return CMD_UNKNOWN;
 }
@@ -4339,6 +4363,10 @@ static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 		 	outputString("Handle STYLE");
 		 	ui_create_style(obj_name, parent);
 		 	break;
+		case CMD_SPINBOX:
+		 	outputString("Handle SPINBOX");
+		 	ui_create_spinbox(obj_name, parent);
+		 	break;
 		// case CMD_SCALE:
 		// 	outputString("Handle TABVIEW");
 		// 	ui_create_tabview(obj_name, parent);
@@ -4423,6 +4451,9 @@ static OBJ primLVGLsetVal(int argCount, OBJ *args) {
 		if (lv_obj_get_class(obj) == &lv_bar_class) {
 			lv_bar_set_value(obj, value, LV_ANIM_OFF);
 		} else
+		if (lv_obj_get_class(obj) == &lv_spinbox_class) {
+			lv_spinbox_set_value(obj, value);
+		} else
 		if (lv_obj_get_class(obj) == &lv_switch_class) {
 			if (value==0) lv_obj_remove_state(obj, LV_STATE_CHECKED);
 			else if (value>0) lv_obj_add_state(obj, LV_STATE_CHECKED);
@@ -4496,6 +4527,9 @@ static OBJ primLVGLgetVal(int argCount, OBJ *args) {
  		} else 
 		if (lv_obj_get_class(obj) == &lv_slider_class) {
 			return int2obj(lv_slider_get_value(obj));
+		} else 
+		if (lv_obj_get_class(obj) == &lv_spinbox_class) {
+			return int2obj(lv_spinbox_get_value(obj));
 		} else 
 		if (lv_obj_get_class(obj) == &lv_switch_class) {
 			return lv_obj_has_state(obj, LV_STATE_CHECKED)  ? trueObj : falseObj;
