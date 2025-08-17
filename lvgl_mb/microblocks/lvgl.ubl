@@ -1,10 +1,12 @@
 module LVGL Output
 author Ste7an
 version 1 8 
-choices attribute_types range rotation angles brightness 'line width' animation digits increment decrement 
+choices attribute_types range rotation angles brightness 'line width' animation digits increment decrement points
 choices style_types 'text font' 'bg color' 'bg opa' 'border width' 'border color' radius 'shadow width' 'shadow offset x' 'shadow offset y' 'shadow opa' 
 choices obj_types arc slider led switch bar spinner spinbox roller list screen tabview tileview style 
 choices symbols bullet audio video list ok close power settings home download drive refresh mute volume_mid volume_max image tint prev play pause stop next eject left right plus minus eye_open eye_close warning shuffle up down loop directory upload call cut copy save bars envelope charge paste bell keyboard gps file wifi battery_full battery_3 battery_2 battery_1 battery_empty usb bluetooth trash edit backspace sd_card new_line 
+choices chart_type line bar scatter
+choices chart_update_mode shift circular
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 
 
@@ -36,8 +38,12 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLsetstyle]' 'set style _ of _ to _' 'str.style_types str auto' 'text font' '' ''
   spec 'r' 'set_states' 'state pressed _ : checked _ : scrolled _' 'bool bool bool bool' true false false
   spec 'r' 'set_parts' 'parts selected _ : indicator _ : knob _ : #BR# items _ : scrollbar _' 'bool bool bool bool bool' true false false false false
+  
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
+  spec ' ' '[tft:LVGLaddchart]' 'chart _ type _ update mode _ : parent _' 'str str.chart_type str.chart_update_mode str' '' 'line' 'shift' 'lv_scr_act'
+  spec ' ' '[tft:LVGLaddseries]' 'add series _ chart _ color _' 'str str color' '' '' 16711680 
+  spec ' ' '[tft:LVGLsetnextvalue]' 'add value to series _ from chart _ value _ : value2 _' 'str str num num' '' '' 0 0
   spec ' ' '[tft:LVGLaddtile]' 'tile _ parent _ col _ row _ #BR# L _ R _ T _ B _' 'str str num num bool bool bool bool' 'tile' '' 0 0 false false false false
   spec 'r' '[tft:LVGLpsram]' 'get PSRAM'
   spec ' ' 'init_callback' 'init callback'

@@ -3271,6 +3271,7 @@ ObjectRegistry<lv_font_t> font_buffer;
 
 ObjectRegistry<lv_style_t> style_registry;
 
+ObjectRegistry<lv_chart_series_t> series_registry;
  
 void fs_init() {
   if (!LittleFS.begin()) {
@@ -3729,6 +3730,49 @@ void ui_add_tab(char * obj_name, const char * parent) {
 	}
 }
 
+void ui_add_series(char * series, const char * chart, int color) {
+    if (registry.get(chart) && !series_registry.get(series)) {
+		lv_chart_series_t* obj = lv_chart_add_series(registry.get(chart), lv_color_hex(color),  LV_CHART_AXIS_PRIMARY_Y);
+		//lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		outputString("ui_add_series");
+		series_registry.add(series, obj);
+	}
+}
+
+void ui_set_next_value(char * series, char * chart, int val) {
+    if (registry.get(chart) && series_registry.get(series)) {
+		lv_chart_set_next_value(registry.get(chart), series_registry.get(series), val);
+		char s[100];
+		sprintf(s,"ui_set_next_value series=%s chart=%s val = %d", series,chart,val);
+		outputString(s);
+
+	}
+}
+
+void ui_set_next_value2(char * series, char * chart, int val, int val2) {
+    if (registry.get(chart) && series_registry.get(series)) {
+		lv_chart_set_next_value2(registry.get(chart), series_registry.get(series), val, val2);
+		outputString("lv_chart_set_next_value2");
+	}
+}
+
+
+void ui_add_chart(char * obj_name, const char * parent, char * chart_type, char * chart_update_mode) {
+	if (!registry.get(obj_name))  {
+		lv_chart_type_t chart_type_id = LV_CHART_TYPE_LINE;
+		lv_chart_update_mode_t chart_update_mode_id = LV_CHART_UPDATE_MODE_SHIFT;
+		if (strcmp(chart_type,"bar")==0) chart_type_id = LV_CHART_TYPE_BAR;
+		else if (strcmp(chart_type,"scatter")==0) chart_type_id = LV_CHART_TYPE_SCATTER;
+
+		if (strcmp(chart_update_mode,"circular")==0) chart_update_mode_id = LV_CHART_UPDATE_MODE_CIRCULAR;
+		lv_obj_t* obj = lv_chart_create(registry.get(parent));
+		lv_chart_set_type(obj, chart_type_id);
+		lv_chart_set_update_mode(obj, chart_update_mode_id);
+
+		registry.add(obj_name, obj);
+	}
+}
+
 void ui_add_tile(char * obj_name, const char * parent, int col_id, int row_id, lv_dir_t dir ) {
     if (!registry.get(obj_name) && registry.get(parent)) {
 		lv_obj_t* obj = lv_tileview_add_tile(registry.get(parent), col_id, row_id, dir);
@@ -3941,7 +3985,13 @@ void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int un
 			if (strcmp(attribute_name,"brightness")==0) {
 				lv_led_set_brightness(obj,to_val );
 			}
-		
+		} else 
+		if (lv_obj_get_class(obj) == &lv_chart_class) {
+			if (strcmp(attribute_name,"points")==0) {
+				lv_chart_set_point_count(obj,to_val );
+				outputString("lv_chart_set_point_count");
+
+			}
 		}
 
 	}
@@ -4165,6 +4215,21 @@ static OBJ primLVGLgetallstyles(int argCount, OBJ *args) {
 	return result;
 }
 
+
+static OBJ primLVGLgetallseries(int argCount, OBJ *args) {
+	std::vector<std::string> names = series_registry.getAllNames();
+	int count = series_registry.size();
+	OBJ result = newObj(ListType, count+1, zeroObj);
+	FIELD(result, 0) = int2obj(count);
+	int i=1;
+	for (const auto& name : names) {
+		FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
+		i++;
+	}
+	return result;
+}
+
+
 static OBJ primLVGLaddBtn(int argCount, OBJ *args) {
 	int scale = 1;
 	char* obj_name = obj2str(args[0]);
@@ -4254,6 +4319,26 @@ static OBJ primLVGLaddTile(int argCount, OBJ *args) {
 	uint8_t b = (trueObj == args[7]) ? 1:0;
 	lv_dir_t dir = (lv_dir_t)(l + (r<<1) + (t<<2) + (b<<3));
 	ui_add_tile(obj_name, parent, col_id, row_id, dir);
+	return falseObj;
+}
+
+static OBJ primLVGLaddSeries(int argCount, OBJ *args) {
+	char* series = obj2str(args[0]);
+	char* chart = obj2str(args[1]);
+	int color = obj2int(args[2]);
+	ui_add_series(series, chart, color);
+	return falseObj;
+}
+
+static OBJ primLVGLaddchart(int argCount, OBJ *args) {
+	char* obj_name = obj2str(args[0]);
+	char* chart_type = obj2str(args[1]);
+	char* chart_update_mode = obj2str(args[2]);
+	char* parent = "lv_scr_act";
+	if (argCount > 3) {
+		parent = obj2str(args[3]);
+	} 
+	ui_add_chart(obj_name, parent, chart_type, chart_update_mode);
 	return falseObj;
 }
 
@@ -4550,6 +4635,19 @@ static OBJ primLVGLsetVal(int argCount, OBJ *args) {
 	return falseObj;
 }
 
+static OBJ primLVGLsetnextvalue(int argCount, OBJ *args) {
+	char* series = obj2str(args[0]);
+	char *chart = obj2str(args[1]);
+	int val = obj2int(args[2]);
+	if (argCount > 3) {
+		int val2 = obj2int(args[3]);
+		ui_set_next_value2(series, chart, val, val2);
+	} else {
+		ui_set_next_value(series, chart, val);
+	}
+		return falseObj;
+}	
+
 
 static OBJ primLVGLsetText(int argCount, OBJ *args) {
 	int scale = 1;
@@ -4800,6 +4898,9 @@ static PrimEntry entries[] = {
 	{"LVGLaddslider",primLVGLaddSlider},
 	{"LVGLaddarc",primLVGLaddArc},
 	{"LVGLaddtab",primLVGLaddTab},
+	{"LVGLaddseries",primLVGLaddSeries},
+	{"LVGLaddchart",primLVGLaddchart},
+	{"LVGLsetnextvalue",primLVGLsetnextvalue},
 	{"LVGLaddtile",primLVGLaddTile},
 	{"LVGLaddbuttonmatrix",primLVGLaddButtonMatrix},
 	{"LVGLaddobj",primLVGLaddObject},
@@ -4819,6 +4920,7 @@ static PrimEntry entries[] = {
 	{"LVGLgetallobjs", primLVGLgetallobjs},
 	{"LVGLgetallfonts",primLVGLgetallfonts},
 	{"LVGLgetallstyles",primLVGLgetallstyles},
+	{"LVGLgetallseries",primLVGLgetallseries},
 	{"LVGLgetsymbol",primLVGLgetSymbol},
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},
