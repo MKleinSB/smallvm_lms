@@ -48,6 +48,9 @@
 #elif defined(M5Atom_Matrix) || defined(M5Atom_Lite)
 	#define PIN_WIRE_SCL 21
 	#define PIN_WIRE_SDA 25
+#elif defined(ARDUINO_M5Stack_ATOMS3)
+	#define PIN_WIRE_SCL 1
+	#define PIN_WIRE_SDA 2
 #elif defined(DUELink)
 	// 0 and 1 are edge connector pins 19 and 20 or DUELink standard pins 16 and 15
 	#define PIN_WIRE_SCL 1
@@ -1046,8 +1049,10 @@ static void writeAccelReg(int regID, int value) {
 static char is6886 = false;
 
 static void startAccelerometer() {
-	#ifdef M5Atom_Matrix
+	#if defined(M5Atom_Matrix)
 		Wire1.begin(25, 21);
+	#elif defined(M5Atom_S3_TFT)
+		Wire1.begin(38, 39);
 	#else
 		Wire1.begin(); // use internal I2C bus with default pins
 	#endif
@@ -2140,7 +2145,7 @@ static int readDigitalMicrophone() {
 	return result;
 }
 
-#elif defined(DATABOT) || defined(ARDUINO_M5STACK_Core2)
+#elif defined(DATABOT) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_XIAO_ESP32S3)
 
 #define USE_DIGITAL_MICROPHONE 1
 
@@ -2157,6 +2162,11 @@ static int readDigitalMicrophone() {
 	#define I2S_WS 0
 	#define I2S_SD 34
 	#define I2S_SCK 12
+	#define I2S_MODE (I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM)
+#elif defined(ARDUINO_XIAO_ESP32S3)
+	#define I2S_WS 42
+	#define I2S_SD 41
+	#define I2S_SCK -1
 	#define I2S_MODE (I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM)
 #endif
 

@@ -201,7 +201,7 @@ static int serialWriteBytes(uint8 *buf, uint32 byteCount) {
 #else // use Serial1 or Serial2
 
 // Use Serial2 on original ESP32 and Pico:ed boards, Serial1 on others
-#if (ESP32_ORIGINAL) || defined(PICO_ED) || defined(COCUBE) || defined(DUELink) || defined(ARDUINO_WEACT)
+#if defined(ESP32_ORIGINAL) || defined(ESP32_S3) || defined(PICO_ED) || defined(COCUBE) || defined(DUELink) || defined(ARDUINO_WEACT)
 	#define SERIAL_PORT Serial2
 #else
 	#define SERIAL_PORT Serial1
@@ -227,8 +227,10 @@ static void serialOpen(int baudRate) {
 		SERIAL_PORT.begin(baudRate, SERIAL_8N1, rxPin, txPin);
 	#elif defined(COCUBE)
 		SERIAL_PORT.begin(baudRate, SERIAL_8N1, 22, 21);
-	#elif defined(C3_SUPERMINI)
+	#elif defined(C3_SUPERMINI) || defined(ARDUINO_XIAO_ESP32C3)
 		SERIAL_PORT.begin(baudRate, SERIAL_8N1, 20, 21);
+	#elif defined(ARDUINO_XIAO_ESP32S3)
+		SERIAL_PORT.begin(baudRate, SERIAL_8N1, 44, 43);
 	#elif defined(M5CORE2)
 		SERIAL_PORT.begin(baudRate, SERIAL_8N1, 32, 33);
 	#elif defined(M5Atom_Lite) || defined(M5Atom_Matrix)
