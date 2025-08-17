@@ -3706,7 +3706,6 @@ void ui_create_roller(char * obj_name, const char * parent) {
 	}
 }
 
-
 void ui_create_spinbox(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
 		lv_obj_t* obj = lv_spinbox_create(registry.get(parent));
@@ -3715,7 +3714,12 @@ void ui_create_spinbox(char * obj_name, const char * parent) {
 	}
 }
 
-
+void ui_create_spinner(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_spinner_create(registry.get(parent));
+		registry.add(obj_name, obj);
+	}
+}
 
 void ui_add_tab(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
@@ -3920,6 +3924,13 @@ void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int un
 		if (lv_obj_get_class(obj) == &lv_bar_class) {
 			if (strcmp(attribute_name,"range")==0) lv_bar_set_range(obj, to_val, until_val);
 		} else
+		if (lv_obj_get_class(obj) == &lv_spinner_class) {
+			if (strcmp(attribute_name,"animation")==0) lv_spinner_set_anim_params(obj, to_val, until_val);
+			else if (strstr(attribute_name,"line width")) {
+				lv_obj_set_style_arc_width(obj,to_val,LV_PART_MAIN);
+				lv_obj_set_style_arc_width(obj,to_val,LV_PART_INDICATOR);
+			}
+		} else
 		if (lv_obj_get_class(obj) == &lv_spinbox_class) {
 			if (strcmp(attribute_name,"range")==0) lv_spinbox_set_range(obj, to_val, until_val);
 			if (strcmp(attribute_name,"digits")==0) lv_spinbox_set_digit_format(obj, to_val, until_val);
@@ -3985,8 +3996,8 @@ void ui_set_color(char * obj_name, int color) {
 			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_MAIN  | LV_STATE_DEFAULT);
 			lv_obj_set_style_bg_opa(obj, LV_OPA_COVER,LV_PART_MAIN |LV_STATE_DEFAULT);
 	    } else
-		if  (lv_obj_get_class(obj) == &lv_arc_class) {
-			outputString("change color arc");
+		if  ((lv_obj_get_class(obj) == &lv_arc_class) || (lv_obj_get_class(obj) == &lv_spinner_class)) {
+			outputString("change color arc or spinner");
 			lv_obj_set_style_arc_color(obj, lv_color_hex(color), LV_PART_MAIN);
  		} else
 			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_MAIN);
@@ -4000,7 +4011,7 @@ void ui_set_color_2nd(char * obj_name, int color) {
 		if (lv_obj_get_class(obj) == &lv_button_class) {
 			lv_obj_t *label = lv_obj_get_child(obj, 0);
 			lv_obj_set_style_text_color(label, lv_color_hex(color), 0); 
-		} else if (lv_obj_get_class(obj) == &lv_arc_class) {
+		} else if ((lv_obj_get_class(obj) == &lv_arc_class)  || (lv_obj_get_class(obj) == &lv_spinner_class)){
 			lv_obj_set_style_arc_color(obj, lv_color_hex(color), LV_PART_INDICATOR);
 		} else if (lv_obj_get_class(obj) == &lv_switch_class) {
 			lv_obj_set_style_bg_color(obj, lv_color_hex(color), LV_PART_INDICATOR|LV_STATE_CHECKED);
@@ -4044,6 +4055,7 @@ typedef enum {
 	CMD_SCREEN,
 	CMD_STYLE,
 	CMD_SPINBOX,
+	CMD_SPINNER,
     CMD_COUNT
 } Command;
 
@@ -4062,6 +4074,7 @@ Command lookup_cmd(const char *s) {
 	if (strcmp(s, "roller") == 0)   return CMD_ROLLER;
 	if (strcmp(s, "style") == 0)   return CMD_STYLE;
 	if (strcmp(s, "spinbox") == 0)   return CMD_SPINBOX;
+	if (strcmp(s, "spinner") == 0)   return CMD_SPINNER;
 	if (strcmp(s, "screen") == 0)   return CMD_SCREEN;
     return CMD_UNKNOWN;
 }
@@ -4363,6 +4376,10 @@ static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 		case CMD_SPINBOX:
 		 	outputString("Handle SPINBOX");
 		 	ui_create_spinbox(obj_name, parent);
+		 	break;
+		case CMD_SPINNER:
+		 	outputString("Handle SPINNER");
+		 	ui_create_spinner(obj_name, parent);
 		 	break;
 		// case CMD_SCALE:
 		// 	outputString("Handle TABVIEW");
