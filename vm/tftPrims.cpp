@@ -4556,8 +4556,6 @@ static OBJ primLVGLloadScreen(int argCount, OBJ *args) {
 	return falseObj;
 }
 
-
-
 static OBJ primLVGLsetParent(int argCount, OBJ *args) {
 	char* obj = obj2str(args[0]);
 	char* parent = obj2str(args[1]);
