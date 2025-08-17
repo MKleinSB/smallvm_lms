@@ -3951,9 +3951,6 @@ void ui_set_style(char * obj_name, char * style_name, int to_val){
 			else if (strstr(style_name,"shadow offset y")) lv_style_set_shadow_offset_y(obj, to_val);
 			else if (strstr(style_name,"shadow opa")) lv_style_set_shadow_opa(obj, to_val);
 			
-			
-		
-
 	}
 }
 
@@ -4377,6 +4374,77 @@ static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 	return falseObj;
 }
 
+static OBJ primLVGLgetSymbol(int argCount, OBJ *args) {
+    static const std::unordered_map<std::string, int> symbolMap = {
+        {"bullet",        20042},
+        {"audio",         61441},
+        {"video",         61448},
+        {"list",          61451},
+        {"ok",            61452},
+        {"close",         61453},
+        {"power",         61457},
+        {"settings",      61459},
+        {"home",          61461},
+        {"download",      61465},
+        {"drive",         61468},
+        {"refresh",       61473},
+        {"mute",          61478},
+        {"volume_mid",    61479},
+        {"volume_max",    61480},
+        {"image",         61502},
+        {"tint",          61507},
+        {"prev",          61512},
+        {"play",          61515},
+        {"pause",         61516},
+        {"stop",          61517},
+        {"next",          61521},
+        {"eject",         61522},
+        {"left",          61523},
+        {"right",         61524},
+        {"plus",          61543},
+        {"minus",         61544},
+        {"eye_open",      61550},
+        {"eye_close",     61552},
+        {"warning",       61553},
+        {"shuffle",       61556},
+        {"up",            61559},
+        {"down",          61560},
+        {"loop",          61561},
+        {"directory",     61563},
+        {"upload",        61587},
+        {"call",          61589},
+        {"cut",           61636},
+        {"copy",          61637},
+        {"save",          61639},
+        {"bars",          61641},
+        {"envelope",      61664},
+        {"charge",        61671},
+        {"paste",         61674},
+        {"bell",          61683},
+        {"keyboard",      61724},
+        {"gps",           61732},
+        {"file",          61787},
+        {"wifi",          61931},
+        {"battery_full",  62016},
+        {"battery_3",     62017},
+        {"battery_2",     62018},
+        {"battery_1",     62019},
+        {"battery_empty", 62020},
+        {"usb",           62087},
+        {"bluetooth",     62099},
+        {"trash",         62189},
+        {"edit",          62212},
+        {"backspace",     62810},
+        {"sd_card",       63426},
+        {"new_line",      63650}
+    };
+	std::string symbol = obj2str(args[0]);
+    auto it = symbolMap.find(symbol);
+    if (it != symbolMap.end()) {
+        return int2obj(it->second);
+    }
+    return falseObj; // not found
+}
 
 static OBJ primLVGLloadScreen(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
@@ -4734,6 +4802,7 @@ static PrimEntry entries[] = {
 	{"LVGLgetallobjs", primLVGLgetallobjs},
 	{"LVGLgetallfonts",primLVGLgetallfonts},
 	{"LVGLgetallstyles",primLVGLgetallstyles},
+	{"LVGLgetsymbol",primLVGLgetSymbol},
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},
  	{"LVGLaddfont",primLVGLaddfont},

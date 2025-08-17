@@ -1,3 +1,41 @@
+module main
+author unknown
+version 1 0 
+description ''
+
+script 137 40 {
+whenStarted
+'[tft:LVGLon]' true
+delete_all_objects
+comment 'define label for messages'
+'[tft:LVGLaddlabel]' 'label' 3 ''
+'[tft:LVGLsetpos]' 'label' 30 20
+comment 'define buttons and use symbols as text'
+'[tft:LVGLaddbtn]' 'prev' 2 (symbol 'prev')
+'[tft:LVGLsetpos]' 'prev' 10 80
+'[tft:LVGLaddbtn]' 'play' 2 (symbol 'play')
+'[tft:LVGLsetpos]' 'play' 60 80
+'[tft:LVGLaddbtn]' 'pause' 2 (symbol 'pause')
+'[tft:LVGLsetpos]' 'pause' 110 80
+'[tft:LVGLaddbtn]' 'stop' 2 (symbol 'stop')
+'[tft:LVGLsetpos]' 'stop' 160 80
+'[tft:LVGLaddbtn]' 'next' 2 (symbol 'next')
+'[tft:LVGLsetpos]' 'next' 210 80
+'[tft:LVGLaddbtn]' 'mute' 3 (symbol 'mute')
+'[tft:LVGLsetpos]' 'mute' 30 160
+'[tft:LVGLaddbtn]' 'mid' 3 (symbol 'volume_mid')
+'[tft:LVGLsetpos]' 'mid' 90 160
+'[tft:LVGLaddbtn]' 'max' 3 (symbol 'volume_max')
+'[tft:LVGLsetpos]' 'max' 160 160
+}
+
+script 711 118 {
+whenCondition ('[tft:LVGLevent]')
+comment 'when a button is pressed, show the button  as text'
+'[tft:LVGLsettext]' 'label' ('[tft:LVGLgetevent]') 3
+}
+
+
 module LVGL Output
 author Ste7an
 version 1 8 
@@ -43,7 +81,6 @@ variables _lvgl_call_backs
   spec ' ' 'init_callback' 'init callback'
   spec ' ' 'add_callback' 'add callback _ : function _' 'str str' '' ''
   spec ' ' 'handle_event' 'handle event'
-  
 
 to add_callback obj function {
   if (not (isType _lvgl_call_backs 'list')) {_lvgl_call_backs = ('[data:makeList]')}
