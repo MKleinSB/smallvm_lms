@@ -10,7 +10,7 @@
 #include "mem.h"
 #include "interp.h"
 
-#if defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP32) && !defined(NO_SD_CARD)
 	#define SD_CARD 1
 #endif
 
