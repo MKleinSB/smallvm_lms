@@ -3722,6 +3722,14 @@ void ui_create_spinner(char * obj_name, const char * parent) {
 	}
 }
 
+void ui_create_scale(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_scale_create(registry.get(parent));
+		registry.add(obj_name, obj);
+	}
+}
+
+
 void ui_add_tab(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
 		lv_obj_t* obj = lv_tabview_add_tab(registry.get(parent),obj_name);
@@ -4007,7 +4015,21 @@ void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int un
 			if (strcmp(attribute_name,"range")==0) {
 				lv_chart_set_range(obj, LV_CHART_AXIS_PRIMARY_Y, to_val, until_val);
 			}
-		}
+		} else
+		if (lv_obj_get_class(obj) == &lv_scale_class) {
+			if (strcmp(attribute_name,"tick count")==0) lv_scale_set_total_tick_count(obj,to_val );
+			if (strcmp(attribute_name,"major tick every")==0) lv_scale_set_major_tick_every(obj,to_val );
+			if (strcmp(attribute_name,"length")==0) lv_obj_set_style_length(obj,to_val, until_val );
+			if (strcmp(attribute_name,"range")==0) lv_scale_set_range(obj, to_val, until_val);
+			if (strstr(attribute_name,"scale mode")) lv_scale_set_mode(obj, (lv_scale_mode_t) to_val);
+			if (strstr(attribute_name,"angles")) lv_scale_set_angle_range(obj, to_val);
+			if (strstr(attribute_name,"rotation")) lv_scale_set_rotation(obj, to_val);
+			if (strcmp(attribute_name,"show labels")==0) {
+				bool show_labels = (to_val==1);
+				lv_scale_set_label_show(obj,show_labels);
+			}
+		}	
+
 	}
 }
 
@@ -4025,7 +4047,14 @@ void ui_set_style(char * obj_name, char * style_name, int to_val){
 			else if (strstr(style_name,"shadow offset x")) lv_style_set_shadow_offset_x(obj, to_val);
 			else if (strstr(style_name,"shadow offset y")) lv_style_set_shadow_offset_y(obj, to_val);
 			else if (strstr(style_name,"shadow opa")) lv_style_set_shadow_opa(obj, to_val);
+			else if (strstr(style_name,"width")) lv_style_set_width(obj, to_val);
+			else if (strstr(style_name,"line width")) lv_style_set_line_width(obj, to_val);
+			else if (strstr(style_name,"line color")) lv_style_set_line_color(obj, lv_color_hex(to_val));
+			else if (strstr(style_name,"text color")) lv_style_set_text_color(obj, lv_color_hex(to_val));
+
+
 			
+
 	}
 }
 
@@ -4120,6 +4149,7 @@ typedef enum {
 	CMD_STYLE,
 	CMD_SPINBOX,
 	CMD_SPINNER,
+	CMD_SCALE,
     CMD_COUNT
 } Command;
 
@@ -4140,6 +4170,7 @@ Command lookup_cmd(const char *s) {
 	if (strcmp(s, "spinbox") == 0)   return CMD_SPINBOX;
 	if (strcmp(s, "spinner") == 0)   return CMD_SPINNER;
 	if (strcmp(s, "screen") == 0)   return CMD_SCREEN;
+	if (strcmp(s, "scale") == 0)   return CMD_SCALE;
     return CMD_UNKNOWN;
 }
 
@@ -4480,10 +4511,9 @@ static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 		 	outputString("Handle SPINNER");
 		 	ui_create_spinner(obj_name, parent);
 		 	break;
-		// case CMD_SCALE:
-		// 	outputString("Handle TABVIEW");
-		// 	ui_create_tabview(obj_name, parent);
-		// 	break;
+		case CMD_SCALE:
+		 	ui_create_scale(obj_name, parent);
+		 	break;
 		default:
 			outputString("Unknown command");;
 	}
@@ -4714,6 +4744,9 @@ static OBJ primLVGLsetattribute(int argCount, OBJ *args) {
 	if (argCount >3) {
 		until_val = obj2int(args[3]);
 	}
+	char s[100];
+	sprintf(s,"set attritube to %d until %d",to_val, until_val);
+	outputString(s);
 	ui_set_attribute(obj_name, attribute_name, to_val, until_val);
 	return falseObj;
 }
