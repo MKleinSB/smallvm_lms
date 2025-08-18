@@ -36,6 +36,7 @@ running = (booleanConstant false)
 delete_all_objects
 init_callback
 '[tft:LVGLaddobj]' 'tabview' 'tv' 'lv_scr_act'
+'[tft:LVGLsetscroll]' 'tv' 'none'
 comment 'initialize tabview and start tab'
 '[tft:LVGLaddtab]' 'start' 'tv'
 '[tft:LVGLaddbtn]' 'run' 2 'Start' 'start'
@@ -55,8 +56,9 @@ comment 'add spinbox tab using spinbox library'
 '[tft:LVGLaddtab]' 'config2' 'tv'
 'add spinbox' 'parameter_1' 'config2' 20 0 -1000 1000 2
 'add spinbox' 'parameter_2' 'config2' 20 80 -100 100 0
-'add spinbox' 'parameter_3' 'config2' 20 160 0 10 1
-'add spinbox' 'parameter_4' 'config2' 20 240 -180 180 0
+'[tft:LVGLaddtab]' 'config3' 'tv'
+'add spinbox' 'parameter_3' 'config3' 20 0 0 10 1
+'add spinbox' 'parameter_4' 'config3' 20 80 -180 180 0
 comment 'add callbacks'
 add_callback 'run'
 add_callback 'slider'
@@ -73,10 +75,6 @@ script 706 690 {
 to slider {}
 }
 
-script 50 1036 {
-to 'add spinbox' {}
-}
-
 
 module LVGL Output
 author Ste7an
@@ -87,6 +85,7 @@ choices obj_types arc slider led switch bar spinner spinbox roller list screen t
 choices symbols bullet audio video list ok close power settings home download drive refresh mute volume_mid volume_max image tint prev play pause stop next eject left right plus minus eye_open eye_close warning shuffle up down loop directory upload call cut copy save bars envelope charge paste bell keyboard gps file wifi battery_full battery_3 battery_2 battery_1 battery_empty usb bluetooth trash edit backspace sd_card new_line 
 choices chart_update_mode shift circular 
 choices chart_type line bar scatter 
+choices scroll_dirs none hor ver all 
 description 'LVGL support for MicroBlocks'
 variables _lvgl_call_backs 
 
@@ -111,13 +110,13 @@ variables _lvgl_call_backs
   spec 'r' '[tft:LVGLgetallobjs]' 'get all objects'
   spec ' ' '[tft:LVGLdelobj]' 'delete object _' 'str' ''
   spec ' ' 'delete_all_objects' 'delete all objects'
-  spec ' ' '[tft:fliptouch]' 'flip touch x _ y _  x/y _' 'bool bool bool' false false false
   spec ' ' '[tft:LVGLaddimg]' 'image path _  as  _ : parent _' 'str str str' '' 'img' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddfont]' 'font path _  as  _' 'str str' '' ''
   spec ' ' '[tft:LVGLsetattribute]' 'set attribute _ of _ to _ : until _' 'str.attribute_types str auto auto' 'range' '' '' ''
   spec ' ' '[tft:LVGLsetstyle]' 'set style _ of _ to _' 'str.style_types str auto' 'text font' '' ''
   spec 'r' 'set_states' 'state pressed _ : checked _ : scrolled _' 'bool bool bool bool' true false false
   spec 'r' 'set_parts' 'parts selected _ : indicator _ : knob _ : #BR# items _ : scrollbar _' 'bool bool bool bool bool' true false false false false
+  spec ' ' '[tft:LVGLsetscroll]' 'set scroll direction of _ to _' 'str str.scroll_dirs' '' 'none'
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
   spec ' ' '[tft:LVGLaddchart]' 'chart _ type _ update mode _ : parent _' 'str str.chart_type str.chart_update_mode str' '' 'line' 'shift' 'lv_scr_act'

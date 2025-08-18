@@ -3862,6 +3862,19 @@ void ui_set_pos(char * obj_name,  uint16_t pos_x, uint16_t pos_y) {
 	}
 }
 
+void ui_set_scroll(char * obj_name,  lv_dir_t scroll_dir) {
+	lv_obj_t* obj = registry.get(obj_name);
+	if (obj!=nullptr) {
+		if (lv_obj_get_class(obj) == &lv_tabview_class) {
+			// when tabview, take container of tabs to controll scroll direction
+			lv_obj_t *content = lv_tabview_get_content(obj);
+			lv_obj_set_scroll_dir(content, scroll_dir);
+		} else
+			  lv_obj_set_scroll_dir(obj, scroll_dir);
+		}
+}
+
+
 void ui_set_value(char * obj_name, int value) {
 	lv_obj_t* obj = registry.get(obj_name);
 	if (obj) {
@@ -4335,7 +4348,7 @@ static OBJ primLVGLaddchart(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
 	char* chart_type = obj2str(args[1]);
 	char* chart_update_mode = obj2str(args[2]);
-	char* parent = "lv_scr_act";
+	const char* parent = "lv_scr_act";
 	if (argCount > 3) {
 		parent = obj2str(args[3]);
 	} 
@@ -4595,6 +4608,20 @@ static OBJ primLVGLsetPos(int argCount, OBJ *args) {
 	ui_set_pos(obj_name, pos_x, pos_y);
 	return falseObj;
 }
+
+static OBJ primLVGLsetScroll(int argCount, OBJ *args) {
+	char* obj_name = obj2str(args[0]);
+	char* direction = obj2str(args[1]);
+	lv_dir_t scroll_dir = LV_DIR_NONE;
+	if (strcmp(direction,"hor")==0) scroll_dir = LV_DIR_HOR;
+	else if (strcmp(direction,"ver")==0) scroll_dir = LV_DIR_VER;
+	else if (strcmp(direction,"all")==0) scroll_dir = LV_DIR_ALL;
+	ui_set_scroll(obj_name, scroll_dir);
+	return falseObj;
+}
+
+
+
 
 static OBJ primLVGLsetVal(int argCount, OBJ *args) {
 	char* obj_name = obj2str(args[0]);
@@ -4924,6 +4951,7 @@ static PrimEntry entries[] = {
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},
  	{"LVGLaddfont",primLVGLaddfont},
+	{"LVGLsetscroll",primLVGLsetScroll},
 	{"LVGLpsram",primLVGLpsram},
 	#if defined(LMSDIAPLY) && defined(BREAKOUT)
 		{"fliptouch",primfliptouch},
