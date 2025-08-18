@@ -3990,10 +3990,11 @@ void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int un
 			if (strcmp(attribute_name,"points")==0) {
 				lv_chart_set_point_count(obj,to_val );
 				outputString("lv_chart_set_point_count");
-
+			}
+			if (strcmp(attribute_name,"range")==0) {
+				lv_chart_set_range(obj, LV_CHART_AXIS_PRIMARY_Y, to_val, until_val);
 			}
 		}
-
 	}
 }
 
