@@ -3272,6 +3272,9 @@ ObjectRegistry<lv_font_t> font_buffer;
 ObjectRegistry<lv_style_t> style_registry;
 
 ObjectRegistry<lv_chart_series_t> series_registry;
+
+ObjectRegistry<char*> btnmap_registry;
+
  
 void fs_init() {
   if (!LittleFS.begin()) {
@@ -3483,21 +3486,31 @@ struct LastEventInfo {
     lv_event_code_t code;
     lv_obj_t *target;
 	std::string  name;
+	uint32_t id;
 };
 
-static LastEventInfo last_event = {nullptr, LV_EVENT_NONE_CUSTOM, nullptr};
 
+static LastEventInfo last_event = {
+    nullptr,
+    LV_EVENT_NONE_CUSTOM,
+    nullptr,
+    std::string(),   // default empty string
+    0                // id
+};
 
 // generic call back function for all events
 void ui_log_event_cb(lv_event_t *e) {
     last_event.event = e;
     last_event.code = lv_event_get_code(e);
     last_event.target = (lv_obj_t *) lv_event_get_target(e);
+	if (lv_obj_get_class(last_event.target) == &lv_buttonmatrix_class) {
+		last_event.id = lv_buttonmatrix_get_selected_button(last_event.target);
+	}
 	last_event.name = registry.findNameFor( last_event.target);
-		// char s[100];
-		// sprintf(s,"Event %d on obj name %s", last_event.code, last_event.name.c_str());
-		// outputString(s);
-	// send broadcast
+		char s[100];
+		sprintf(s,"Event %d on obj name %s id %d", last_event.code, last_event.name.c_str(),last_event.id);
+		outputString(s);
+	// // send broadcast
 	event_seen = true; // set to false in getevent
 	
 	char eventmessage[] = "LVGLevent";
@@ -3810,9 +3823,6 @@ void ui_create_style(char * obj_name, const char * parent) {
 	}
 }
 
-
-
-
 void ui_set_parent(char * obj_name, const char * parent, int states, int parts){
 	lv_obj_t* obj_parent =  registry.get(parent);
 	if (registry.get(obj_name) && registry.get(parent)) {
@@ -3825,32 +3835,40 @@ void ui_set_parent(char * obj_name, const char * parent, int states, int parts){
 	}
 }
 
+
+void free_btnmap(char **btnmap) {
+    if (!btnmap) return;
+    for (size_t i = 0; btnmap[i] != NULL; i++) {
+        free(btnmap[i]);
+    }
+    free(btnmap);
+}
+
 void ui_delete_obj(char * obj_name) {
     lv_obj_t* obj = registry.get(obj_name);
 	lv_font_t* font = font_buffer.get(obj_name);
 	lv_style_t* style = style_registry.get(obj_name);
+	char** btnmap = btnmap_registry.get(obj_name);
+	// lv_chart_series_t* series = series_registry.get(obj_name); 
+	// not needed because lv_obj_del of chart already deletes all the series attached to the chart
     if (obj) {
 		lv_obj_del(obj);
-		// if (lv_obj_get_class(obj) == &lv_image_class) {
-		// 	uint8_t* buffer = img_buffer.get(obj_name);
-		// 	heap_caps_free(buffer);
-		// 	img_buffer.remove(obj_name);
-		// } else
-		// if (lv_obj_get_class(obj) == &lv_buttonmatrix_class) {
-		// 	uint8_t* buffer = map_buffer.get(obj_name);
-		// 	heap_caps_free(buffer);
-		// 	map_buffer.remove(obj_name);
-		// }
         registry.remove(obj_name);
-    } else if (font){
+    } 
+	if (font){
 			outputString("deleting font");
 			lv_binfont_destroy(font);
 			font_buffer.remove(obj_name);
-	} else if (style) { 
+	} 
+	if (style) { 
 		delete style;
 		style_registry.remove(obj_name);
+	} 
+	if (btnmap) { 
+		outputString("deleting btnmap");
+		free_btnmap(btnmap); // free structure of char** for btnmap
+		btnmap_registry.remove(obj_name); // remove entry in btnmap_registry
 	}
-	
 }
 
 void ui_set_size(char * obj_name,  lv_coord_t w, lv_coord_t h ) {
@@ -4028,8 +4046,18 @@ void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int un
 				bool show_labels = (to_val==1);
 				lv_scale_set_label_show(obj,show_labels);
 			}
-		}	
-
+		} else
+		if (lv_obj_get_class(obj) == &lv_buttonmatrix_class) {
+			if (strcmp(attribute_name,"button ctrl")==0) {
+				// first clear all states
+				lv_btnmatrix_clear_btn_ctrl(obj, to_val, LV_BTNMATRIX_CTRL_HIDDEN);
+				lv_btnmatrix_clear_btn_ctrl(obj, to_val, LV_BTNMATRIX_CTRL_DISABLED);
+				lv_btnmatrix_clear_btn_ctrl(obj, to_val, LV_BTNMATRIX_CTRL_CHECKED);
+				lv_btnmatrix_clear_btn_ctrl(obj, to_val, LV_BTNMATRIX_CTRL_CHECKABLE);
+				lv_buttonmatrix_set_button_ctrl(obj,to_val, (lv_buttonmatrix_ctrl_t)until_val); // id, button_ctrl
+			}
+			if (strcmp(attribute_name,"width")==0) lv_buttonmatrix_set_button_width(obj,to_val, until_val); // id, width
+		}
 	}
 }
 
@@ -4059,21 +4087,34 @@ void ui_set_style(char * obj_name, char * style_name, int to_val){
 }
 
 
+struct ClassNameMap {
+    const lv_obj_class_t *cls;
+    const char *name;
+} class_map[] = {
+    { &lv_buttonmatrix_class, "buttonmatrix" },
+    { &lv_label_class,       "label" },
+    { &lv_button_class,         "button" },
+    { &lv_obj_class,         "generic_obj" }, // base class
+    { nullptr,               nullptr }
+};
 
-int ui_get_value(char * obj_name) {
-	lv_obj_t* obj = registry.get(obj_name);
-	if (obj) {
-		if (lv_obj_get_class(obj) == &lv_arc_class) {
-			return lv_arc_get_value(obj);
- 		} else 
-		if (lv_obj_get_class(obj) == &lv_slider_class) {
-			return lv_slider_get_value(obj);
-		} else 
-		if (lv_obj_get_class(obj) == &lv_switch_class) {
-			return lv_obj_has_state(obj, LV_STATE_CHECKED);
-		} 
-		else return 0x10000000;
-	} else return 0x10000000;
+// Get a readable class name
+const char *get_class_name(const lv_obj_class_t *cls) {
+    for (int i = 0; class_map[i].cls; i++) {
+        if (class_map[i].cls == cls) return class_map[i].name;
+    }
+    return "(unknown)";
+}
+
+// Print class hierarchy
+void print_class_hierarchy(const lv_obj_t *obj) {
+    if (!obj) return;
+
+    const lv_obj_class_t *cls = lv_obj_get_class(obj);
+
+    char s[100];
+			sprintf(s,"class name - %s (%p)", get_class_name(cls), cls);
+			outputString(s);
 }
 
 void ui_set_color(char * obj_name, int color) {
@@ -4220,11 +4261,35 @@ static OBJ primLVGLprintall(int argCount, OBJ *args) {
 }
 
 static OBJ primLVGLgetallobjs(int argCount, OBJ *args) {
-	std::vector<std::string> names = registry.getAllNames();
 	int count = registry.size();
+	count += font_buffer.size();
+	count += style_registry.size();
+	count += series_registry.size();
+	count += btnmap_registry.size();
 	OBJ result = newObj(ListType, count+1, zeroObj);
 	FIELD(result, 0) = int2obj(count);
 	int i=1;
+	std::vector<std::string> names = registry.getAllNames();
+	for (const auto& name : names) {
+		FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
+		i++;
+	}
+	names = font_buffer.getAllNames();
+	for (const auto& name : names) {
+		FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
+		i++;
+	}
+	names = style_registry.getAllNames();
+	for (const auto& name : names) {
+		FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
+		i++;
+	}
+	names = series_registry.getAllNames();
+	for (const auto& name : names) {
+		FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
+		i++;
+	}
+	names = btnmap_registry.getAllNames();
 	for (const auto& name : names) {
 		FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
 		i++;
@@ -4274,6 +4339,18 @@ static OBJ primLVGLgetallseries(int argCount, OBJ *args) {
 	return result;
 }
 
+static OBJ primLVGLgetallbtnmaps(int argCount, OBJ *args) {
+	std::vector<std::string> names = btnmap_registry.getAllNames();
+	int count = btnmap_registry.size();
+	OBJ result = newObj(ListType, count+1, zeroObj);
+	FIELD(result, 0) = int2obj(count);
+	int i=1;
+	for (const auto& name : names) {
+		FIELD(result, i)=newStringFromBytes(name.c_str(), name.length());
+		i++;
+	}
+	return result;
+}
 
 static OBJ primLVGLaddBtn(int argCount, OBJ *args) {
 	int scale = 1;
@@ -4400,44 +4477,56 @@ static OBJ primLVGLaddArc(int argCount, OBJ *args) {
 }
 
 
+void free_btnmap(char **btnmap, size_t count) {
+    if (!btnmap) return;
+    for (size_t i = 0; i <= count; i++) {
+        free(btnmap[i]);  // free each string
+    }
+    free(btnmap);         // free the array of pointers
+}
+
+
+
+
 static OBJ primLVGLaddButtonMatrix(int argCount, OBJ *args) {
-	/*
 	int count;
 	char* obj_name = obj2str(args[0]);
+	const char *parent;
 	OBJ obj = args[1];
-	if (IS_TYPE(obj, ListType)) {
-		count = obj2int(FIELD(obj, 0));
-		if (count >= WORDS(obj)) count = WORDS(obj) - 1;
-	}
-	// alloc array of strings 
-	uint8_t** result = malloc(count * sizeof(uint8_t*));
-	for (size_t i = 0; i < count; i++) {
-        OBJ field =  FIELD(obj, i);
-		char* string_n = obj2str(field)
-		size_t len = strlen(field_n);
-        result[i] = malloc(len + 1); // +1 for null terminator
-        if (!result[i]) {
-            // Free already allocated strings on error
-            for (size_t j = 0; j < i; j++) free(result[j]);
-            free(result);
-            return NULL;
-        }
-        memcpy(result[i], field_n, len);
-        result[i][len] = '\0'; // Null-terminate
-    }
-	map_
 	if (argCount > 2) {
 		parent = obj2str(args[2]);
 	} else {
 		parent = "lv_scr_act";
 	}
 
-   if (!registry.get(obj_name) && registry.get(parent)) {
-		lv_obj_t* obj = lv_buttonmatrix_create(registry.get(parent));
-		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-		registry.add(obj_name, obj);
+	if (IS_TYPE(obj, ListType)) {
+		count = obj2int(FIELD(obj, 0));
+		if (count >= WORDS(obj)) count = WORDS(obj) - 1;
+		if (!registry.get(obj_name) && registry.get(parent)) {
+			// alloc array of strings 
+			char** btnmap = (char **)malloc((count+1) * sizeof(char*));
+			for (size_t i = 1; i < count+1; i++) {
+				OBJ field =  FIELD(obj, i);
+				char* string_n = obj2str(field);
+				size_t len = strlen(string_n);
+				outputString(string_n);
+				if (len==0) {
+						btnmap[i-1] = (char *)malloc(2);
+						strcpy(btnmap[i-1], "\n");
+				} else {
+					btnmap[i-1] = (char *)malloc(len + 1); // +1 for null terminator
+					strcpy(btnmap[i-1], string_n);
+				}
+			}
+			btnmap[count]=NULL; // end button map
+			lv_obj_t* obj = lv_buttonmatrix_create(registry.get(parent));
+			lv_buttonmatrix_set_map(obj, btnmap);
+			lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+			registry.add(obj_name, obj);
+			btnmap_registry.add(obj_name, btnmap); // store btnmap in registry
+		}
 	}
-		*/
+		
 	return falseObj;
 }
 
@@ -4780,6 +4869,16 @@ static OBJ primLVGLgetVal(int argCount, OBJ *args) {
 			char buf[100];
 			lv_roller_get_selected_str(obj, buf, sizeof(buf));
 			return  newStringFromBytes(buf, strlen(buf));
+		} else
+		if (lv_obj_check_type(obj, &lv_buttonmatrix_class)){
+			// used when event to retuen the id of the btn
+			char s[100];
+			sprintf(s,"btn: %s id: %d",obj_name, lv_buttonmatrix_get_selected_button(obj) );
+			outputString(s);
+			int id = lv_buttonmatrix_get_selected_button(obj);
+			int checked = 0;
+			if (lv_buttonmatrix_has_button_ctrl(obj, id, LV_BTNMATRIX_CTRL_CHECKED)) checked = 512;
+			return int2obj(id + checked);
 		} 
 		else return falseObj;
 	} else return falseObj;
@@ -4808,6 +4907,9 @@ static OBJ primLVGLsetColor(int argCount, OBJ *args) {
 static OBJ primLVGLgetEvent(int argCount, OBJ *args) {
 	std::string name;
 	int code = ui_get_last_event(name);
+	char s[100];
+	sprintf(s,"event: %s code: %d",name.c_str(),code);
+	outputString(s);	
 	OBJ result = newStringFromBytes(name.c_str(), name.length());
 	return result;
 }
@@ -4980,6 +5082,7 @@ static PrimEntry entries[] = {
 	{"LVGLgetallfonts",primLVGLgetallfonts},
 	{"LVGLgetallstyles",primLVGLgetallstyles},
 	{"LVGLgetallseries",primLVGLgetallseries},
+	{"LVGLgetallbtnmaps",primLVGLgetallbtnmaps},
 	{"LVGLgetsymbol",primLVGLgetSymbol},
 	{"LVGLinit", primLVGLinit},
 	{"LVGLaddimg", primLVGLaddimg},

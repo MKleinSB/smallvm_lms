@@ -34,18 +34,15 @@ delete_all_objects
 '[tft:LVGLsetattribute]' 'scale mode' 'scale2' (set_scale_mode 'hor bottom')
 '[tft:LVGLsetsize]' 'scale2' 200 30
 '[tft:LVGLsetattribute]' 'range' 'scale2' -200 200
-}
-
-script 197 423 {
-'[tft:LVGLsetstyle]' 'text font' '' ''
-}
-
-script 541 616 {
 '[tft:LVGLaddobj]' 'style' 'sty'
 '[tft:LVGLsetstyle]' 'text font' 'sty' 2
 '[tft:LVGLsetstyle]' 'text color' 'sty' (lvgl_color (colorSwatch 25 21 190 255))
 '[tft:LVGLsetparent]' 'sty' 'scale' 0 0
 '[tft:LVGLsetparent]' 'sty' 'scale2' 0 0
+}
+
+script 197 423 {
+'[tft:LVGLsetstyle]' 'text font' '' ''
 }
 
 
