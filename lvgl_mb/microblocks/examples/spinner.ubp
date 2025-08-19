@@ -16,12 +16,12 @@ to scales {
   '[tft:LVGLaddobj]' 'scale' 'scale_angle'
   '[tft:LVGLsetattribute]' 'range' 'scale_angle' 0 360
   '[tft:LVGLsetattribute]' 'scale mode' 'scale_angle' (set_scale_mode 'ver right')
-  '[tft:LVGLsetpos]' 'scale_angle' 100 20
+  '[tft:LVGLsetpos]' 'scale_angle' 120 20
   '[tft:LVGLsetsize]' 'scale_angle' 20 190
   '[tft:LVGLaddobj]' 'scale' 'scale_time'
   '[tft:LVGLsetattribute]' 'range' 'scale_time' 0 10000
   '[tft:LVGLsetattribute]' 'scale mode' 'scale_time' (set_scale_mode 'ver right')
-  '[tft:LVGLsetpos]' 'scale_time' 40 20
+  '[tft:LVGLsetpos]' 'scale_time' 60 20
   '[tft:LVGLsetsize]' 'scale_time' 20 190
 }
 
@@ -50,13 +50,13 @@ init_callback
 '[tft:LVGLsetval]' 'angle' 180
 comment 'add spinner'
 '[tft:LVGLaddobj]' 'spinner' 'spin'
-'[tft:LVGLsetpos]' 'spin' 130 60
+'[tft:LVGLsetpos]' 'spin' 170 60
 '[tft:LVGLsetattribute]' 'animation' 'spin' ('[tft:LVGLgetval]' 'time') ('[tft:LVGLgetval]' 'angle')
 comment 'add labels'
 '[tft:LVGLaddlabel]' 'label_time' 1 'time'
 '[tft:LVGLsetpos]' 'label_time' 30 220
 '[tft:LVGLaddlabel]' 'label_angle' 1 'angle'
-'[tft:LVGLsetpos]' 'label_angle' 80 220
+'[tft:LVGLsetpos]' 'label_angle' 90 220
 comment 'add labels'
 add_callback 'time'
 add_callback 'angle'
