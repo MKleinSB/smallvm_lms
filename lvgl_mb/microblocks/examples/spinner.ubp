@@ -4,6 +4,7 @@ version 1 0
 description ''
 
   spec ' ' 'angle' 'angle'
+  spec ' ' 'scales' 'scales'
   spec ' ' 'time' 'time'
 
 to angle {
@@ -11,12 +12,29 @@ to angle {
   '[tft:LVGLsetattribute]' 'animation' 'spin' ('[tft:LVGLgetval]' 'time') ('[tft:LVGLgetval]' 'angle')
 }
 
+to scales {
+  '[tft:LVGLaddobj]' 'scale' 'scale_angle'
+  '[tft:LVGLsetattribute]' 'range' 'scale_angle' 0 360
+  '[tft:LVGLsetattribute]' 'scale mode' 'scale_angle' (set_scale_mode 'ver right')
+  '[tft:LVGLsetpos]' 'scale_angle' 100 20
+  '[tft:LVGLsetsize]' 'scale_angle' 20 190
+  '[tft:LVGLaddobj]' 'scale' 'scale_time'
+  '[tft:LVGLsetattribute]' 'range' 'scale_time' 0 10000
+  '[tft:LVGLsetattribute]' 'scale mode' 'scale_time' (set_scale_mode 'ver right')
+  '[tft:LVGLsetpos]' 'scale_time' 40 20
+  '[tft:LVGLsetsize]' 'scale_time' 20 190
+}
+
 to time {
   sayIt 'time' ('[tft:LVGLgetval]' 'time')
   '[tft:LVGLsetattribute]' 'animation' 'spin' ('[tft:LVGLgetval]' 'time') ('[tft:LVGLgetval]' 'angle')
 }
 
-script 220 61 {
+script 654 40 {
+to scales {}
+}
+
+script 156 45 {
 whenStarted
 'enable lvgl' true true
 init_callback
@@ -24,28 +42,37 @@ init_callback
 '[tft:LVGLsetattribute]' 'range' 'time' 0 10000
 '[tft:LVGLsetpos]' 'time' 30 20
 '[tft:LVGLsetsize]' 'time' 20 190
+'[tft:LVGLsetval]' 'time' 4000
 '[tft:LVGLaddobj]' 'slider' 'angle'
 '[tft:LVGLsetattribute]' 'range' 'angle' 0 360
 '[tft:LVGLsetpos]' 'angle' 90 20
 '[tft:LVGLsetsize]' 'angle' 20 190
+'[tft:LVGLsetval]' 'angle' 180
+comment 'add spinner'
 '[tft:LVGLaddobj]' 'spinner' 'spin'
 '[tft:LVGLsetpos]' 'spin' 130 60
-'[tft:LVGLsetval]' 'angle' 180
-'[tft:LVGLsetval]' 'time' 4000
+'[tft:LVGLsetattribute]' 'animation' 'spin' ('[tft:LVGLgetval]' 'time') ('[tft:LVGLgetval]' 'angle')
+comment 'add labels'
+'[tft:LVGLaddlabel]' 'label_time' 1 'time'
+'[tft:LVGLsetpos]' 'label_time' 30 220
+'[tft:LVGLaddlabel]' 'label_angle' 1 'angle'
+'[tft:LVGLsetpos]' 'label_angle' 80 220
+comment 'add labels'
 add_callback 'time'
 add_callback 'angle'
-'[tft:LVGLsetattribute]' 'animation' 'spin' ('[tft:LVGLgetval]' 'time') ('[tft:LVGLgetval]' 'angle')
+comment 'add scales'
+scales
 forever {
   handle_event
 }
 }
 
-script 682 156 {
-to time {}
+script 696 553 {
+to angle {}
 }
 
-script 686 296 {
-to angle {}
+script 693 723 {
+to time {}
 }
 
 
