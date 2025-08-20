@@ -3984,6 +3984,7 @@ void ui_create_scale(char * obj_name, const char * parent) {
 void ui_create_keyboard(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
 		lv_obj_t* obj = lv_keyboard_create(registry.get(parent));
+		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_READY, NULL);
 		registry.add(obj_name, obj);
 	}
 }
@@ -4218,6 +4219,10 @@ void ui_set_text(char * obj_name, char * text, int scale) {
 			lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_PART_MAIN | LV_STATE_DEFAULT | LV_STYLE_PROP_FLAG_INHERITABLE);
 			lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_PART_SELECTED|  LV_STATE_DEFAULT);
 			
+		}else 
+		if (lv_obj_get_class(obj) == &lv_textarea_class) {
+			lv_textarea_set_text(obj, text);
+			//lv_obj_set_style_text_font(obj, get_font_from_scale(scale), LV_PART_MAIN); // does not seem to work
 		}
 	}
 }
@@ -5050,7 +5055,7 @@ static OBJ primLVGLsetVal(int argCount, OBJ *args) {
 		}  else
 		if (lv_obj_get_class(obj) == &lv_roller_class) {
 			lv_roller_set_visible_row_count(obj,value);
-		}
+		} 
 	}
 	return falseObj;
 }
@@ -5136,6 +5141,10 @@ static OBJ primLVGLgetVal(int argCount, OBJ *args) {
 		} else 
 		if (lv_obj_get_class(obj) == &lv_spinbox_class) {
 			return int2obj(lv_spinbox_get_value(obj));
+		} else 
+		if (lv_obj_get_class(obj) == &lv_textarea_class) {
+			const char * text = lv_textarea_get_text(obj);
+			return newStringFromBytes(text, strlen(text));
 		} else 
 		if (lv_obj_get_class(obj) == &lv_switch_class) {
 			return lv_obj_has_state(obj, LV_STATE_CHECKED)  ? trueObj : falseObj;
