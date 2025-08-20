@@ -955,9 +955,9 @@ void hardwareInit() {
 	// also possibly: 39-42 (JTAG pins)
 	static const char reservedPin[TOTAL_PINS] = {
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+		0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
 		1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+		1, 1, 1, 1, 1, 0, 0, 0, 1, 0,
 		0, 0, 0};
 
 #elif defined(ESP32_C3)

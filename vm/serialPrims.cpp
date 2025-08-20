@@ -255,7 +255,7 @@ static void serialOpen(int baudRate) {
 		SERIAL_PORT.begin(baudRate);
 		delayMicroseconds(5); // wait for garbage byte when first opening the serial port after a reset (seen at 115200 baud)
 		SERIAL_PORT.begin(baudRate); // reset to discard garbage byte
-	#elif defined(ESP32_ORIGINAL)
+	#elif defined(ESP32_ORIGINAL) && !defined(CYDS343)
 		// sodb: lms-esp32vw: SERIAL_PORT.begin(baudRate, SERIAL_8N1, 8, 7); rx=8, tx=7
 		// lms-esp32v1 rx=18, tx=19
 
@@ -264,6 +264,9 @@ static void serialOpen(int baudRate) {
 		} else {
 			SERIAL_PORT.begin(baudRate, SERIAL_8N1, 18, 19);
 		}
+	#elif defined(ESP32_ORIGINAL) && defined(CYDS343)
+		SERIAL_PORT.begin(baudRate, SERIAL_8N1, 17, 18);
+	
 	#elif defined(DUELink)
 		if (!DUE_HAS_EDGE_CONNECTOR) return; // serial only supported on boards with edge connectors
 		// Edge connector pins 0 and 1

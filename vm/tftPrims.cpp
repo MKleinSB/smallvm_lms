@@ -755,7 +755,7 @@ static int deferUpdates = false;
 		}
 
 
-	#elif defined(CYDS343)
+	#elif defined(CYDS343) && defined(LVGL)
 
 
 	    // change: #if (!defined(ESP_ARDUINO_VERSION_MAJOR)) || (ESP_ARDUINO_VERSION_MAJOR <3>)
@@ -984,6 +984,245 @@ static OBJ primfliptouch(int argCount, OBJ *args) {
 	flip_x_y = (trueObj == args[2]);
 return falseObj;
 }
+
+#elif defined(CYDS343) && !defined(LVGL)
+
+
+// change: #if (!defined(ESP_ARDUINO_VERSION_MAJOR)) || (ESP_ARDUINO_VERSION_MAJOR <3>)
+// in Arduino_ESP32RGBPanel.h
+
+#include <Arduino_GFX_Library.h>
+
+// sodb: change this line in .pio/
+/*
+
+in Arduino_ESP32RGBPanel.h
+
+#if (!defined(ESP_ARDUINO_VERSION_MAJOR)) || (ESP_ARDUINO_VERSION_MAJOR < 3)
+//#if (!defined(ESP_ARDUINO_VERSION_MAJOR)) || (ESP_ARDUINO_VERSION_MAJOR >5)
+
+
+*/
+
+
+#include <TAMC_GT911.h>
+
+#define GFX_BL 2
+// option 1:
+// Uncomment for ILI6485 LCD 480x272
+Arduino_ESP32RGBPanel *rgbpanel = new Arduino_ESP32RGBPanel(
+    40 /* DE */, 41 /* VSYNC */, 39 /* HSYNC */, 42 /* PCLK */,
+    45 /* R0 */, 48 /* R1 */, 47 /* R2 */, 21 /* R3 */, 14 /* R4 */,
+    5 /* G0 */, 6 /* G1 */, 7 /* G2 */, 15 /* G3 */, 16 /* G4 */, 4 /* G5 */,
+    8 /* B0 */, 3 /* B1 */, 46 /* B2 */, 9 /* B3 */, 1 /* B4 */,
+    0 /* hsync_polarity */, 1 /* hsync_front_porch */, 1 /* hsync_pulse_width */, 43 /* hsync_back_porch */,
+    0 /* vsync_polarity */, 3 /* vsync_front_porch */, 1 /* vsync_pulse_width */, 12 /* vsync_back_porch */,
+    1 /* pclk_active_neg */, 9000000 /* prefer_speed */);
+
+
+
+Arduino_RGB_Display tft = Arduino_RGB_Display(
+    480 /* width */, 272 /* height */, rgbpanel, 0 /* rotation */, true /* auto_flush */);
+
+
+#define TFT_WIDTH 480
+#define TFT_HEIGHT 272
+
+void tftInit() {
+
+	
+#ifdef DEV_DEVICE_INIT
+  DEV_DEVICE_INIT();
+#endif
+
+  Serial.begin(115200);
+  // Serial.setDebugOutput(true);
+  // while(!Serial);
+  //Serial.println("Arduino_GFX Hello World example");
+
+  // Init Display
+  tft.begin();
+  tft.fillScreen(RGB565_BLACK);
+  useTFT = true;
+#ifdef GFX_BL
+  pinMode(GFX_BL, OUTPUT);
+  digitalWrite(GFX_BL, HIGH);
+#endif
+
+}
+
+		
+// Setup touch
+#define TOUCH_GT911
+#define TOUCH_GT911_SCL 20
+#define TOUCH_GT911_SDA 19
+#define TOUCH_GT911_INT -1
+#define TOUCH_GT911_RST 38
+#define TOUCH_GT911_ROTATION ROTATION_RIGHT  //ROTATION_NORMAL
+#define TOUCH_MAP_X1 320
+#define TOUCH_MAP_X2 0
+#define TOUCH_MAP_Y1 240
+#define TOUCH_MAP_Y2 0
+
+TAMC_GT911 ts = TAMC_GT911(TOUCH_GT911_SDA, TOUCH_GT911_SCL, TOUCH_GT911_INT, TOUCH_GT911_RST, max(TOUCH_MAP_X1, TOUCH_MAP_X2), max(TOUCH_MAP_Y1, TOUCH_MAP_Y2));
+
+		#define HAS_TOUCH_SCREEN 1
+
+		static void touchInit() {
+		 	//touch_init();
+			ts.begin();
+  			ts.setRotation(1);
+			touchEnabled = true;
+		}
+
+		static uint32 lastTouchUpdate = 0;
+		static int touchScreenX = -1;
+		static int touchScreenY = -1;
+		static int touchSize =0;
+		
+		static int screenTouched() {
+			if (!touchEnabled) touchInit();
+			ts.read();
+			return (ts.touches>0);
+		}
+
+		static void touchUpdate() {
+
+			if (!touchEnabled) touchInit();
+			  
+			uint32 now = millisecs();
+			if ((now - lastTouchUpdate) < 10) return;
+			if (screenTouched()) {
+				touchScreenX = ts.points[0].x;;
+				touchScreenY = ts.points[0].y;
+				touchSize = ts.points[0].size;
+			} 
+			lastTouchUpdate = now;
+		
+		}
+
+		static int screenTouchX() {
+			touchUpdate();
+			return touchScreenX;
+		}
+
+		static int screenTouchY() {
+			touchUpdate();
+			return touchScreenY;
+		}
+
+		static int screenTouchPressure() {
+			// pressure not supported; return a constant value if screen is touched, -1 if not
+			int pressure=0;
+			if (ts.touches>0) pressure = ts.points[0].size;
+			return pressure;
+		}
+
+
+	#elif defined(LMSDISPLAY) && defined(TFT_ESPI)
+		bool flip_x_y=false;
+		bool flip_x=false;
+		bool flip_y=false;
+		#define HAS_TOUCH_SCREEN 1
+		#include <TFT_eSPI.h>
+
+		// in User_Setup,h #define ILI9341_DRIVER
+		// this definition also defines width and height.
+
+		#include <XPT2046_Touchscreen.h>
+		TFT_eSPI tft = TFT_eSPI();  // Invoke TFT object
+		XPT2046_Touchscreen ts(TOUCH_CS);
+		SPIClass& spix = SPI;
+//SPIClass mySPI(HSPI); 
+
+		void tftInit() {
+			
+			tft.init();
+			tft.initDMA();
+			//tft.setSwapBytes(true);
+			spix = tft.getSPIinstance(); 
+			//tft.fillScreen(TFT_BLACK);
+		
+			tft.begin();
+			tft.setRotation(3);
+	//			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
+			tftClear();
+			// Turn on backlight on IoT-Bus
+			
+			pinMode(33, OUTPUT);
+			digitalWrite(33, HIGH);
+			useTFT = true;
+	}
+  
+	static void touchInit() {
+		
+		ts.begin(spix);
+		//pinMode(TOUCH_CS, INPUT);
+		//mySPI.begin(TFT_SCLK, TFT_MISO, TFT_MOSI, TOUCH_CS);
+		//ts.begin(mySPI);
+  		ts.setRotation(3);
+		//ts.setCalibration(X_MIN, X_MAX, Y_MIN, Y_MAX);
+		//ts.setRotation(1);
+		touchEnabled = true;
+	}
+
+	static int screenTouched() {
+		if (!touchEnabled) touchInit();
+		// char s[100];
+		// sprintf(s,"touch init: %d ",ts.touched());
+		// outputString(s);
+		return ts.touched();
+	}
+
+	static int screenTouchX() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		int16_t x;
+		if (flip_x_y) {
+			x = ts.getPoint().y;
+		} else
+		  	x = ts.getPoint().x;
+		// char s[100];
+		// sprintf(s,"touch x: %d ",x);
+		// outputString(s);
+		if (flip_x) 
+		   return map(x, 200, 3800, 0, TFT_HEIGHT);
+		else
+		   return map(x, 200, 3800, TFT_HEIGHT,0);
+	}
+		
+	static int screenTouchY() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		int16_t y;
+		if (flip_x_y) 
+			y = ts.getPoint().x;
+		else
+			y = ts.getPoint().y;
+		// char s[100];
+		// sprintf(s,"touch y: %d ",y);
+		// outputString(s);
+		if (flip_y) 
+			return  map(y, 300, 3900, TFT_WIDTH,0);
+		else
+			return  map(y, 300, 3900, 0, TFT_WIDTH);
+		}
+		
+	static int screenTouchPressure() {
+		if (!touchEnabled) touchInit();
+		if (!ts.touched()) { return -1; }
+		return ts.getPoint().z;
+		}
+		
+
+
+static OBJ primfliptouch(int argCount, OBJ *args) {
+	flip_x = (trueObj == args[0]);
+	flip_y = (trueObj == args[1]);
+	flip_x_y = (trueObj == args[2]);
+return falseObj;
+}
+
 
 
 
@@ -3742,6 +3981,18 @@ void ui_create_scale(char * obj_name, const char * parent) {
 	}
 }
 
+void ui_create_keyboard(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_keyboard_create(registry.get(parent));
+		registry.add(obj_name, obj);
+	}
+}
+void ui_create_textarea(char * obj_name, const char * parent) {
+    if (!registry.get(obj_name) && registry.get(parent)) {
+		lv_obj_t* obj = lv_textarea_create(registry.get(parent));
+		registry.add(obj_name, obj);
+	}
+}
 
 void ui_add_tab(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
@@ -3824,9 +4075,19 @@ void ui_create_style(char * obj_name, const char * parent) {
 }
 
 void ui_set_parent(char * obj_name, const char * parent, int states, int parts){
+	lv_obj_t* obj =  registry.get(obj_name);
 	lv_obj_t* obj_parent =  registry.get(parent);
-	if (registry.get(obj_name) && registry.get(parent)) {
-		lv_obj_set_parent(registry.get(obj_name), obj_parent);
+	char s[100];
+	sprintf(s,"set parent: %s parent %s",obj_name,parent);
+	outputString(s);
+
+	if (obj && obj_parent) {
+		if ( (lv_obj_get_class(obj) == &lv_keyboard_class) &&
+			 (lv_obj_get_class(obj_parent) == &lv_textarea_class) ) {
+				outputString("attaching keyboard to textarea");
+			 	lv_keyboard_set_textarea(obj, obj_parent);
+			} else
+				lv_obj_set_parent(registry.get(obj_name), obj_parent);
 	} else
 	if (style_registry.get(obj_name) && obj_parent) {
 		lv_style_t* style =  style_registry.get(obj_name);
@@ -4057,7 +4318,11 @@ void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int un
 				lv_buttonmatrix_set_button_ctrl(obj,to_val, (lv_buttonmatrix_ctrl_t)until_val); // id, button_ctrl
 			}
 			if (strcmp(attribute_name,"width")==0) lv_buttonmatrix_set_button_width(obj,to_val, until_val); // id, width
+		} else 
+		if (lv_obj_get_class(obj) == &lv_textarea_class) {
+			if (strcmp(attribute_name,"focused")==0) lv_obj_add_state(obj, LV_STATE_FOCUSED);
 		}
+		
 	}
 }
 
@@ -4191,6 +4456,8 @@ typedef enum {
 	CMD_SPINBOX,
 	CMD_SPINNER,
 	CMD_SCALE,
+	CMD_TEXTAREA,
+	CMD_KEYBOARD,
     CMD_COUNT
 } Command;
 
@@ -4212,6 +4479,8 @@ Command lookup_cmd(const char *s) {
 	if (strcmp(s, "spinner") == 0)   return CMD_SPINNER;
 	if (strcmp(s, "screen") == 0)   return CMD_SCREEN;
 	if (strcmp(s, "scale") == 0)   return CMD_SCALE;
+	if (strcmp(s, "textarea") == 0)   return CMD_TEXTAREA;
+	if (strcmp(s, "keyboard") == 0)   return CMD_KEYBOARD;
     return CMD_UNKNOWN;
 }
 
@@ -4602,6 +4871,12 @@ static OBJ primLVGLaddObject(int argCount, OBJ *args) {
 		 	break;
 		case CMD_SCALE:
 		 	ui_create_scale(obj_name, parent);
+		 	break;
+		case CMD_TEXTAREA:
+		 	ui_create_textarea(obj_name, parent);
+		 	break;
+		case CMD_KEYBOARD:
+		 	ui_create_keyboard(obj_name, parent);
 		 	break;
 		default:
 			outputString("Unknown command");;
