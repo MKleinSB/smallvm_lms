@@ -755,7 +755,7 @@ static int deferUpdates = false;
 		}
 
 
-	#elif defined(CYDS343) && defined(LVGL)
+	#elif defined(CYDS343) && !defined(LVGL)
 
 
 	    // change: #if (!defined(ESP_ARDUINO_VERSION_MAJOR)) || (ESP_ARDUINO_VERSION_MAJOR <3>)
@@ -985,7 +985,7 @@ static OBJ primfliptouch(int argCount, OBJ *args) {
 return falseObj;
 }
 
-#elif defined(CYDS343) && !defined(LVGL)
+#elif defined(CYDS343) && defined(LVGL)
 
 
 // change: #if (!defined(ESP_ARDUINO_VERSION_MAJOR)) || (ESP_ARDUINO_VERSION_MAJOR <3>)
@@ -1059,9 +1059,9 @@ void tftInit() {
 #define TOUCH_GT911_INT -1
 #define TOUCH_GT911_RST 38
 #define TOUCH_GT911_ROTATION ROTATION_RIGHT  //ROTATION_NORMAL
-#define TOUCH_MAP_X1 320
+#define TOUCH_MAP_X1 480
 #define TOUCH_MAP_X2 0
-#define TOUCH_MAP_Y1 240
+#define TOUCH_MAP_Y1 272
 #define TOUCH_MAP_Y2 0
 
 TAMC_GT911 ts = TAMC_GT911(TOUCH_GT911_SDA, TOUCH_GT911_SCL, TOUCH_GT911_INT, TOUCH_GT911_RST, max(TOUCH_MAP_X1, TOUCH_MAP_X2), max(TOUCH_MAP_Y1, TOUCH_MAP_Y2));
@@ -1083,21 +1083,24 @@ TAMC_GT911 ts = TAMC_GT911(TOUCH_GT911_SDA, TOUCH_GT911_SCL, TOUCH_GT911_INT, TO
 		static int screenTouched() {
 			if (!touchEnabled) touchInit();
 			ts.read();
-			return (ts.touches>0);
+			touchScreenX = ts.points[0].x;;
+			touchScreenY = ts.points[0].y;
+			touchSize = ts.points[0].size;
+			return (ts.isTouched);
 		}
 
 		static void touchUpdate() {
 
 			if (!touchEnabled) touchInit();
 			  
-			uint32 now = millisecs();
-			if ((now - lastTouchUpdate) < 10) return;
-			if (screenTouched()) {
-				touchScreenX = ts.points[0].x;;
-				touchScreenY = ts.points[0].y;
-				touchSize = ts.points[0].size;
-			} 
-			lastTouchUpdate = now;
+			//uint32 now = millisecs();
+			//if ((now - lastTouchUpdate) < 10) return;
+			// if (screenTouched()) {
+			// 	touchScreenX = ts.points[0].x;;
+			// 	touchScreenY = ts.points[0].y;
+			// 	touchSize = ts.points[0].size;
+			// } 
+			//lastTouchUpdate = now;
 		
 		}
 
@@ -3292,13 +3295,15 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 
 void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 {
-  if (touch_has_signal())
+ 
+	/*
+	if (touch_has_signal())
   {
     if (touch_touched())
     {
       data->state = LV_INDEV_STATE_PRESSED;
 
-      /*Set the coordinates*/
+     
       data->point.x = touch_last_x;
       data->point.y = touch_last_y;
 	//   char s[100];
@@ -3314,7 +3319,29 @@ void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
   {
     data->state = LV_INDEV_STATE_RELEASED;
   }
+	*/
+
+			/*
+			uint16_t x_raw,y_raw;
+			if (ts.touched()) {
+			TS_Point p = ts.getPoint();
+			// Map raw touch to screen coordinates
+			data->state = LV_INDEV_STATE_PR;
+			data->point.x = map(p.x, 200, 3800, 0, TFT_WIDTH);
+			data->point.y = map(p.y, 250, 3900,  TFT_HEIGHT,0);
+			*/
+			// use global functions
+			if (screenTouched()) {
+				data->state = LV_INDEV_STATE_PR;
+				data->point.x = screenTouchX();
+				data->point.y = screenTouchY();
+			
+			} else {
+			data->state = LV_INDEV_STATE_RELEASED;
+			}
+		
 }
+
 
 
 
@@ -3888,6 +3915,8 @@ void ui_create_arc(char * obj_name, const char * parent) {
     if (!registry.get(obj_name) && registry.get(parent)) {
 		lv_obj_t* obj = lv_arc_create(registry.get(parent));
 		lv_obj_add_event_cb(obj, ui_log_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+		// sodb solve unmovable arc on capacitive touch displays.
+		lv_obj_add_flag(obj, (lv_obj_flag_t)(LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_CHECKABLE ));
 		registry.add(obj_name, obj);
 	}
 }
@@ -4257,6 +4286,7 @@ void ui_set_text_font(char * obj_name, char * text, char * font_name) {
 void ui_set_attribute(char * obj_name, char * attribute_name, int to_val, int until_val){
 	lv_obj_t* obj = registry.get(obj_name);
 	if (obj) {
+		if (strcmp(attribute_name,"flags")==0) lv_obj_add_flag(obj, (lv_obj_flag_t)to_val); else
 		if (lv_obj_get_class(obj) == &lv_arc_class) {
 			if (strcmp(attribute_name,"range")==0) lv_arc_set_range(obj, to_val, until_val);
 			else if (strstr(attribute_name,"angles")) lv_arc_set_bg_angles(obj, to_val, until_val);

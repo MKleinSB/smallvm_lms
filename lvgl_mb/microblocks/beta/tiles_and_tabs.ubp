@@ -3,48 +3,104 @@ author unknown
 version 1 0 
 description ''
 
-script 82 40 {
+  spec ' ' 'make_tiles' 'make_tiles'
+  spec ' ' 'tile2' 'tile2'
+  spec ' ' 'tile4' 'tile4'
+
+to make_tiles {
+  '[tft:LVGLaddobj]' 'tileview' 'tiles'
+  '[tft:LVGLaddtile]' 'tile1' 'tiles' 0 0 false true false false
+  '[tft:LVGLaddtile]' 'tile2' 'tiles' 1 0 true false false true
+  '[tft:LVGLaddtile]' 'tile3' 'tiles' 1 1 false false true true
+  '[tft:LVGLaddtile]' 'tile4' 'tiles' 1 2 false false true false
+  '[tft:LVGLaddbtn]' 'btn1' 3 'tile1 ->' 'tile1'
+  '[tft:LVGLaddbtn]' 'btn2' 3 'tile2  v' 'tile2'
+  '[tft:LVGLaddbtn]' 'btn3' 3 'tile3 v' 'tile3'
+  '[tft:LVGLsetcolor]' 'btn2' (colorSwatch 35 190 30 255)
+  '[tft:LVGLsetcolor]' 'btn3' (colorSwatch 190 14 36 255)
+}
+
+to tile2 {
+  comment 'create roller on tile 2'
+  '[tft:LVGLaddlabel]' 'label' 2 'select:' 'tile2'
+  '[tft:LVGLsetpos]' 'label' 100 90
+  '[tft:LVGLaddobj]' 'roller' 'roller' 'tile2'
+  '[tft:LVGLsetpos]' 'roller' 200 30
+  '[tft:LVGLsettext]' 'roller' 'left
+right
+upper
+lower'
+}
+
+to tile4 {
+  comment 'add tabview in tile4'
+  '[tft:LVGLaddobj]' 'tabview' 'tabs' 'tile4'
+  '[tft:LVGLaddtab]' 'tab1' 'tabs'
+  '[tft:LVGLaddtab]' 'tab2' 'tabs'
+  '[tft:LVGLaddobj]' 'arc' 'arc' 'tab1'
+  '[tft:LVGLaddobj]' 'slider' 'slider' 'tab2'
+  '[tft:LVGLsetpos]' 'slider' 10 30
+  '[tft:LVGLaddobj]' 'tileview' 'tiles'
+  comment 'add leds'
+  '[tft:LVGLaddobj]' 'led' 'led1' 'tile1'
+  '[tft:LVGLsetpos]' 'led1' 100 120
+  '[tft:LVGLaddobj]' 'led' 'led2' 'tile1'
+  '[tft:LVGLsetpos]' 'led2' 200 120
+  '[tft:LVGLsetcolor]' 'led2' (colorSwatch 190 38 8 255)
+  comment 'add switches'
+  '[tft:LVGLaddobj]' 'switch' 'sw1' 'tile1'
+  '[tft:LVGLsetpos]' 'sw1' 70 180
+  '[tft:LVGLsetsize]' 'sw1' 100 50
+  '[tft:LVGLsetcolor]' 'sw1' (colorSwatch 169 190 166 255) (colorSwatch 35 190 30 255)
+  '[tft:LVGLaddobj]' 'switch' 'sw2' 'tile1'
+  '[tft:LVGLsetpos]' 'sw2' 200 180
+  '[tft:LVGLsetsize]' 'sw2' 100 50
+  '[tft:LVGLsetcolor]' 'sw2' (colorSwatch 190 166 178 255) (colorSwatch 190 13 47 255)
+  comment 'add slider'
+  '[tft:LVGLaddobj]' 'slider' 'sl1' 'tile1'
+  '[tft:LVGLsetpos]' 'sl1' 20 80
+  '[tft:LVGLsetattribute]' 'range' 'sl1' 120 256
+}
+
+script 508 40 {
+whenBroadcastReceived 'LVGLevent'
+sayIt ('[tft:LVGLgetval]' ('[tft:LVGLgetevent]'))
+if (('[tft:LVGLgetevent]') == 'sw1') {
+  '[tft:LVGLsetval]' 'led1' ('[tft:LVGLgetval]' 'sw1')
+} (('[tft:LVGLgetevent]') == 'sw2') {
+  '[tft:LVGLsetval]' 'led2' ('[tft:LVGLgetval]' 'sw2')
+} (('[tft:LVGLgetevent]') == 'sl1') {
+  '[tft:LVGLsetattribute]' 'brightness' 'led1' ('[tft:LVGLgetval]' 'sl1')
+  '[tft:LVGLsetattribute]' 'brightness' ';ed2' ('[tft:LVGLgetval]' 'sl1')
+}
+}
+
+script 114 90 {
 whenStarted
 'enable lvgl' true true
-'[tft:LVGLaddobj]' 'scale' 'scale'
-'[tft:LVGLsetsize]' 'scale' 180 180
-'[tft:LVGLsetpos]' 'scale' 50 40
-'[tft:LVGLsetattribute]' 'angles' 'scale' 180 ''
-'[tft:LVGLsetattribute]' 'rotation' 'scale' 180 ''
-'[tft:LVGLsetattribute]' 'tick count' 'scale' 21
-'[tft:LVGLsetattribute]' 'scale mode' 'scale' (set_scale_mode 'round inner')
-'[tft:LVGLsetattribute]' 'length' 'scale' 20 (set_parts false true false false)
-'[tft:LVGLsetattribute]' 'length' 'scale' 15 (set_parts false false false true)
-'[tft:LVGLaddobj]' 'arc' 'arc'
-'[tft:LVGLsetval]' 'arc' 10
-'[tft:LVGLsetpos]' 'arc' 50 40
-'[tft:LVGLsetsize]' 'arc' 180 180
-'[tft:LVGLsetattribute]' 'angles' 'arc' 0 180
-'[tft:LVGLsetattribute]' 'rotation' 'arc' 180
-'[tft:LVGLaddobj]' 'style' 'sty_labels'
-'[tft:LVGLsetstyle]' 'text color' 'sty_labels' (lvgl_color (colorSwatch 35 190 30 255))
-'[tft:LVGLsetstyle]' 'text font' 'sty_labels' 2
-'[tft:LVGLaddobj]' 'slider' 'slider'
-'[tft:LVGLsetpos]' 'slider' 40 180
-'[tft:LVGLsetsize]' 'slider' 200 15
-'[tft:LVGLsetattribute]' 'range' 'slider' -200 200
-'[tft:LVGLaddobj]' 'scale' 'scale2'
-'[tft:LVGLsetpos]' 'scale2' 40 200
-'[tft:LVGLsetattribute]' 'scale mode' 'scale2' (set_scale_mode 'hor bottom')
-'[tft:LVGLsetsize]' 'scale2' 200 30
-'[tft:LVGLsetattribute]' 'range' 'scale2' -200 200
-'[tft:LVGLaddobj]' 'style' 'sty'
-'[tft:LVGLsetstyle]' 'text font' 'sty' 2
-'[tft:LVGLsetstyle]' 'text color' 'sty' (lvgl_color (colorSwatch 25 21 190 255))
-'[tft:LVGLsetparent]' 'sty' 'scale' 0 0
-'[tft:LVGLsetparent]' 'sty' 'scale2' 0 0
+comment 'create tiles'
+make_tiles
+tile2
+tile4
+}
+
+script 40 410 {
+to make_tiles {}
+}
+
+script 493 479 {
+to tile4 {}
+}
+
+script 62 901 {
+to tile2 {}
 }
 
 
 module LVGL Output
 author Ste7an
 version 1 10 
-choices attribute_types range rotation angles brightness 'line width' animation digits increment decrement points length 'tick count' 'major tick every' 'show labels' 'scale mode' 'button ctrl' width focused flags 
+choices attribute_types range rotation angles brightness 'line width' animation digits increment decrement points length 'tick count' 'major tick every' 'show labels' 'scale mode' 'button ctrl' width focused 
 choices style_types 'text font' 'text color' 'bg color' 'bg opa' 'border width' 'border color' radius 'shadow width' 'shadow offset x' 'shadow offset y' 'shadow opa' width 'line width' 'line color' 
 choices obj_types arc bar led list roller scale screen slider spinbox spinner style switch tabview tileview keyboard textarea 
 choices symbols bullet audio video list ok close power settings home download drive refresh mute volume_mid volume_max image tint prev play pause stop next eject left right plus minus eye_open eye_close warning shuffle up down loop directory upload call cut copy save bars envelope charge paste bell keyboard gps file wifi battery_full battery_3 battery_2 battery_1 battery_empty usb bluetooth trash edit backspace sd_card new_line 
@@ -85,7 +141,6 @@ variables _lvgl_call_backs
   spec 'r' 'set_parts' 'parts selected _ : indicator _ : knob _ : #BR# items _ : scrollbar _' 'bool bool bool bool bool' true false false false false
   spec 'r' 'set_scale_mode' 'scale mode _' 'str.scale_modes' 'hor top'
   spec 'r' 'set_button_ctrl' 'button ctrl checkable _ : checked _ : hidden _ : disabled _' 'bool bool bool bool' true false false false
-  spec 'r' 'set_flag' 'behaviour flags hidden _ : clickable _ : checkable _ : scrollable : _ : scroll one _' 'bool bool bool bool bool' false false false false false
   spec ' ' '[tft:LVGLsetscroll]' 'set scroll direction of _ to _' 'str str.scroll_dirs' '' 'none'
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
@@ -158,10 +213,6 @@ to screen {
 
 to set_button_ctrl checkable checked hidden disabled {
   return (sum (ifExpression checkable (hexToInt '80') 0) (ifExpression checked (hexToInt '100') 0) (ifExpression hidden (hexToInt '10') 0) (ifExpression disabled (hexToInt '40') 0))
-}
-
-to set_flag hidden clickable checkable scrollable scroll_one {
-  return (sum (ifExpression hidden (hexToInt '1') 0) (ifExpression clickable (hexToInt '2') 0) (ifExpression checkable (hexToInt '8') 0) (ifExpression scrollable (hexToInt '10') 0) (ifExpression scroll_one (hexToInt '80') 0))
 }
 
 to set_parts selected indicator knob items scrollbar {

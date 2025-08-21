@@ -3,48 +3,61 @@ author unknown
 version 1 0 
 description ''
 
-script 82 40 {
+script 415 85 {
 whenStarted
 'enable lvgl' true true
-'[tft:LVGLaddobj]' 'scale' 'scale'
-'[tft:LVGLsetsize]' 'scale' 180 180
-'[tft:LVGLsetpos]' 'scale' 50 40
-'[tft:LVGLsetattribute]' 'angles' 'scale' 180 ''
-'[tft:LVGLsetattribute]' 'rotation' 'scale' 180 ''
-'[tft:LVGLsetattribute]' 'tick count' 'scale' 21
-'[tft:LVGLsetattribute]' 'scale mode' 'scale' (set_scale_mode 'round inner')
-'[tft:LVGLsetattribute]' 'length' 'scale' 20 (set_parts false true false false)
-'[tft:LVGLsetattribute]' 'length' 'scale' 15 (set_parts false false false true)
-'[tft:LVGLaddobj]' 'arc' 'arc'
-'[tft:LVGLsetval]' 'arc' 10
-'[tft:LVGLsetpos]' 'arc' 50 40
-'[tft:LVGLsetsize]' 'arc' 180 180
-'[tft:LVGLsetattribute]' 'angles' 'arc' 0 180
-'[tft:LVGLsetattribute]' 'rotation' 'arc' 180
-'[tft:LVGLaddobj]' 'style' 'sty_labels'
-'[tft:LVGLsetstyle]' 'text color' 'sty_labels' (lvgl_color (colorSwatch 35 190 30 255))
-'[tft:LVGLsetstyle]' 'text font' 'sty_labels' 2
-'[tft:LVGLaddobj]' 'slider' 'slider'
-'[tft:LVGLsetpos]' 'slider' 40 180
-'[tft:LVGLsetsize]' 'slider' 200 15
-'[tft:LVGLsetattribute]' 'range' 'slider' -200 200
-'[tft:LVGLaddobj]' 'scale' 'scale2'
-'[tft:LVGLsetpos]' 'scale2' 40 200
-'[tft:LVGLsetattribute]' 'scale mode' 'scale2' (set_scale_mode 'hor bottom')
-'[tft:LVGLsetsize]' 'scale2' 200 30
-'[tft:LVGLsetattribute]' 'range' 'scale2' -200 200
+'[tft:LVGLaddobj]' 'textarea' 'ta'
+'[tft:LVGLsetsize]' 'ta' 280 50
+'[tft:LVGLsetpos]' 'ta' 0 0
+'[tft:LVGLaddobj]' 'keyboard' 'kb'
+'[tft:LVGLsetsize]' 'kb' 320 150
+'[tft:LVGLsetparent]' 'kb' 'ta'
+'[tft:LVGLsetattribute]' 'focused' 'ta' ''
+'[tft:LVGLaddobj]' 'style' 'sty'
+'[tft:LVGLsetstyle]' 'text font' 'sty' 1
+'[tft:LVGLsetstyle]' 'bg color' 'sty' (lvgl_color (colorSwatch 102 190 188 255))
+'[tft:LVGLsetstyle]' 'border width' 'sty' 1
+'[tft:LVGLsetparent]' 'sty' 'kb' 0 (set_parts false false false true)
+'[tft:LVGLaddobj]' 'style' 'sty2'
+'[tft:LVGLsetstyle]' 'text font' 'sty2' 2
+'[tft:LVGLsetparent]' 'sty2' 'ta'
+}
+
+script 886 137 {
+whenCondition ('[tft:LVGLevent]')
+if (('[tft:LVGLgetevent]') == 'kb') {
+  sayIt 'text:' ('[tft:LVGLgetval]' 'ta')
+}
+}
+
+script 128 160 {
+'[tft:LVGLaddobj]' 'roller' 'roller'
+}
+
+script 65 282 {
+'[tft:LVGLsettext]' 'roller' 'aap
+noot
+mies
+walvis' 2
+}
+
+script 885 362 {
 '[tft:LVGLaddobj]' 'style' 'sty'
 '[tft:LVGLsetstyle]' 'text font' 'sty' 2
-'[tft:LVGLsetstyle]' 'text color' 'sty' (lvgl_color (colorSwatch 25 21 190 255))
-'[tft:LVGLsetparent]' 'sty' 'scale' 0 0
-'[tft:LVGLsetparent]' 'sty' 'scale2' 0 0
+'[tft:LVGLsetstyle]' 'text color' 'sty' (lvgl_color (colorSwatch 102 190 188 255))
+'[tft:LVGLsetstyle]' 'border width' 'sty' 1
+'[tft:LVGLsetparent]' 'sty' 'roller' 0 (set_parts true false false true)
+}
+
+script 66 536 {
+'[tft:LVGLsettext]' 'ta' 'aaaaa bbbb' 2
 }
 
 
 module LVGL Output
 author Ste7an
-version 1 10 
-choices attribute_types range rotation angles brightness 'line width' animation digits increment decrement points length 'tick count' 'major tick every' 'show labels' 'scale mode' 'button ctrl' width focused flags 
+version 1 9 
+choices attribute_types range rotation angles brightness 'line width' animation digits increment decrement points length 'tick count' 'major tick every' 'show labels' 'scale mode' 'button ctrl' width focused 
 choices style_types 'text font' 'text color' 'bg color' 'bg opa' 'border width' 'border color' radius 'shadow width' 'shadow offset x' 'shadow offset y' 'shadow opa' width 'line width' 'line color' 
 choices obj_types arc bar led list roller scale screen slider spinbox spinner style switch tabview tileview keyboard textarea 
 choices symbols bullet audio video list ok close power settings home download drive refresh mute volume_mid volume_max image tint prev play pause stop next eject left right plus minus eye_open eye_close warning shuffle up down loop directory upload call cut copy save bars envelope charge paste bell keyboard gps file wifi battery_full battery_3 battery_2 battery_1 battery_empty usb bluetooth trash edit backspace sd_card new_line 
@@ -85,7 +98,6 @@ variables _lvgl_call_backs
   spec 'r' 'set_parts' 'parts selected _ : indicator _ : knob _ : #BR# items _ : scrollbar _' 'bool bool bool bool bool' true false false false false
   spec 'r' 'set_scale_mode' 'scale mode _' 'str.scale_modes' 'hor top'
   spec 'r' 'set_button_ctrl' 'button ctrl checkable _ : checked _ : hidden _ : disabled _' 'bool bool bool bool' true false false false
-  spec 'r' 'set_flag' 'behaviour flags hidden _ : clickable _ : checkable _ : scrollable : _ : scroll one _' 'bool bool bool bool bool' false false false false false
   spec ' ' '[tft:LVGLsetscroll]' 'set scroll direction of _ to _' 'str str.scroll_dirs' '' 'none'
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
@@ -158,10 +170,6 @@ to screen {
 
 to set_button_ctrl checkable checked hidden disabled {
   return (sum (ifExpression checkable (hexToInt '80') 0) (ifExpression checked (hexToInt '100') 0) (ifExpression hidden (hexToInt '10') 0) (ifExpression disabled (hexToInt '40') 0))
-}
-
-to set_flag hidden clickable checkable scrollable scroll_one {
-  return (sum (ifExpression hidden (hexToInt '1') 0) (ifExpression clickable (hexToInt '2') 0) (ifExpression checkable (hexToInt '8') 0) (ifExpression scrollable (hexToInt '10') 0) (ifExpression scroll_one (hexToInt '80') 0))
 }
 
 to set_parts selected indicator knob items scrollbar {
