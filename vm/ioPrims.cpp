@@ -403,6 +403,7 @@ void hardwareInit() {
 #elif defined(ARDUINO_SEEED_XIAO_NRF52840_SENSE)
 
 	#define BOARD_TYPE "Xiao NRF52840"
+	#define IS_XIAO 1
 	#define DIGITAL_PINS 14
 	#define ANALOG_PINS 6
 	#define TOTAL_PINS 33
@@ -517,6 +518,7 @@ void hardwareInit() {
 #elif defined(ARDUINO_SEEED_XIAO_M0) // must come before Zero
 
 	#define BOARD_TYPE "Xiao SAMD21"
+	#define IS_XIAO 1
 	#define DIGITAL_PINS 14
 	#define ANALOG_PINS 11
 	#define TOTAL_PINS 14
@@ -873,6 +875,7 @@ void hardwareInit() {
 
 #elif defined(ARDUINO_XIAO_ESP32S3)
 	#define BOARD_TYPE "Xiao ESP32S3"
+	#define IS_XIAO 1
 	#define DIGITAL_PINS 14
 	#define ANALOG_PINS 14
 	#define TOTAL_PINS 45
@@ -890,6 +893,7 @@ void hardwareInit() {
 
 #elif defined(ARDUINO_XIAO_ESP32C3)
 	#define BOARD_TYPE "Xiao ESP32C3"
+	#define IS_XIAO 1
 	#define DIGITAL_PINS 22
 	#define ANALOG_PINS 4
 	#define TOTAL_PINS 22
@@ -1112,6 +1116,7 @@ void hardwareInit() {
 #elif defined(ARDUINO_SEEED_XIAO_RP2040)
 
 	#define BOARD_TYPE "Xiao RP2040"
+	#define IS_XIAO 1
 	#define DIGITAL_PINS 15
 	#define ANALOG_PINS 4
 	#define TOTAL_PINS 30
@@ -1129,6 +1134,7 @@ void hardwareInit() {
 #elif defined(ARDUINO_SEEED_XIAO_RP2350)
 
 	#define BOARD_TYPE "Xiao RP2350"
+	#define IS_XIAO 1
 	#define DIGITAL_PINS 21
 	#define ANALOG_PINS 3
 	#define TOTAL_PINS 30
@@ -1186,10 +1192,6 @@ void hardwareInit() {
 	#define ANALOG_PINS 5
 	#define TOTAL_PINS 60
 	#define PIN_LED 15 // PA_6 (unmapped)
-	#define PIN_BUTTON_A 28 // (unmapped) edge pin 5
-	#define PIN_BUTTON_B 27 // (unmapped) edge pin 11
-	#undef BUTTON_PRESSED
-	#define BUTTON_PRESSED HIGH
 	#define DEFAULT_TONE_PIN 21
 	static const int8_t analogPin[ANALOG_PINS] = {16, 17, 18, 19, 37}; // used to initialize random generater
 
@@ -1348,6 +1350,8 @@ const char * boardType() {
 		if (DUE_HAS_EDGE_CONNECTOR) {
 			return (IS_DUE_CINCO) ? "CincoBit" : "PixoBit";
 		}
+		if (IS_DUE_STEM) return "DueSTEM";
+		if (IS_DUE_CLIPIT) return "Clipit";
 	#endif
 	return BOARD_TYPE;
 }
@@ -1976,12 +1980,17 @@ OBJ primButtonA(OBJ *args) {
 		#elif defined(ARDUINO_NRF52840_CLUE) || defined(ARDUINO_ARCH_ESP32) || \
 			  defined(ESP8266) || defined(M5STAMP)
 			SET_MODE(PIN_BUTTON_A, INPUT_PULLUP);
-		#elif defined(DUELink)
-			setPinMode(PIN_BUTTON_A, INPUT_PULLDOWN); // Arduino pin number not edge pin
 		#else
 			SET_MODE(PIN_BUTTON_A, INPUT);
 		#endif
 		return (BUTTON_PRESSED == digitalRead(PIN_BUTTON_A)) ? trueObj : falseObj;
+	#elif defined(DUELink)
+		int pinButton = -1;
+		if (DUE_HAS_EDGE_CONNECTOR) { pinButton = 28;
+		} else if (IS_DUE_STEM) { pinButton = 28;
+		} else { return falseObj; }
+		setPinMode(pinButton, INPUT_PULLDOWN); // Arduino pin, not edge pin number
+		return (HIGH == digitalRead(pinButton)) ? trueObj : falseObj;
 	#else
 		return falseObj;
 	#endif
@@ -1999,13 +2008,17 @@ OBJ primButtonB(OBJ *args) {
 			setPinMode(PIN_BUTTON_B, INPUT_PULLUP); // ESP32 pin number not edge pin
 		#elif defined(ARDUINO_NRF52840_CLUE)
 			SET_MODE(PIN_BUTTON_B, INPUT_PULLUP);
-		#elif defined(DUELink)
-			setPinMode(PIN_BUTTON_B, INPUT); // workaround: force button back to digital mode if light sensor was read
-			setPinMode(PIN_BUTTON_B, INPUT_PULLDOWN); // Arduino pin number not edge pin
 		#else
 			SET_MODE(PIN_BUTTON_B, INPUT);
 		#endif
 		return (BUTTON_PRESSED == digitalRead(PIN_BUTTON_B)) ? trueObj : falseObj;
+	#elif defined(DUELink)
+		int pinButton = -1;
+		if (DUE_HAS_EDGE_CONNECTOR) { pinButton = 27;
+		} else if (IS_DUE_STEM) { pinButton = 16;
+		} else { return falseObj; }
+		setPinMode(pinButton, INPUT_PULLDOWN); // Arduino pin, not edge pin number
+		return (HIGH == digitalRead(pinButton)) ? trueObj : falseObj;
 	#else
 		return falseObj;
 	#endif
@@ -2638,6 +2651,12 @@ OBJ primPlayTone(int argCount, OBJ *args) {
 			pin = ed1DigitalPinMap[pin - 1];
 		} else {
 			pin = DEFAULT_TONE_PIN;
+		}
+	#elif defined(DUELink)
+		if ((pin < 0) || (pin >= DIGITAL_PINS)) {
+			if (IS_DUE_STEM) pin = 3;
+			else if (IS_DUE_CLIPIT) pin = 7;
+			else pin = DEFAULT_TONE_PIN; // DUE Cinco and PixoBit
 		}
 	#else
 		if ((pin < 0) || (pin >= DIGITAL_PINS)) pin = DEFAULT_TONE_PIN;
