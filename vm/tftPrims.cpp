@@ -1005,7 +1005,8 @@ in Arduino_ESP32RGBPanel.h
 */
 
 
-#include <TAMC_GT911.h>
+
+
 
 #define GFX_BL 2
 // option 1:
@@ -1051,7 +1052,87 @@ void tftInit() {
 
 }
 
+#if defined(BBCT)
+
+#include <bb_captouch.h>
+#include <Wire.h>
+#define TOUCH_GT911_SCL 20
+#define TOUCH_GT911_SDA 19
+#define TOUCH_GT911_INT -1
+#define TOUCH_GT911_RST 38
+
+BBCapTouch bbct;
+
+  
+
+
+   	#define HAS_TOUCH_SCREEN 1
+
+		static void touchInit() {
+
+			Wire1.end();
+			bbct.init(TOUCH_GT911_SDA, TOUCH_GT911_SCL, TOUCH_GT911_RST, TOUCH_GT911_INT, 400000, &Wire1);
+			int iType = bbct.sensorType();
+			const char *szNames[] = {"Unknown", "FT6x36", "GT911", "CST820", "CST226", "MXT144", "AXS15231"};
+			char s[100];
+			sprintf(s,"sensor type: %s", szNames[iType] );
+			outputString(s);
+				
+			
+			touchEnabled = true;
+		}
+
+		static uint32 lastTouchUpdate = 0;
+		static int touchScreenX = -1;
+		static int touchScreenY = -1;
+		static int touchSize =0;
 		
+		static int screenTouched() {
+			if (!touchEnabled) touchInit();
+			 TOUCHINFO ti;
+			if (bbct.getSamples(&ti)) {
+				touchScreenX = ti.x[0];
+      			touchScreenY = ti.y[0];
+ 				touchSize = ti.area[0];
+				return true;
+			} else
+			return false;
+		}
+
+		static void touchUpdate() {
+
+			if (!touchEnabled) touchInit();
+			screenTouched();	  
+			//uint32 now = millisecs();
+			//if ((now - lastTouchUpdate) < 10) return;
+			// if (screenTouched()) {
+			// 	touchScreenX = ts.points[0].x;;
+			// 	touchScreenY = ts.points[0].y;
+			// 	touchSize = ts.points[0].size;
+			// } 
+			//lastTouchUpdate = now;
+		
+		}
+
+		static int screenTouchX() {
+			touchUpdate();
+			return touchScreenX;
+		}
+
+		static int screenTouchY() {
+			touchUpdate();
+			return touchScreenY;
+		}
+
+		static int screenTouchPressure() {
+			// pressure not supported; return a constant value if screen is touched, -1 if not
+			return touchSize;
+		}
+
+
+
+#else
+#include <TAMC_GT911.h>		
 // Setup touch
 #define TOUCH_GT911
 #define TOUCH_GT911_SCL 20
@@ -1120,8 +1201,7 @@ TAMC_GT911 ts = TAMC_GT911(TOUCH_GT911_SDA, TOUCH_GT911_SCL, TOUCH_GT911_INT, TO
 			if (ts.touches>0) pressure = ts.points[0].size;
 			return pressure;
 		}
-
-
+#endif
 	#elif defined(LMSDISPLAY) && defined(TFT_ESPI)
 		bool flip_x_y=false;
 		bool flip_x=false;
@@ -3292,6 +3372,30 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
   lv_disp_flush_ready(disp);
 }
 
+#if defined(BBCT)
+
+void my_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data) {
+
+  	TOUCHINFO ti;
+  	if (!touchEnabled) touchInit();
+	if (bbct.getSamples(&ti)) {
+		for (int i = 0; i < ti.count; i++) {
+		int32_t x =ti.x[0];
+		int32_t y =ti.y[0];
+		//if (x >= 0 && x < 320 && y >= 0 && y < 480) {
+			data->point.x = x;
+			data->point.y = y;
+			// Serial.printf("x,y = %d, %d\n", x, y);
+			data->state = LV_INDEV_STATE_PRESSED;
+		//}
+		}
+	} else {
+		data->state = LV_INDEV_STATE_RELEASED;  // No touch detected
+	}
+}
+
+
+#else
 
 void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 {
@@ -3332,7 +3436,7 @@ void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 			*/
 			// use global functions
 			if (screenTouched()) {
-				data->state = LV_INDEV_STATE_PR;
+				data->state = LV_INDEV_STATE_PRESSED;
 				data->point.x = screenTouchX();
 				data->point.y = screenTouchY();
 			
@@ -3342,7 +3446,7 @@ void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 		
 }
 
-
+#endif
 
 
 
