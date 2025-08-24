@@ -3454,7 +3454,7 @@ void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 
 
 // only for these boards:
-#if defined(LVGL) && defined(TFT_ESPI)
+#if (defined(LVGL) || defined(CDYR) || defined(CYD))&& defined(TFT_ESPI)
 	#include <lvgl.h>
 	void setup_lvgl(void); 
 	extern bool useLVGL;
@@ -3477,6 +3477,7 @@ void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 
 		// Immediately notify LVGL since TFT_eSPI handles DMA behind the scenes
 		lv_disp_flush_ready(disp);
+		yield(); // sodb give wifi some air to breath
 	}
 	/*Read the touchpad*/
 	#if defined(HAS_TOUCH_SCREEN)
@@ -3525,6 +3526,7 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t * px_map) 
 
     tft.endWrite();
     lv_disp_flush_ready(disp);
+	yield(); // sodb give wifi some air to breath
 }
 /*Read the touchpad*/
 #if defined(HAS_TOUCH_SCREEN)
@@ -3552,6 +3554,10 @@ void my_touchpad_read(lv_indev_t *indev_driver, lv_indev_data_t *data) {
 #endif
 
 #if defined(LVGL)
+
+
+
+
 #define TFT_BUFFER_LINES 40
 static lv_draw_buf_t draw_buf;
 static lv_color_t *buf1;
@@ -3755,6 +3761,19 @@ uint8_t* load_file_to_psram(const char *path, size_t *out_size) {
     return buffer;
 }
 */
+/* //sodb task to run lvgl on core 1; does not work
+void lvglTask(void *pvParameter) {
+    while (true) {
+        if (LVGL_initialized && useLVGL) {
+            lv_tick_inc(5);        // advance LVGL tick
+            lv_timer_handler();    // process LVGL tasks
+        }
+        //vTaskDelay(5 / portTICK_PERIOD_MS);  // let other tasks run
+		vTaskDelay(5);  // let other tasks run
+    }
+}
+*/
+
 void setup_lvgl() {
 	/*
 	#include "esp_heap_caps.h"
@@ -3777,6 +3796,18 @@ void setup_lvgl() {
   	lv_init();
 	// double buffer
 
+/* // sodb try to give Wifi more chance 
+xTaskCreatePinnedToCore(
+        lvglTask,       // Task function
+        "LVGL Task",    // Name
+        64000,           // Stack size (increase if widgets crash)
+        NULL,           // Parameters
+        1,              // Priority
+        NULL,           // Handle
+        1               // Core 1
+    );
+
+*/
 #include "esp_heap_caps.h"
 
  	size_t buf_size = TFT_WIDTH * TFT_BUFFER_LINES * sizeof(lv_color_t);

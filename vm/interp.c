@@ -1378,6 +1378,9 @@ static void runTask(Task *task) {
 
 #if !defined(EMSCRIPTEN)
 
+
+
+
 void vmLoop() {
 	// Run the next runnable task. Wake up any waiting tasks whose wakeup time has arrived.
 	int currentTaskIndex = 0;
@@ -1387,10 +1390,11 @@ void vmLoop() {
 			if (LVGL_initialized & useLVGL) {
 					 lv_tick_inc(3);
 					 lv_timer_handler();
-
+					//yield();
+					vTaskDelay(1);  
 				}
 		#endif
-
+	
 		if (count-- < 0) {
 			// do background VM tasks once every N VM loop cycles
 
