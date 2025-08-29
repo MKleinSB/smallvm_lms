@@ -1,3 +1,5 @@
+
+#if defined(LMSDISPLAY) || defined(LMS7789)
 #include "espVersion.h"
 #include <string.h>
 
@@ -43,3 +45,5 @@ int getESPVersion(void) {
     }
     return version;
 }
+
+#endif

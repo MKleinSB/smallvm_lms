@@ -111,7 +111,7 @@ touch.writeto_mem(21, 0xfe, b'\xff') #
 
 
 #elif defined(CYDR)
-#define ILI9341_DRIVER
+#define ILI9341_2_DRIVER
 
 /*
 ili9341(miso=12, mosi=13, clk=14, cs=15, dc=2, rst=-1, backlight=27, power=-1, width=320, height=240, rot=LANDSCAPE)

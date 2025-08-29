@@ -12,7 +12,7 @@ variables text list_text capital
   spec ' ' 'sym_but' 'sym_but'
 
 to btns {
-  waitMillis 50
+  waitMillis 100
   local 'btn' (('[tft:LVGLgetval]' 'btns') % 512)
   local 'checked' (('[tft:LVGLgetval]' 'btns') > 511)
   if (btn == 0) {
@@ -127,15 +127,15 @@ to sym_but {
   show_text
 }
 
-script 313 49 {
+script 313 40 {
 whenStarted
 'enable lvgl' true true
 init_callback
-'[tft:LVGLaddbtn]' 'char_but' 2 (symbol 'ok')
+'[tft:LVGLaddbtn]' 'char_but' 1 (symbol 'ok')
 '[tft:LVGLsetpos]' 'char_but' 10 190
-'[tft:LVGLaddbtn]' 'num_but' 2 (symbol 'ok')
+'[tft:LVGLaddbtn]' 'num_but' 1 (symbol 'ok')
 '[tft:LVGLsetpos]' 'num_but' 60 190
-'[tft:LVGLaddbtn]' 'sym_but' 2 (symbol 'ok')
+'[tft:LVGLaddbtn]' 'sym_but' 1 (symbol 'ok')
 '[tft:LVGLsetpos]' 'sym_but' 110 190
 show_rollers
 add_callback 'char_but'
@@ -143,7 +143,7 @@ add_callback 'num_but'
 add_callback 'sym_but'
 '[tft:LVGLaddobj]' 'textarea' 'ta'
 '[tft:LVGLaddobj]' 'style' 'sty'
-'[tft:LVGLsetstyle]' 'text font' 'sty' 2
+'[tft:LVGLsetstyle]' 'text font' 'sty' 1
 '[tft:LVGLsetparent]' 'sty' 'ta'
 '[tft:LVGLsetpos]' 'ta' 30 0
 '[tft:LVGLsetsize]' 'ta' 200 50
@@ -163,31 +163,31 @@ forever {
 }
 }
 
-script 40 705 {
+script 40 696 {
 to show_rollers {}
 }
 
-script 804 738 {
+script 804 729 {
 to show_text {}
 }
 
-script 564 906 {
+script 564 897 {
 to char_but {}
 }
 
-script 860 1168 {
+script 860 1159 {
 to num_but {}
 }
 
-script 717 1341 {
+script 717 1332 {
 to sym_but {}
 }
 
-script 339 1408 {
+script 339 1399 {
 to btns {}
 }
 
-script 698 1821 {
+script 698 1812 {
 wifiConnect 'asus' 'Aapnootmies2018'
 }
 

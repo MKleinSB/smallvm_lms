@@ -16,8 +16,10 @@
 #include "mem.h"
 #include "interp.h"
 
+#if defined(ESP32_ORIGINAL)
 #include <LittleFS.h>
 #include <FS.h>
+#endif
 
 int useTFT = false;
 int isOLED1106 = false;
@@ -3321,9 +3323,9 @@ static OBJ primSetBacklight(int argCount, OBJ *args) { return falseObj; }
 static OBJ primGetWidth(int argCount, OBJ *args) { return int2obj(0); }
 static OBJ primGetHeight(int argCount, OBJ *args) { return int2obj(0); }
 static OBJ primSetPixel(int argCount, OBJ *args) { return falseObj; }
-#if defined(BOARD_HAS_PSRAM)
+//#if defined(BOARD_HAS_PSRAM)
 static OBJ primPixelRow(int argCount, OBJ *args) { return falseObj; }
-#endif
+//#endif
 static OBJ primLine(int argCount, OBJ *args) { return falseObj; }
 static OBJ primRect(int argCount, OBJ *args) { return falseObj; }
 static OBJ primRoundedRect(int argCount, OBJ *args) { return falseObj; }

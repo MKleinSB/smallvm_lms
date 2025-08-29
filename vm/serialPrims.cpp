@@ -550,7 +550,7 @@ static OBJ primMIDIRecv(int argCount, OBJ *args) { return falseObj; }
 #endif // USB_MIDI
 
 
-#if defined(ESP32_ORIGINAL)
+#if defined(LMSDISPLAY) || defined(LMS7789)
 		// sodb: lms-esp32vw: SERIAL_PORT.begin(baudRate, SERIAL_8N1, 8, 7); rx=8, tx=7
 		// lms-esp32v1 rx=18, tx=19
 		
@@ -646,7 +646,7 @@ static PrimEntry entries[] = {
 	{"read", primSerialRead},
 	{"available",primSerialAvailable},
 	{"readNr", primSerialReadNr},
-#if defined(ESP32_ORIGINAL)
+#if defined(LMSDISPLAY) || defined(LMS7789)
 	{"espversion", primSerialESPVersion},
 #endif
 	{"readInto", primSerialReadInto},

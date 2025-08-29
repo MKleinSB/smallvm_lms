@@ -2,44 +2,43 @@ module main
 author unknown
 version 1 0 
 description ''
+variables line 
 
-script 40 40 {
+  spec ' ' 'btns' 'btns'
+
+to btns {
+  local 'btns' ('[data:makeList]' ('[data:toString]' '7') ('[data:toString]' '8') ('[data:toString]' '9') '/' (symbol 'backspace') ('[data:toString]' '3') ('[data:toString]' '5') ('[data:toString]' '6') 'x' 'clear' ('[data:toString]' '1') ('[data:toString]' '2') ('[data:toString]' '3') '-' 'E' ('[data:toString]' '0') '.' '(-)' '+' (symbol 'new_line') '(-)')
+  local 'btn' ('[tft:LVGLgetval]' 'btns')
+  if (btn == 4) {
+    '[data:delete]' 'last' line
+  } (btn == 9) {
+    line = ('[data:makeList]')
+  } (btn == 19) {
+    sayIt ('[data:joinStrings]' line)
+  } else {
+    '[data:addLast]' (at (btn + 1) btns) line
+  }
+  '[tft:LVGLsettext]' 'ta' ('[data:joinStrings]' line)
+}
+
+script 265 49 {
 whenStarted
 'enable lvgl' true true
-comment 'draw arc'
-'[tft:LVGLaddobj]' 'arc' 'arc'
-'[tft:LVGLsetval]' 'arc' 10
-'[tft:LVGLsetpos]' 'arc' 50 40
-'[tft:LVGLsetsize]' 'arc' 180 180
-'[tft:LVGLsetattribute]' 'angles' 'arc' 0 180
-'[tft:LVGLsetattribute]' 'rotation' 'arc' 180
-comment 'Add scale to arc'
-'[tft:LVGLaddobj]' 'scale' 'scale'
-'[tft:LVGLsetsize]' 'scale' 180 180
-'[tft:LVGLsetpos]' 'scale' 50 40
-'[tft:LVGLsetattribute]' 'angles' 'scale' 180
-'[tft:LVGLsetattribute]' 'rotation' 'scale' 180
-'[tft:LVGLsetattribute]' 'tick count' 'scale' 21
-'[tft:LVGLsetattribute]' 'scale mode' 'scale' (set_scale_mode 'round inner')
-'[tft:LVGLsetattribute]' 'length' 'scale' 20 (set_parts false true false false)
-'[tft:LVGLsetattribute]' 'length' 'scale' 15 (set_parts false false false true)
-comment 'draw slider'
-'[tft:LVGLaddobj]' 'slider' 'slider'
-'[tft:LVGLsetpos]' 'slider' 40 180
-'[tft:LVGLsetsize]' 'slider' 200 15
-'[tft:LVGLsetattribute]' 'range' 'slider' -200 200
-comment 'add scale to slider'
-'[tft:LVGLaddobj]' 'scale' 'scale2'
-'[tft:LVGLsetpos]' 'scale2' 40 200
-'[tft:LVGLsetattribute]' 'scale mode' 'scale2' (set_scale_mode 'hor bottom')
-'[tft:LVGLsetsize]' 'scale2' 200 30
-'[tft:LVGLsetattribute]' 'range' 'scale2' -200 200
-comment 'Change style for scales'
-'[tft:LVGLaddobj]' 'style' 'sty'
-'[tft:LVGLsetstyle]' 'text font' 'sty' 2
-'[tft:LVGLsetstyle]' 'text color' 'sty' (lvgl_color (colorSwatch 25 21 190 255))
-'[tft:LVGLsetparent]' 'sty' 'scale'
-'[tft:LVGLsetparent]' 'sty' 'scale2'
+line = ('[data:makeList]')
+init_callback
+'[tft:LVGLaddbuttonmatrix]' 'btns' ('[data:makeList]' ('[data:toString]' '7') ('[data:toString]' '8') ('[data:toString]' '9') '/' (symbol 'backspace') '' ('[data:toString]' '3') ('[data:toString]' '5') ('[data:toString]' '6') 'x' 'clear' '' ('[data:toString]' '1') ('[data:toString]' '2') ('[data:toString]' '3') '-' 'E' '' ('[data:toString]' '0') '.' '(-)' '+' (symbol 'new_line'))
+'[tft:LVGLsetpos]' 'btns' 20 100
+'[tft:LVGLaddobj]' 'textarea' 'ta'
+'[tft:LVGLsetpos]' 'ta' 20 20
+'[tft:LVGLsetsize]' 'ta' 250 40
+add_callback 'btns'
+forever {
+  handle_event
+}
+}
+
+script 50 627 {
+to btns {}
 }
 
 
@@ -91,7 +90,7 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLsetscroll]' 'set scroll direction of _ to _' 'str str.scroll_dirs' '' 'none'
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
-  spec ' ' '[tft:LVGLaddbuttonmatrix]' 'button matrix _ elements _ : parent _' 'str any str' '' nil 'lv_scr_act'
+  spec ' ' '[tft:LVGLaddbuttonmatrix]' 'button matrix _ elements _ : parent _' 'str auto str' '' 'aList' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddchart]' 'chart _ type _ update mode _ : parent _' 'str str.chart_type str.chart_update_mode str' '' 'line' 'shift' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddseries]' 'add series _ chart _ color _' 'str str color' '' ''
   spec ' ' '[tft:LVGLsetnextvalue]' 'add value to series _ from chart _ value _ : value2 _' 'str str num num' '' '' 0 0
