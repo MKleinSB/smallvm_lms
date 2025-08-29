@@ -150,6 +150,8 @@ touch.writeto_mem(21, 0xfe, b'\xff') #
 #define LOAD_FONT4
 #define SMOOTH_FONT
 
+#define TFT_INVERSION_OFF
+
 #define TFT_SPI_PORT HSPI 
 // Optional: set SPI clock speed
 #define CONFIG_TFT_HSPI_PORT
