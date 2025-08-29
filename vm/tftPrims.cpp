@@ -1350,7 +1350,7 @@ uint16_t touchScreenMinimumX = 200, touchScreenMaximumX = 3700, touchScreenMinim
 		
 			tft.begin();
 			#if defined(USB2)
-				tft.invertDisplay(true); 
+				tft.invertDisplay(false); 
 			#endif
 			tft.setRotation(3);
 	//			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
