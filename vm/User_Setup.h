@@ -203,7 +203,7 @@ touch.writeto_mem(21, 0xfe, b'\xff') #
 #define TP_IRQ 36
 
 #define TFT_RGB_ORDER TFT_BGR
-#define TFT_INVERSION_OFF
+#define TFT_INVERSION_ON
 #define LOAD_GLCD
 #define LOAD_FONT2
 #define LOAD_FONT4
