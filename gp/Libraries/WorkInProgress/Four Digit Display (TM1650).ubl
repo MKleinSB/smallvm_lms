@@ -1,6 +1,6 @@
 module 'Four Digit Display (TM1650)' Output
 author MicroBlocks
-version 1 0 
+version 1 1 
 description 'Four digit seven-segment LED display for KidsIOT.
 Displays decimal numbers from -999 to 9999 with optional decimal point.
 
@@ -12,12 +12,13 @@ https://m5stack.oss-cn-shenzhen.aliyuncs.com/resource/docs/datasheet/unit/digi_c
 variables _tmSegmentMap 
 
   spec ' ' 'tm1650_show' '#SVG#square11#00c612 tm1650 show _ : decimal places _' 'auto menu.range:0-3' 3142 3
+  spec ' ' 'tm1650_showString' '#SVG#square11#00c612 tm1650 string _' 'str' '3.142'
+  space
   spec ' ' 'tm1650_clear' '#SVG#square11#00c612 tm1650 clear'
   spec ' ' 'tm1650_setBrightness' '#SVG#square11#00c612 tm1659 brightness _' 'menu.range:1-7' 3
   space
   spec ' ' '_tm1650_init' '_tm1650_init'
   spec ' ' '_tm1650_setDigit' '_tm1650_setDigit _ segments _ decimal after _' 'num num num' 1 0 0
-  spec ' ' 'tm1650_showString' 'tm1650_showString _' 'str' '10'
 
 to '_tm1650_init' {
   if (not ('[sensors:i2cExists]' (hexToInt '24'))) {
@@ -109,6 +110,7 @@ to tm1650_showString s {
       comment 'Leading minus sign'
       sign = -1
     } (and (48 <= ch) (ch <= 57)) {
+      comment 'ch is a digit'
       n = ((10 * n) + (ch - 48))
       if (decimalPos != 99) {
         comment 'Move the decimal point left'
@@ -117,17 +119,14 @@ to tm1650_showString s {
           exitLoop
         }
       }
-    } (or (ch == 44) (ch == 46)) {
+    } else {
+      comment 'ch is not a digit -- assume it is a decimal point character (varies by country)'
       if (decimalPos != 99) {
         comment 'More than one decimal point'
         tm1650_clear
         return 0
       }
       decimalPos = 4
-    } else {
-      comment 'Bad number string'
-      tm1650_clear
-      return 0
     }
   }
   if (decimalPos != 99) {
