@@ -60,7 +60,7 @@ GND	Ground
 #define TFT_DMA_BUFFER_SIZE  132768
 #define TFT_DMA_MODE         1   
 
-#elif defined(CYD)
+#elif defined(CYDC)
 #define ILI9341_DRIVER
 
 /*

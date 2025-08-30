@@ -36,7 +36,7 @@ static int deferUpdates = false;
 	defined(TTGO_RP2040) || defined(TTGO_DISPLAY) || defined(ARDUINO_M5STACK_Core2) || \
 	defined(GAMEPAD_DISPLAY) || defined(PICO_ED) || defined(OLED_128_64) || defined(COCUBE) || \
 	defined(ARDUINO_M5Atom_S3) || defined(LMSDISPLAY) || defined(LMS7789) || defined(UNIHIKER) ||\
-	defined(M5Atom_S3_TFT) || defined(CYD) || defined(CYDR) || defined(CYDS343)
+	defined(M5Atom_S3_TFT) || defined(CYDC) || defined(CYDR) || defined(CYDS343)
 
 	//sodb
 	//#if !defined(TFT_ESPI)
@@ -1430,7 +1430,7 @@ return falseObj;
 
 
 
- #elif defined(CYD) && defined(TFT_ESPI)
+ #elif defined(CYDC) && defined(TFT_ESPI)
 	#define HAS_TOUCH_SCREEN 1
 		#include <TFT_eSPI.h>
 
@@ -3459,7 +3459,7 @@ void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 
 
 // only for these boards:
-#if (defined(LVGL) || defined(CDYR) || defined(CYD))&& defined(TFT_ESPI)
+#if (defined(LVGL) || defined(CDYR) || defined(CYDC))&& defined(TFT_ESPI)
 	#include <lvgl.h>
 	void setup_lvgl(void); 
 	extern bool useLVGL;

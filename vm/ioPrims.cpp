@@ -995,6 +995,31 @@ void hardwareInit() {
 			0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
 			1, 1};
 	#endif
+#elif defined(CYDIO)
+	#define BOARD_TYPE "CYD"
+	#define DIGITAL_PINS 40
+	#define ANALOG_PINS 40 //sodb was 16
+	#define TOTAL_PINS 40
+	static const int analogPin[] = {34}; //sodb; test for cyd LDR
+	#define PIN_LED_R 4
+	#define PIN_LED_G 16
+	#define PIN_LED_B 17
+	#define PIN_LED 4
+	
+	#if !defined(PIN_BUTTON_A)
+		#if defined(KEY_BUILTIN)
+			#define PIN_BUTTON_A KEY_BUILTIN
+		#else
+			#define PIN_BUTTON_A 0
+		#endif
+	#endif
+	static const char reservedPin[TOTAL_PINS] = {
+		//sodb remove reserved pins 7 and 8 for LMS-ESP32v2 serial port
+		
+		0, 1, 0, 1, 0, 0, 1, 0, 0, 1,
+		1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 1, 0, 0, 0, 1, 1,
+		1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 #elif defined(ARDUINO_ARCH_ESP32)
 	#ifdef ARDUINO_IOT_BUS
@@ -1930,13 +1955,26 @@ void primSetUserLED(OBJ *args) {
 		defined(BUILT_IN_DISPLAY)
 			tftSetHugePixel(3, 1, (trueObj == args[0]));
 	#else
+		//sodb CYD has led on GPIO 4, 16 and 17
+		// leds are inverted (HIGH=off, LOW=on)
+		
+		int output = (trueObj == args[0]) ? HIGH : LOW;
+		#if defined(CYDIO)
+			pinMode(PIN_LED_R, OUTPUT);
+			pinMode(PIN_LED_G, OUTPUT);
+			pinMode(PIN_LED_B, OUTPUT);
+			output = !output;
+			digitalWrite(PIN_LED_R,(PinStatus) output);
+			digitalWrite(PIN_LED_G, HIGH); // off
+			digitalWrite(PIN_LED_B, HIGH); //off
+		#endif
 		if (PIN_LED < 0) return; // board does not have a user LED
 		if (PIN_LED < TOTAL_PINS) {
 			SET_MODE(PIN_LED, OUTPUT);
 		} else {
 			pinMode(PIN_LED, OUTPUT);
 		}
-		int output = (trueObj == args[0]) ? HIGH : LOW;
+		
 		#ifdef INVERT_USER_LED
 			output = !output;
 		#endif
