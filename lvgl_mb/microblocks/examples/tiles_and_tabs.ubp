@@ -62,7 +62,7 @@ to tile4 {
   '[tft:LVGLsetattribute]' 'range' 'sl1' 120 256
 }
 
-script 114 40 {
+script 124 50 {
 whenStarted
 'enable lvgl' true true
 comment 'create tiles'
@@ -71,7 +71,7 @@ tile2
 tile4
 }
 
-script 418 51 {
+script 428 61 {
 whenBroadcastReceived 'LVGLevent'
 sayIt ('[tft:LVGLgetval]' ('[tft:LVGLgetevent]'))
 if (('[tft:LVGLgetevent]') == 'sw1') {
@@ -84,19 +84,19 @@ if (('[tft:LVGLgetevent]') == 'sw1') {
 }
 }
 
-script 40 360 {
+script 50 370 {
 to make_tiles {}
 }
 
-script 495 487 {
+script 505 497 {
 to tile4 {}
 }
 
-script 876 785 {
+script 886 795 {
 '[tft:LVGLsetattribute]' 'flags' 'arc' (set_flag false true true false false)
 }
 
-script 62 851 {
+script 72 861 {
 to tile2 {}
 }
 
@@ -149,7 +149,7 @@ variables _lvgl_call_backs
   spec ' ' '[tft:LVGLsetscroll]' 'set scroll direction of _ to _' 'str str.scroll_dirs' '' 'none'
   spec ' ' '[tft:LVGLloadscreen]' 'load screen _' 'str' ''
   spec ' ' '[tft:LVGLaddtab]' 'tab _ parent _' 'str str' 'tab' ''
-  spec ' ' '[tft:LVGLaddbuttonmatrix]' 'button matrix _ elements _ : parent _' 'str any str' '' nil 'lv_scr_act'
+  spec ' ' '[tft:LVGLaddbuttonmatrix]' 'button matrix _ elements _ : parent _' 'str auto str' '' 'aList' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddchart]' 'chart _ type _ update mode _ : parent _' 'str str.chart_type str.chart_update_mode str' '' 'line' 'shift' 'lv_scr_act'
   spec ' ' '[tft:LVGLaddseries]' 'add series _ chart _ color _' 'str str color' '' ''
   spec ' ' '[tft:LVGLsetnextvalue]' 'add value to series _ from chart _ value _ : value2 _' 'str str num num' '' '' 0 0

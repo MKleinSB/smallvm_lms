@@ -21,7 +21,7 @@ to btns {
   '[tft:LVGLsettext]' 'ta' ('[data:joinStrings]' line)
 }
 
-script 265 49 {
+script 265 40 {
 whenStarted
 'enable lvgl' true true
 line = ('[data:makeList]')
@@ -37,7 +37,7 @@ forever {
 }
 }
 
-script 50 627 {
+script 50 618 {
 to btns {}
 }
 

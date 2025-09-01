@@ -9,8 +9,8 @@ whenStarted
 comment 'draw arc'
 '[tft:LVGLaddobj]' 'arc' 'arc'
 '[tft:LVGLsetval]' 'arc' 10
-'[tft:LVGLsetpos]' 'arc' 50 40
-'[tft:LVGLsetsize]' 'arc' 180 180
+'[tft:LVGLsetpos]' 'arc' 35 20
+'[tft:LVGLsetsize]' 'arc' 210 210
 '[tft:LVGLsetattribute]' 'angles' 'arc' 0 180
 '[tft:LVGLsetattribute]' 'rotation' 'arc' 180
 comment 'Add scale to arc'
