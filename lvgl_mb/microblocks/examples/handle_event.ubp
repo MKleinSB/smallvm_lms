@@ -32,13 +32,13 @@ to button2 {
   }
 }
 
-script 824 40 {
+script 824 50 {
 to button1 {}
 }
 
-script 50 53 {
+script 50 63 {
 whenStarted
-'[tft:LVGLon]' true
+'enable lvgl' true
 comment 'add widgets'
 delete_all_objects
 '[tft:LVGLaddbtn]' 'button1' 2
@@ -63,11 +63,11 @@ forever {
 }
 }
 
-script 821 341 {
+script 821 351 {
 to button2 {}
 }
 
-script 815 648 {
+script 815 658 {
 to arc {}
 }
 
