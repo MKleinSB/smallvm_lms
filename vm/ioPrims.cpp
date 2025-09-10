@@ -35,7 +35,7 @@ static void initPins(void); // forward reference
 static void initRandomSeed(void); // forward reference
 static void stopRF(); // forward reference
 
-#if (defined(ARDUINO_SAMD_MKR1000) || defined(ESP32)) && !defined(ESP32_C3)
+#if (defined(ARDUINO_SAMD_MKR1000) || defined(ESP32)) && !defined(ESP32_C3) && !defined(ESP32_C6)
 	#include <I2S.h>
 	int I2SsampleRate = 16000;
 	#define HAS_I2S 1
@@ -1216,7 +1216,7 @@ void hardwareInit() {
 	#define DIGITAL_PINS 27
 	#define ANALOG_PINS 5
 	#define TOTAL_PINS 60
-	#define PIN_LED 15 // PA_6 (unmapped)
+	#define PIN_LED 15 // PB_8
 	#define DEFAULT_TONE_PIN 21
 	static const int8_t analogPin[ANALOG_PINS] = {16, 17, 18, 19, 37}; // used to initialize random generater
 
@@ -1227,16 +1227,16 @@ void hardwareInit() {
 	// 47 (PA_3) - Downlink RX (serial)
 	// 52 (PA_2) - Downlink TX (serial)
 
-	// 13 (PA_5, edge pin 21) is the buzzer
-	// 19 (PB_0, edge pin 8) is the light sensor
+	// PA_5, D13, edge pin 21 is the buzzer
+	// PB_0, D19, edge pin  9 is the light sensor
 	static const char cincoEdgePin[DIGITAL_PINS] = {
 		16, 17, 18, 14, 29, 28,  8,  10,  37, 19,
 		 2, 27, 32,  9,  5,  4, 33, 255, 255,  0,
 		 1, 13,  7, 12, 15, 54, 11}; // row pins: 7, 12, 15, 54, 11
 
-	// 13 (PA_5, edge pin 21) is the buzzer
-	// 12 (PA_6, edge pin 23) is the light sensor
-	// 29 (PA_10, edge pin 22) is the display reset pin
+	// PA_5, D13, edge pin 21 is the buzzer
+	// PC_6, D29, edge pin 22 is the display reset pin
+	// PA_6, D12, edge pin 23 is the light sensor
 	static const char pixoEdgePin[DIGITAL_PINS] = {
 		16, 17, 18, 11, 54, 28,  8,  10,  37, 19,
 		 2, 27,  7,  9,  5,  4, 33, 255, 255,  0,
@@ -1249,11 +1249,15 @@ void hardwareInit() {
 
 	// Analog pin names for DUELink boards
 	// Note: CincoBit edge pins 3, 4, and 12 are not analog capable
-	#define DUE_ANALOG_PIN_COUNT 18
+	#define DUE_ANALOG_PIN_COUNT 24
 	static const int16_t dueEdgeAnalog[DUE_ANALOG_PIN_COUNT] = {
-		PA_0, PA_1, PA_4, PA_7, PB_1, PA_14, -1, -1, PB_2, PB_0, -1, PA_13, PA_8, -1, -1, -1, -1, -1};
+		PA_0, PA_1, PA_4, PA_7, PB_1, PA_14, -1, -1, PB_2, PB_0,
+		-1, PA_13, PA_8, -1, -1, -1, -1, -1, -1, -1,
+		-1, -1, -1, PA_6};
 	static const int16_t dueStandardAnalog[DUE_ANALOG_PIN_COUNT] = {
-		-1, PA_0, PA_1, PA_4, PA_5, PA_6, PA_7, PA_8, PB_1, PB_0, -1, -1, -1, -1, -1,  -1,  -1, PB_2};
+		-1, PA_0, PA_1, PA_4, PA_5, PA_6, PA_7, PA_8, PB_1, PB_0,
+		-1, -1, -1, -1, -1,  -1,  -1, PB_2, -1, -1,
+		-1, -1, -1, -1};
 
 	static int dueAnalogPin(int pinNum) {
 		int result = -1; // default - no pin
@@ -1765,7 +1769,7 @@ void primAnalogWrite(OBJ *args) {
 	#endif
 
 	#if defined(ESP32)
-	  #if !defined(ESP32_S3) && !defined(ESP32_C3) && !defined(COCUBE)
+	  #if !defined(ESP32_S3) && !defined(ESP32_C3) && !defined(ESP32_C6) && !defined(COCUBE)
 		if ((25 == pinNum) || (26 == pinNum)) { // ESP32 and ESP32-S2 DAC pins
 			dacWrite(pinNum, (value >> 2)); // convert 10-bit to 8-bit value for ESP32 DAC
 			return;
@@ -2536,7 +2540,7 @@ OBJ primI2SWrite(int argCount, OBJ *args) { return falseObj; }
 
 // DAC (digital to analog converter) Support
 
-#if defined(ESP32) && !defined(ESP32_S3) && !defined(ESP32_C3)
+#if defined(ESP32) && !defined(ESP32_S3) && !defined(ESP32_C3) && !defined(ESP32_C6)
 
 #include "driver/dac_common.h"
 

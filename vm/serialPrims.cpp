@@ -573,14 +573,18 @@ static OBJ primMIDIRecv(int argCount, OBJ *args) { return falseObj; }
 
 #if defined(DUELink)
 
-HardwareSerial DOWNLINK(PA3, PA2);
+#define DOWNLINK Serial2
 static int downlinkInitialized = false;
 
 static void initDownlink() {
 	if (downlinkInitialized) return; // already open
+	DOWNLINK.setRx(PA3);
+	DOWNLINK.setTx(PA2);
 	DOWNLINK.begin(115200);
 	downlinkInitialized = true;
 }
+
+static OBJ primIsDUELink(int argCount, OBJ *args) { return trueObj; }
 
 static OBJ primDUELinkSend(int argCount, OBJ *args) {
 	// Send up to 63 bytes to the DUELink downstream link and return the number of bytes sent.
@@ -636,6 +640,8 @@ static void initDownlink() {
 	delay(5); // leave a litte time for things to settle
 }
 
+static OBJ primIsDUELink(int argCount, OBJ *args) { return falseObj; }
+
 static OBJ primDUELinkSend(int argCount, OBJ *args) {
 	initDownlink();
 	return primSerialWriteBytes(argCount, args);
@@ -665,6 +671,7 @@ static PrimEntry entries[] = {
 	{"writeBytes", primSerialWriteBytes},
 	{"midiSend", primMIDISend},
 	{"midiRecv", primMIDIRecv},
+	{"isDUELink", primIsDUELink},
 	{"dueSend", primDUELinkSend},
 	{"dueRecv", primDUELinkRecv},
 };
