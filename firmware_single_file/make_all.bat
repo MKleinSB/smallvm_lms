@@ -6,4 +6,4 @@ call make_firmware cydc-lvgl %version%
 call make_firmware cydr-lvgl  %version%
 call make_firmware cydr-usb2-lvgl  %version%
 call make_firmware m5core2-lvgl %version%
-call make_firmware esp32_breakout  %version%
+call make_firmware iot-bus-fixed-lvgl  %version%
