@@ -5,7 +5,7 @@
 // Copyright 2018 John Maloney, Bernat Romagosa, and Jens Mönig
 
 // tftPrims.cpp - Microblocks TFT screen primitives and touch screen input
-// Bernat Romagosa, November 2018
+// Bernat Romagosa, November 2018 .... Line 1355
 
 #include <Arduino.h>
 #include <SPI.h>
@@ -1352,7 +1352,7 @@ uint16_t touchScreenMinimumX = 200, touchScreenMaximumX = 3700, touchScreenMinim
 			#if defined(USB2)
 				tft.invertDisplay(false); 
 			#endif
-			tft.setRotation(3);
+			tft.setRotation(2);
 	//			tft._freq = 80000000; // this requires moving _freq to public in AdaFruit_SITFT.h
 			tftClear();
 			// Turn on backlight on IoT-Bus
